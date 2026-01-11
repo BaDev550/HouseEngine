@@ -16,6 +16,7 @@ Application::Application()
 	_Window = std::make_unique<Window>(config);
 	_VulkanContext = std::make_unique<VulkanContext>();
 	_Renderer = std::make_unique<Renderer>();
+	_Texture = std::make_shared<VulkanTexture>("Resources/Textures/texture.jpg");
 
 	CreateVertexBuffer();
 	CreateIndexBuffer();
@@ -23,20 +24,27 @@ Application::Application()
 	_DescriptorPool = VulkanDescriptorPool::Builder()
 		.SetMaxSets(1000)
 		.AddPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1000)
+		.AddPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000)
 		.Build();
-	_DescriptorSetLayout = VulkanDescriptorSetLayout::Builder()
+	_DescriptorSetLayouts[0] = VulkanDescriptorSetLayout::Builder()
 		.AddBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT)
+		.Build();
+	_DescriptorSetLayouts[1] = VulkanDescriptorSetLayout::Builder()
+		.AddBinding(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
 		.Build();
 
 	VkDeviceSize bufferSize = sizeof(UniformBufferObject);
-	
 	_UniformBuffer = std::make_unique<VulkanBuffer>(bufferSize, 1, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 	_UniformBuffer->Map();
 
 	VkDescriptorBufferInfo camInfo = _UniformBuffer->DescriptorInfo();
-	VulkanDescriptorWriter(*_DescriptorSetLayout, *_DescriptorPool)
+	VkDescriptorImageInfo imageInfo = _Texture->GetImageDescriptorInfo();
+	VulkanDescriptorWriter(*_DescriptorSetLayouts[0], *_DescriptorPool)
 		.WriteBuffer(0, &camInfo)
 		.Build(_UniformDescriptorSet);
+	VulkanDescriptorWriter(*_DescriptorSetLayouts[1], *_DescriptorPool)
+		.WriteImage(0, &imageInfo)
+		.Build(_TextureDescriptorSet);
 
 	VulkanPipelineConfig vulkanConfig{};
 	VulkanContext::DefaultPipelineConfigInfo(vulkanConfig);
@@ -53,18 +61,21 @@ Application::~Application()
 	_VertexBuffer = nullptr;
 	_IndexBuffer = nullptr;
 
+	_Texture = nullptr;
 	_Pipeline = nullptr;
 	_DescriptorPool = nullptr;
-	_DescriptorSetLayout = nullptr;
+
+	for (size_t i = 0; i < _DescriptorSetLayouts.size(); i++)
+		_DescriptorSetLayouts[i] = nullptr;
 
 	_VulkanContext = nullptr;
 }
 
 std::vector<Vertex> vertices = {
-	{{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-	{{0.5f,  -0.5f}, {0.0f, 1.0f, 0.0f}},
-	{{0.5f,  0.5f},  {0.0f, 0.0f, 1.0f}},
-	{{-0.5f, 0.5f},  {1.0f, 0.0f, 0.0f}}
+	{{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+	{{0.5f,  -0.5f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
+	{{0.5f,  0.5f},  {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
+	{{-0.5f, 0.5f},  {1.0f, 0.0f, 0.0f}, {1.0f, 1.0f}}
 };
 
 std::vector<uint32_t> indices = {
@@ -96,6 +107,13 @@ void Application::Run()
 				_Pipeline->GetPipelineLayout(),
 				0, 1,
 				&_UniformDescriptorSet,
+				0, nullptr);
+			vkCmdBindDescriptorSets(
+				cmd,
+				VK_PIPELINE_BIND_POINT_GRAPHICS,
+				_Pipeline->GetPipelineLayout(),
+				1, 1,
+				&_TextureDescriptorSet,
 				0, nullptr);
 			vkCmdBindVertexBuffers(cmd, 0, 1, vertexBuffers, offsets);
 			vkCmdBindIndexBuffer(cmd, _IndexBuffer->GetBuffer(), offsets[0], VK_INDEX_TYPE_UINT32);

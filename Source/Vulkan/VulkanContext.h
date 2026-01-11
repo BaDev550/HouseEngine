@@ -48,6 +48,7 @@ public:
 
 	VkDevice GetDevice() const { return _Device; }
 	VkPhysicalDevice GetPhysicalDevice() const { return _PhysicalDevice; }
+	VkPhysicalDeviceProperties GetPhysicalDeviceProperties() const { return _PhysicalDeviceProperties; }
 	VkQueue GetGraphicsQueue() const { return _GraphicsQueue; }
 	VkQueue GetPresentQueue() const { return _PresentQueue; }
 	VkCommandPool GetCommandPool() const { return _CommandPool; }

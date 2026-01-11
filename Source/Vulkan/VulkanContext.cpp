@@ -196,6 +196,7 @@ void VulkanContext::CreateLogicalDevice()
 	float queuePriority = 1.0f;
 
 	VkPhysicalDeviceFeatures deviceFeatures{};
+	deviceFeatures.samplerAnisotropy = VK_TRUE;
 	std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
 	std::set<uint32_t> uniqueQueueFamilies = { indices.graphicsFamily.value(), indices.presentFamily.value() };
 	for (uint32_t queueFamily : uniqueQueueFamilies) {
@@ -418,6 +419,7 @@ bool VulkanContext::IsPhysicalDeviceSuitable(VkPhysicalDevice device)
 		swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
 	}
 	return deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU 
+		&& deviceFeatures.samplerAnisotropy
 		&& indices.IsComplete()
 		&& extensionsSupported
 		&& swapChainAdequate;

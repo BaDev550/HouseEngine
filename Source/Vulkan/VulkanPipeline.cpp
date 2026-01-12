@@ -1,6 +1,6 @@
 #include "VulkanPipeline.h"
 #include "ShaderCompiler.h"
-#include "Application.h"
+#include "Core/Application.h"
 
 VulkanPipeline::VulkanPipeline(VulkanPipelineConfig& config, const std::string& vertexPath, const std::string& fragmentPath)
 	: _VulkanContext(*Application::Get()->GetVulkanContext())

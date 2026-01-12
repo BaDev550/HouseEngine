@@ -6,6 +6,7 @@
 #include "Vulkan/VulkanBuffer.h"
 #include "Vulkan/VulkanTexture.h"
 #include "Renderer/Renderer.h"
+#include "Renderer/SceneRenderer.h"
 #include "Core/Window.h"
 #include "Core/Memory.h"
 #include <glm/glm.hpp>
@@ -13,14 +14,6 @@
 #include <chrono>
 
 #define APPLICATIONNAME "Application"
-
-
-
-struct UniformBufferObject {
-	glm::mat4 Model;
-	glm::mat4 View;
-	glm::mat4 Proj;
-};
 
 class Application
 {
@@ -38,6 +31,7 @@ private:
 
 	MEM::Scope<Window> _Window;
 	MEM::Scope<VulkanContext> _VulkanContext;
+	MEM::Scope<SceneRenderer> _SceneRenderer; // Move to world class;
 
 	float _DeltaTime;
 };

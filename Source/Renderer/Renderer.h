@@ -18,6 +18,9 @@ public:
 
 	static uint32_t GetFrameIndex();
 	static MEM::Ref<PipelineLibrary>& GetPipelineLibrary();
+	static MEM::Scope<VulkanDescriptorPool>& GetDescriptorPool();
+	static std::vector<VkDescriptorSetLayout>& GetDescriptorSetLayouts();
+	static MEM::Scope<VulkanDescriptorSetLayout>& GetVulkanDescriptorSetLayout(int index);
 private:
 	//VkCommandBuffer BeginRecordCommandBuffer();
 	//void EndRecordCommandBuffer();

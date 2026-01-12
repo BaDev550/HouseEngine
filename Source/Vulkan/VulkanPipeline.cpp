@@ -24,13 +24,13 @@ VulkanPipeline::VulkanPipeline(VulkanPipelineConfig& config, const std::string& 
 	fragShaderStageInfo.module = _FragmentShaderModule;
 	fragShaderStageInfo.pName = "main";
 	
-	//auto setLayouts = Application::Get()->GetSetLayouts();
+	auto& setLayouts = Renderer::GetDescriptorSetLayouts();
 
 	VkPipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageInfo, fragShaderStageInfo };
 	VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 	pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-	//pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(setLayouts.size());
-	//pipelineLayoutInfo.pSetLayouts = setLayouts.data(); TODO - Make a static class such as scene renderer to access these
+	pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(setLayouts.size());
+	pipelineLayoutInfo.pSetLayouts = setLayouts.data();
 	pipelineLayoutInfo.pushConstantRangeCount = 0;
 	pipelineLayoutInfo.pPushConstantRanges = nullptr;
 	

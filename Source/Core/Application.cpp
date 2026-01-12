@@ -17,6 +17,8 @@ Application::Application()
 	_Window = MEM::MakeScope<Window>(config);
 	_VulkanContext = MEM::MakeScope<VulkanContext>();
 	Renderer::Init();
+
+	_SceneRenderer = MEM::MakeScope<SceneRenderer>();
 }
 
 Application::~Application()

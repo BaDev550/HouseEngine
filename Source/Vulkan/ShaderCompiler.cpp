@@ -1,3 +1,4 @@
+#include "hepch.h"
 #include "ShaderCompiler.h"
 
 #include <fstream>

@@ -1,3 +1,4 @@
+#include "hepch.h"
 #include "Core/Application.h"
 #include <stdexcept>
 

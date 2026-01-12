@@ -1,7 +1,8 @@
+#include "hepch.h"
 #include "VulkanTexture.h"
 #include "Core/Application.h"
 
-#include <stb/stb_image.h>
+#include <stb_image.h>
 
 VulkanTexture::VulkanTexture(const std::string& path)
 	: _Context(*Application::Get()->GetVulkanContext())

@@ -31,9 +31,9 @@ public:
 	static Application* Get() { return _Instance; }
 	void Run();
 public:
-	Window* GetWindow() const { return _Window.get(); }
-	Renderer* GetRenderer() const { return _Renderer.get(); }
-	VulkanContext* GetVulkanContext() const { return _VulkanContext.get(); }
+	Window& GetWindow() { return *_Window; }
+	Renderer& GetRenderer() { return *_Renderer; }
+	VulkanContext& GetVulkanContext() { return *_VulkanContext; }
 private:
 	static Application* _Instance;
 

@@ -26,12 +26,24 @@ Window::~Window()
 	glfwTerminate();
 }
 
+void Window::CreateSwapchain()
+{
+	_Swapchain = MEM::MakeRef<VulkanSwapchain>();
+}
+
 bool Window::ShouldClose() const { return glfwWindowShouldClose(_Handle); }
 bool Window::HasResized() const { return _Config.Resized; }
 
 void Window::ResetResizeFlag()
 {
 	_Config.Resized = false;
+}
+
+bool Window::SwapBuffers()
+{
+	VkResult result = _Swapchain->AcquireNextImage(&_ImageIndex);
+	CHECKF((result != VK_SUCCESS || result == VK_SUBOPTIMAL_KHR), "Failed to acquire next image");
+	return true;
 }
 
 void Window::FramebufferResizeCallback(GLFWwindow* window, int width, int height)

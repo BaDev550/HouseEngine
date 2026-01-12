@@ -10,6 +10,55 @@
 	UBO Setting ref
 */
 
+void VulkanCommands::BeginSwapchainRenderPass(VkCommandBuffer cmd)
+{
+	auto& swapchain = Application::Get()->GetWindow().GetSwapchain();
+	auto& imageIndex = Application::Get()->GetWindow().GetImageIndex();
+	VkRenderPassBeginInfo renderPassInfo{};
+	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+	renderPassInfo.renderPass = swapchain.GetRenderPass();
+	renderPassInfo.framebuffer = swapchain.GetSwapchainFramebuffer(imageIndex);
+	renderPassInfo.renderArea.offset = { 0,0 };
+	renderPassInfo.renderArea.extent = swapchain.GetSwapChainExtent();
+
+	VkClearValue clearColor = { 0.1f, 0.1f, 0.1f, 1.0f };
+	renderPassInfo.clearValueCount = 1;
+	renderPassInfo.pClearValues = &clearColor;
+	vkCmdBeginRenderPass(cmd, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+	VkViewport viewport{};
+	viewport.x = 0.0f;
+	viewport.y = 0.0f;
+	viewport.width = static_cast<float>(swapchain.GetSwapChainExtent().width);
+	viewport.height = static_cast<float>(swapchain.GetSwapChainExtent().height);
+	viewport.minDepth = 0.0f;
+	viewport.maxDepth = 1.0f;
+	vkCmdSetViewport(cmd, 0, 1, &viewport);
+
+	VkRect2D scissor{};
+	scissor.offset = { 0,0 };
+	scissor.extent = swapchain.GetSwapChainExtent();
+	vkCmdSetScissor(cmd, 0, 1, &scissor);
+}
+
+void VulkanCommands::EndSwapchainRenderPass(VkCommandBuffer cmd)
+{
+	vkCmdEndRenderPass(cmd);
+}
+
+void VulkanCommands::SubmitSwapchain(VkCommandBuffer cmd)
+{
+	auto& window = Application::Get()->GetWindow();
+	auto& swapchain = window.GetSwapchain();
+	auto& imageIndex = window.GetImageIndex();
+	VkResult result = swapchain.Submit(&cmd, &imageIndex);
+	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || window.HasResized()) {
+		window.ResetResizeFlag();
+		swapchain.Recreate();
+	}
+	CHECKF((result != VK_SUCCESS), "failed to acquire swap chain image!");
+}
+
 void VulkanCommands::DrawVertex(VkCommandBuffer cmd, MEM::Ref<VulkanPipeline>& pipeline, MEM::Ref<VulkanBuffer> vertexBuffer, uint32_t vertexCount)
 {
 	pipeline->Bind(cmd);

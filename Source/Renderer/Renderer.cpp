@@ -5,9 +5,8 @@
 #include <assert.h>
 
 Renderer::Renderer()
-	: _Context(*Application::Get()->GetVulkanContext()), _Window(*Application::Get()->GetWindow())
+	: _Context(Application::Get()->GetVulkanContext())
 {
-	_Swapchain = MEM::MakeRef<VulkanSwapchain>();
 	CreateFrameContext();
 
 	_DescriptorPool = VulkanDescriptorPool::Builder()
@@ -24,7 +23,7 @@ Renderer::Renderer()
 
 	VulkanPipelineConfig config;
 	VulkanContext::DefaultPipelineConfigInfo(config);
-	config.RenderPass = _Swapchain->GetRenderPass();
+	config.RenderPass = Application::Get()->GetWindow().GetSwapchain().GetRenderPass();
 	PipelineLibrary::AddPipeline("MainPipeline", "Shaders/base.vert", "Shaders/base.frag", config);
 
 	//VkDeviceSize bufferSize = sizeof(UniformBufferObject);
@@ -43,16 +42,15 @@ Renderer::Renderer()
 
 Renderer::~Renderer()
 {
-	_Swapchain = nullptr;
 	DestroyFrameContext();
 }
 
 void Renderer::Submit(std::function<void(VkCommandBuffer& commandBuffer)> fn)
 {
 	VkCommandBuffer buffer = BeginRecordCommandBuffer();
-	BeginSwapchainRenderPass(buffer);
+	VulkanCommands::BeginSwapchainRenderPass(buffer);
 	fn(buffer);
-	EndSwapchainRenderPass(buffer);
+	VulkanCommands::EndSwapchainRenderPass(buffer);
 	EndRecordCommandBuffer();
 }
 
@@ -64,8 +62,7 @@ VkCommandBuffer Renderer::GetCurrentCommandBuffer() {
 VkCommandBuffer Renderer::BeginRecordCommandBuffer()
 {
 	assert(!_FrameStarted && "Cant call beginframe while still processing a frame");
-	VkResult result = _Swapchain->AcquireNextImage(&_ImageIndex);
-	CHECKF((result != VK_SUCCESS || result == VK_SUBOPTIMAL_KHR), "Failed to acquire next image");
+	Application::Get()->GetWindow().SwapBuffers();
 
 	_FrameStarted = true;
 
@@ -86,48 +83,9 @@ void Renderer::EndRecordCommandBuffer()
 	assert(_FrameStarted && "Cant submit a not recorded frame");
 	VkCommandBuffer cmd = GetCurrentCommandBuffer();
 	CHECKF((vkEndCommandBuffer(cmd) != VK_SUCCESS), "Failed to record commad buffer");
-	VkResult result = _Swapchain->Submit(&cmd, &_ImageIndex);
-	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || _Window.HasResized()) {
-		_Window.ResetResizeFlag();
-		_Swapchain->Recreate();
-	}
-	CHECKF((result != VK_SUCCESS), "failed to acquire swap chain image!");
+	VulkanCommands::SubmitSwapchain(cmd);
 	_FrameStarted = false;
 	_FrameIndex = (_FrameIndex + 1) % MAX_FRAMES_IN_FLIGHT;
-}
-
-void Renderer::BeginSwapchainRenderPass(VkCommandBuffer cmd)
-{
-	VkRenderPassBeginInfo renderPassInfo{};
-	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-	renderPassInfo.renderPass = _Swapchain->GetRenderPass();
-	renderPassInfo.framebuffer = _Swapchain->GetSwapchainFramebuffer(_ImageIndex);
-	renderPassInfo.renderArea.offset = { 0,0 };
-	renderPassInfo.renderArea.extent = _Swapchain->GetSwapChainExtent();
-
-	VkClearValue clearColor = {0.1f, 0.1f, 0.1f, 1.0f};
-	renderPassInfo.clearValueCount = 1;
-	renderPassInfo.pClearValues = &clearColor;
-	vkCmdBeginRenderPass(cmd, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-
-	VkViewport viewport{};
-	viewport.x = 0.0f;
-	viewport.y = 0.0f;
-	viewport.width = static_cast<float>(_Swapchain->GetSwapChainExtent().width);
-	viewport.height = static_cast<float>(_Swapchain->GetSwapChainExtent().height);
-	viewport.minDepth = 0.0f;
-	viewport.maxDepth = 1.0f;
-	vkCmdSetViewport(cmd, 0, 1, &viewport);
-
-	VkRect2D scissor{};
-	scissor.offset = { 0,0 };
-	scissor.extent = _Swapchain->GetSwapChainExtent();
-	vkCmdSetScissor(cmd, 0, 1, &scissor);
-}
-
-void Renderer::EndSwapchainRenderPass(VkCommandBuffer cmd)
-{
-	vkCmdEndRenderPass(cmd);
 }
 
 void Renderer::CreateFrameContext()

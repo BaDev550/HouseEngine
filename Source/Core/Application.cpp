@@ -16,6 +16,8 @@ Application::Application()
 	
 	_Window = MEM::MakeScope<Window>(config);
 	_VulkanContext = MEM::MakeScope<VulkanContext>();
+	_Window->CreateSwapchain();
+
 	_Renderer = MEM::MakeScope<Renderer>();
 }
 
@@ -23,7 +25,6 @@ Application::~Application()
 {
 	_Renderer = nullptr;
 	_Window = nullptr;
-
 	_VulkanContext = nullptr;
 }
 

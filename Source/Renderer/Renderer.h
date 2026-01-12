@@ -2,8 +2,9 @@
 #include "Vulkan/VulkanPipeline.h"
 #include "Vulkan/VulkanContext.h"
 #include "Vulkan/VulkanSwapchain.h"
+#include "PipelineLibrary.h"
+#include "Core/Memory.h"
 #include <functional>
-#include <memory>
 #include <array>
 
 struct FrameContext {
@@ -19,6 +20,13 @@ public:
 	Renderer(const Renderer&) = delete;
 	Renderer& operator=(Renderer&) = delete;
 	
+	std::vector<VkDescriptorSetLayout> GetSetLayouts() {
+		std::vector<VkDescriptorSetLayout> result(_DescriptorSetLayouts.size());
+		for (size_t i = 0; i < _DescriptorSetLayouts.size(); i++)
+			result[i] = _DescriptorSetLayouts[i]->GetDescriptorSetLayout();
+		return result;
+	}
+
 	void Submit(std::function<void(VkCommandBuffer& commandBuffer)> fn);
 	VkExtent2D GetSwapChainExtent() const { return _Swapchain->GetSwapChainExtent(); }
 	VkRenderPass GetSwapChainRenderPass() const { return _Swapchain->GetRenderPass(); }
@@ -34,7 +42,7 @@ private:
 	void DestroyFrameContext();
 	VkCommandBuffer GetCurrentCommandBuffer();
 
-	std::shared_ptr<VulkanSwapchain> _Swapchain;
+	MEM::Ref<VulkanSwapchain> _Swapchain;
 	std::array<FrameContext, MAX_FRAMES_IN_FLIGHT> _Frames;
 	
 	bool _FrameStarted = false;
@@ -43,5 +51,12 @@ private:
 
 	VulkanContext& _Context;
 	Window& _Window;
+
+	MEM::Scope<VulkanDescriptorPool> _DescriptorPool;
+	std::array<MEM::Scope<VulkanDescriptorSetLayout>, 2> _DescriptorSetLayouts;
+
+	MEM::Scope<VulkanBuffer> _UniformBuffer;
+	VkDescriptorSet _TextureDescriptorSet;
+	VkDescriptorSet _UniformDescriptorSet;
 };
 

@@ -2,6 +2,7 @@
 #include "VulkanPipeline.h"
 #include "ShaderCompiler.h"
 #include "Core/Application.h"
+#include "Renderer/Model.h"
 
 VulkanPipeline::VulkanPipeline(VulkanPipelineConfig& config, const std::string& vertexPath, const std::string& fragmentPath)
 	: _VulkanContext(*Application::Get()->GetVulkanContext())
@@ -23,19 +24,17 @@ VulkanPipeline::VulkanPipeline(VulkanPipelineConfig& config, const std::string& 
 	fragShaderStageInfo.module = _FragmentShaderModule;
 	fragShaderStageInfo.pName = "main";
 	
-	auto setLayouts = Application::Get()->GetSetLayouts();
+	//auto setLayouts = Application::Get()->GetSetLayouts();
 
 	VkPipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageInfo, fragShaderStageInfo };
 	VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 	pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-	pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(setLayouts.size());
-	pipelineLayoutInfo.pSetLayouts = setLayouts.data();
+	//pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(setLayouts.size());
+	//pipelineLayoutInfo.pSetLayouts = setLayouts.data(); TODO - Make a static class such as scene renderer to access these
 	pipelineLayoutInfo.pushConstantRangeCount = 0;
 	pipelineLayoutInfo.pPushConstantRanges = nullptr;
 	
-	if (vkCreatePipelineLayout(_VulkanContext.GetDevice(), &pipelineLayoutInfo, nullptr, &_PipelineLayout) != VK_SUCCESS)
-		throw std::runtime_error("failed to create pipeline layout!");
-
+	CHECKF(vkCreatePipelineLayout(_VulkanContext.GetDevice(), &pipelineLayoutInfo, nullptr, &_PipelineLayout) != VK_SUCCESS, "failed to create pipeline layout!");
 	auto bindingDescription = Vertex::GetBindingDescription();
 	auto attributeDescriptons = Vertex::GetAttributeDescriptions();
 
@@ -61,8 +60,7 @@ VulkanPipeline::VulkanPipeline(VulkanPipelineConfig& config, const std::string& 
 	createInfo.layout =				 _PipelineLayout;
 	createInfo.renderPass =			 config.RenderPass;
 	createInfo.subpass = 0;
-	if (vkCreateGraphicsPipelines(_VulkanContext.GetDevice(), VK_NULL_HANDLE, 1, &createInfo, nullptr, &_VulkanPipeline) != VK_SUCCESS)
-		throw std::runtime_error("Failed to create pipeline");
+	CHECKF(vkCreateGraphicsPipelines(_VulkanContext.GetDevice(), VK_NULL_HANDLE, 1, &createInfo, nullptr, &_VulkanPipeline) != VK_SUCCESS, "Failed to create pipeline");
 }
 
 VulkanPipeline::~VulkanPipeline()
@@ -84,6 +82,5 @@ void VulkanPipeline::CreateShaderModule(const std::vector<char>& code, VkShaderM
 	createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
 	createInfo.codeSize = code.size();
 	createInfo.pCode = reinterpret_cast<const uint32_t*>(code.data());
-	if (vkCreateShaderModule(_VulkanContext.GetDevice(), &createInfo, nullptr, shaderModule) != VK_SUCCESS)
-		throw std::runtime_error("failed to create shader module!");
+	CHECKF(vkCreateShaderModule(_VulkanContext.GetDevice(), &createInfo, nullptr, shaderModule) != VK_SUCCESS, "failed to create shader module!");
 }

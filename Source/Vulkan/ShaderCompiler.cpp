@@ -22,7 +22,7 @@ namespace {
 
     std::string ReadFileToString(const std::filesystem::path& path) {
         std::ifstream in(path, std::ios::binary);
-        if (!in) throw std::runtime_error("Failed to open shader file: " + path.string());
+        CHECKF(!in, "Failed to open shader file: " + path.string());
         std::ostringstream ss;
         ss << in.rdbuf();
         return ss.str();
@@ -33,7 +33,7 @@ namespace pipeline::utils {
     std::vector<char> CompileShaderFileToSpirv(const std::filesystem::path& path, bool optimize) {
         if (path.extension() == ".spv") {
             std::ifstream in(path, std::ios::binary);
-            if (!in) throw std::runtime_error("Failed to open .spv file: " + path.string());
+            CHECKF(!in, "Failed to open .spv file: " + path.string());
             std::vector<char> data((std::istreambuf_iterator<char>(in)),
                 std::istreambuf_iterator<char>());
             return data;
@@ -41,9 +41,7 @@ namespace pipeline::utils {
 
         const std::string source = ReadFileToString(path);
         shaderc::Compiler compiler;
-        if (!compiler.IsValid()) {
-            throw std::runtime_error("shaderc::Compiler failed to initialize");
-        }
+        CHECKF(!compiler.IsValid(), "shaderc::Compiler failed to initialize");
         shaderc_shader_kind kind = InferShaderKind(path);
         shaderc::CompileOptions options;
 
@@ -60,7 +58,7 @@ namespace pipeline::utils {
         const auto status = result.GetCompilationStatus();
         if (status != shaderc_compilation_status_success) {
             std::string err = result.GetErrorMessage();
-            throw std::runtime_error("Shader compile error (" + path.string() + "): " + err);
+            CHECKF(false, "Shader compile error (" + path.string() + "): " + err)
         }
 
         const uint32_t* begin = result.cbegin();

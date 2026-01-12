@@ -7,3 +7,5 @@
 #include <iostream>
 
 #include "Core/Application.h"
+#include "Core/Memory.h"
+#include "Core/Defines.h"

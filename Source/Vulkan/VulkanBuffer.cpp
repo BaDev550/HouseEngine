@@ -26,8 +26,7 @@ VulkanBuffer::~VulkanBuffer()
 
 VkResult VulkanBuffer::Map(VkDeviceSize size, VkDeviceSize offset)
 {
-    if (!_Buffer && !_BufferMemory)
-        throw std::runtime_error("Called 'MAP BUFFER' before buffer created");
+    CHECKF((!_Buffer && !_BufferMemory), "Called 'MAP BUFFER' before buffer created");
     return vkMapMemory(_Context.GetDevice(), _BufferMemory, offset, size, 0, &_Data);
 }
 
@@ -41,8 +40,7 @@ void VulkanBuffer::Unmap()
 
 void VulkanBuffer::WriteToBuffer(void* data, VkDeviceSize size, VkDeviceSize offset)
 {
-    if (!_Data)
-        throw std::runtime_error("Cannot copy to unmapped buffer");
+    CHECKF(!_Data, "Cannot copy to unmapped buffer");
     if (size == VK_WHOLE_SIZE) {
         memcpy(_Data, data, _BufferSize);
     }

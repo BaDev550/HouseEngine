@@ -30,8 +30,7 @@ VulkanDescriptorSetLayout::VulkanDescriptorSetLayout(std::unordered_map<uint32_t
     descriptorSetLayoutInfo.bindingCount = static_cast<uint32_t>(setLayoutBindings.size());
     descriptorSetLayoutInfo.pBindings = setLayoutBindings.data();
 
-    if (vkCreateDescriptorSetLayout(_Context.GetDevice(), &descriptorSetLayoutInfo, nullptr, &_DescriptorSetLayout) != VK_SUCCESS)
-        throw std::runtime_error("Failed to create descriptor set layout");
+    CHECKF(vkCreateDescriptorSetLayout(_Context.GetDevice(), &descriptorSetLayoutInfo, nullptr, &_DescriptorSetLayout) != VK_SUCCESS, "Failed to create descriptor set layout");
 }
 
 VulkanDescriptorSetLayout::~VulkanDescriptorSetLayout()
@@ -66,8 +65,7 @@ VulkanDescriptorPool::VulkanDescriptorPool(uint32_t maxSets, VkDescriptorPoolCre
     descriptorPoolInfo.pPoolSizes = poolSizes.data();
     descriptorPoolInfo.maxSets = maxSets;
     descriptorPoolInfo.flags = poolFlags;
-    if (vkCreateDescriptorPool(_Context.GetDevice(), &descriptorPoolInfo, nullptr, &_DescriptorPool) != VK_SUCCESS)
-        throw std::runtime_error("Failed to create descriptor pool");
+    CHECKF(vkCreateDescriptorPool(_Context.GetDevice(), &descriptorPoolInfo, nullptr, &_DescriptorPool) != VK_SUCCESS, "Failed to create descriptor pool");
 }
 
 VulkanDescriptorPool::~VulkanDescriptorPool()

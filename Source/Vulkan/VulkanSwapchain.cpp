@@ -104,8 +104,7 @@ void VulkanSwapchain::CreateSwapChain() {
 
 	createInfo.oldSwapchain = VK_NULL_HANDLE;
 
-	if (vkCreateSwapchainKHR(_Context.GetDevice(), &createInfo, nullptr, &_SwapChain) != VK_SUCCESS)
-		throw std::runtime_error("Failed to create swap chain!");
+	CHECKF(vkCreateSwapchainKHR(_Context.GetDevice(), &createInfo, nullptr, &_SwapChain) != VK_SUCCESS, "Failed to create swap chain!");
 
 	vkGetSwapchainImagesKHR(_Context.GetDevice(), _SwapChain, &imageCount, nullptr);
 	_SwapChainImages.resize(imageCount);
@@ -132,8 +131,7 @@ void VulkanSwapchain::CreateImageViews(){
 		createInfo.subresourceRange.levelCount = 1;
 		createInfo.subresourceRange.baseArrayLayer = 0;
 		createInfo.subresourceRange.layerCount = 1;
-		if (vkCreateImageView(_Context.GetDevice(), &createInfo, nullptr, &_SwapChainImageViews[i]) != VK_SUCCESS)
-			throw std::runtime_error("Failed to create image views!");
+		CHECKF(vkCreateImageView(_Context.GetDevice(), &createInfo, nullptr, &_SwapChainImageViews[i]) != VK_SUCCESS, "Failed to create image views!");
 	}
 }
 
@@ -164,8 +162,7 @@ void VulkanSwapchain::CreateRenderPass(){
 	createInfo.subpassCount = 1;
 	createInfo.pSubpasses = &subpass;
 
-	if (vkCreateRenderPass(_Context.GetDevice(), &createInfo, nullptr, &_RenderPass) != VK_SUCCESS)
-		throw std::runtime_error("Failed to create render pass");
+	CHECKF(vkCreateRenderPass(_Context.GetDevice(), &createInfo, nullptr, &_RenderPass) != VK_SUCCESS, "Failed to create render pass");
 }
 
 void VulkanSwapchain::CreateFramebuffers(){
@@ -181,8 +178,7 @@ void VulkanSwapchain::CreateFramebuffers(){
 		framebufferCreateInfo.height = _SwapChainExtent.height;
 		framebufferCreateInfo.layers = 1;
 
-		if (vkCreateFramebuffer(_Context.GetDevice(), &framebufferCreateInfo, nullptr, &_SwapChainFramebuffers[i]) != VK_SUCCESS)
-			throw std::runtime_error("Failed to create swapchain framebuffers");
+		CHECKF(vkCreateFramebuffer(_Context.GetDevice(), &framebufferCreateInfo, nullptr, &_SwapChainFramebuffers[i]) != VK_SUCCESS, "Failed to create swapchain framebuffers");
 	}
 }
 
@@ -199,15 +195,13 @@ void VulkanSwapchain::CreateSyncObjects() {
 	fenceCreateInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-		if (vkCreateSemaphore(_Context.GetDevice(), &semaphoreCreateInfo, nullptr, &_ImageAvailableSemaphores[i]) != VK_SUCCESS
-			|| vkCreateFence(_Context.GetDevice(), &fenceCreateInfo, nullptr, &_InFlightFences[i]) != VK_SUCCESS) {
-			throw std::runtime_error("Failed to create syncned objects");
-		}
+		CHECKF(vkCreateSemaphore(_Context.GetDevice(), &semaphoreCreateInfo, nullptr, &_ImageAvailableSemaphores[i]) != VK_SUCCESS
+			|| vkCreateFence(_Context.GetDevice(), &fenceCreateInfo, nullptr, &_InFlightFences[i]) != VK_SUCCESS,
+			"Failed to create syncned objects");
 	}
 
 	for (size_t i = 0; i < GetImageCount(); i++) {
-		if (vkCreateSemaphore(_Context.GetDevice(), &semaphoreCreateInfo, nullptr, &_RenderFinishedSemaphores[i]) != VK_SUCCESS)
-			throw std::runtime_error("Failed to create syncned objects");
+		CHECKF(vkCreateSemaphore(_Context.GetDevice(), &semaphoreCreateInfo, nullptr, &_RenderFinishedSemaphores[i]) != VK_SUCCESS, "Failed to create syncned objects");
 	}
 }
 
@@ -252,8 +246,7 @@ VkResult VulkanSwapchain::Submit(VkCommandBuffer* cmd, uint32_t* imageIndex)
 	submitInfo.pSignalSemaphores = signalSemaphores;
 
 	vkResetFences(_Context.GetDevice(), 1, &_InFlightFences[_FrameIndex]);
-	if (vkQueueSubmit(_Context.GetGraphicsQueue(), 1, &submitInfo, _InFlightFences[_FrameIndex]) != VK_SUCCESS)
-		throw std::runtime_error("Failed to swap buffers");
+	CHECKF(vkQueueSubmit(_Context.GetGraphicsQueue(), 1, &submitInfo, _InFlightFences[_FrameIndex]) != VK_SUCCESS, "Failed to swap buffers");
 
 	VkPresentInfoKHR presentInfo{};
 	presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;

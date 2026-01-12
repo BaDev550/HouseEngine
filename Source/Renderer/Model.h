@@ -4,6 +4,8 @@
 #include <assimp/scene.h>
 #include <assimp/types.h>
 #include <glm/glm.hpp>
+#include <array>
+#include <Vulkan/vulkan.h>
 
 #include "Vulkan/VulkanBuffer.h"
 #include "Material.h"

@@ -26,19 +26,10 @@ Window::~Window()
 	glfwTerminate();
 }
 
-void Window::CreateSwapchain()
-{
-	_Swapchain = MEM::MakeRef<VulkanSwapchain>();
-}
-
+void Window::CreateSwapchain(VulkanContext* context) { _Swapchain = MEM::MakeRef<VulkanSwapchain>(context); }
 bool Window::ShouldClose() const { return glfwWindowShouldClose(_Handle); }
 bool Window::HasResized() const { return _Config.Resized; }
-
-void Window::ResetResizeFlag()
-{
-	_Config.Resized = false;
-}
-
+void Window::ResetResizeFlag() { _Config.Resized = false; }
 bool Window::SwapBuffers()
 {
 	VkResult result = _Swapchain->AcquireNextImage(&_ImageIndex);

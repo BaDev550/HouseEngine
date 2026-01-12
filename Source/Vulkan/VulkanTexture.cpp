@@ -5,7 +5,7 @@
 #include <stb_image.h>
 
 VulkanTexture::VulkanTexture(const std::string& path)
-	: _Context(*Application::Get()->GetVulkanContext())
+	: _Context(Application::Get()->GetVulkanContext())
 {
 	int width, height, channels;
 	stbi_uc* pixels = stbi_load(path.c_str(), &width, &height, &channels, STBI_rgb_alpha);

@@ -18,7 +18,7 @@ std::unique_ptr<VulkanDescriptorSetLayout> VulkanDescriptorSetLayout::Builder::B
 std::unique_ptr<VulkanDescriptorPool> VulkanDescriptorPool::Builder::Build() const { return std::make_unique<VulkanDescriptorPool>(_MaxSets, _PoolFlags, _PoolSizes); }
 
 VulkanDescriptorSetLayout::VulkanDescriptorSetLayout(std::unordered_map<uint32_t, VkDescriptorSetLayoutBinding> bindings)
-    : _Context(*Application::Get()->GetVulkanContext()), _Bindings(bindings)
+    : _Context(Application::Get()->GetVulkanContext()), _Bindings(bindings)
 {
     std::vector<VkDescriptorSetLayoutBinding> setLayoutBindings{};
     for (auto kv : _Bindings) {
@@ -57,7 +57,7 @@ VulkanDescriptorPool::Builder& VulkanDescriptorPool::Builder::SetMaxSets(uint32_
 }
 
 VulkanDescriptorPool::VulkanDescriptorPool(uint32_t maxSets, VkDescriptorPoolCreateFlags poolFlags, const std::vector<VkDescriptorPoolSize>& poolSizes)
-    : _Context(*Application::Get()->GetVulkanContext())
+    : _Context(Application::Get()->GetVulkanContext())
 {
     VkDescriptorPoolCreateInfo descriptorPoolInfo{};
     descriptorPoolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;

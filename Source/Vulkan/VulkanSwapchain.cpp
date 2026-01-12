@@ -32,7 +32,10 @@ VkExtent2D VulkanSwapchain::ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& cap
 	}
 	else {
 		int width, height;
-		glfwGetFramebufferSize(_Window.GetHandle(), &width, &height);
+		auto& window = Application::Get()->GetWindow();
+		width = window.GetWidth();
+		height = window.GetHeight();
+
 		VkExtent2D actualExtent = {
 			static_cast<uint32_t>(width),
 			static_cast<uint32_t>(height)
@@ -43,8 +46,8 @@ VkExtent2D VulkanSwapchain::ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& cap
 	}
 }
 
-VulkanSwapchain::VulkanSwapchain()
-	: _Context(*Application::Get()->GetVulkanContext()), _Window(*Application::Get()->GetWindow())
+VulkanSwapchain::VulkanSwapchain(VulkanContext* context)
+	: _Context(*context)
 {
 	try {
 		CreateSwapChain();
@@ -217,9 +220,12 @@ void VulkanSwapchain::DestroySwapchain() {
 void VulkanSwapchain::Recreate()
 {
 	int width = 0, height = 0;
-	glfwGetFramebufferSize(_Window.GetHandle(), &width, &height);
+	auto& window = Application::Get()->GetWindow();
+	width = window.GetWidth();
+	height = window.GetHeight();
 	while (width == 0 || height == 0) {
-		glfwGetFramebufferSize(_Window.GetHandle(), &width, &height);
+		width = window.GetWidth();
+		height = window.GetHeight();
 		glfwWaitEvents();
 	}
 

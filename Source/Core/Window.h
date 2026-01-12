@@ -6,6 +6,7 @@
 #include <string>
 
 #include "Vulkan/VulkanSwapchain.h"
+#include "Vulkan/VulkanContext.h"
 #include "Core/Memory.h"
 
 struct WindowConfig {
@@ -25,12 +26,14 @@ public:
 	uint32_t& GetImageIndex() { return _ImageIndex; }
 	GLFWwindow* GetHandle() const { return _Handle; }
 	VulkanSwapchain& GetSwapchain() { return *_Swapchain; }
-	void CreateSwapchain();
+	void CreateSwapchain(VulkanContext* context);
 	bool ShouldClose() const;
 	bool HasResized() const;
 	void ResetResizeFlag();
 	void PollEvents() const { glfwPollEvents(); }
 	bool SwapBuffers();
+	int GetWidth() const { return _Config.Width; }
+	int GetHeight() const { return _Config.Height; }
 private:
 	static void FramebufferResizeCallback(GLFWwindow* window, int width, int height);
 	GLFWwindow* _Handle;

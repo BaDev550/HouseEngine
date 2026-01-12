@@ -5,7 +5,7 @@
 #include "Renderer/Model.h"
 
 VulkanPipeline::VulkanPipeline(VulkanPipelineConfig& config, const std::string& vertexPath, const std::string& fragmentPath)
-	: _VulkanContext(*Application::Get()->GetVulkanContext())
+	: _VulkanContext(Application::Get()->GetVulkanContext())
 {
 	std::vector<char> vertShaderCode = pipeline::utils::CompileShaderFileToSpirv(vertexPath);
 	std::vector<char> fragShaderCode = pipeline::utils::CompileShaderFileToSpirv(fragmentPath);

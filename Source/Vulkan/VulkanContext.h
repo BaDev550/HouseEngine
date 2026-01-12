@@ -1,5 +1,4 @@
 #pragma once
-#include "Core/Window.h"
 #include <vector>
 #include <optional>
 #include <vulkan/vulkan.h>
@@ -37,6 +36,7 @@ struct VulkanPipelineConfig {
 
 constexpr int MAX_FRAMES_IN_FLIGHT = 2;
 
+class Window;
 class VulkanContext
 {
 public:

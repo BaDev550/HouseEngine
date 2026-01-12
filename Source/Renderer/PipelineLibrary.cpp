@@ -4,8 +4,6 @@
 #include <iostream>
 #include <assert.h>
 
-std::unordered_map<std::string, MEM::Ref<VulkanPipeline>> PipelineLibrary::_Pipelines;
-
 MEM::Ref<VulkanPipeline>& PipelineLibrary::AddPipeline(const std::string& name, const std::string& vertexPath, const std::string& fragPath, VulkanPipelineConfig& pipelineConfig)
 {
 	_Pipelines[name] = MEM::MakeRef<VulkanPipeline>(pipelineConfig, vertexPath, fragPath);

@@ -6,7 +6,7 @@ class VulkanSwapchain
 public:
 	size_t GetImageCount() const { return _SwapChainImages.size(); }
 
-	VulkanSwapchain();
+	VulkanSwapchain(VulkanContext* context);
 	~VulkanSwapchain();
 	VulkanSwapchain(const VulkanSwapchain&) = delete;
 	VulkanSwapchain& operator=(VulkanSwapchain&) = delete;
@@ -44,6 +44,5 @@ private:
 	std::vector<VkFence> _InFlightFences;
 
 	VulkanContext& _Context;
-	Window& _Window;
 };
 

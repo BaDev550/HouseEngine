@@ -3,7 +3,7 @@
 #include "Core/Application.h"
 
 Mesh::Mesh(const std::string& name, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, const uint32_t materialID)
-	: _Name(name), _MaterialId(materialID), _Context(*Application::Get()->GetVulkanContext())
+	: _Name(name), _MaterialId(materialID), _Context(Application::Get()->GetVulkanContext())
 {
 	CreateVertexBuffer(vertices);
 	CreateIndexBuffer(indices);

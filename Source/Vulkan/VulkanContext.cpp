@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <set>
 #include "Core/Application.h"
+#include "Core/Window.h"
 
 static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(
 	VkDebugUtilsMessageSeverityFlagBitsEXT       messageSeverity,
@@ -107,7 +108,7 @@ void VulkanContext::DefaultPipelineConfigInfo(VulkanPipelineConfig& config)
 }
 
 VulkanContext::VulkanContext()
-	: _Window(*Application::Get()->GetWindow())
+	: _Window(Application::Get()->GetWindow())
 {
 	try {
 		CreateInstance();
@@ -116,6 +117,7 @@ VulkanContext::VulkanContext()
 		PickPhysicalDevice();
 		CreateLogicalDevice();
 		CreateContextCommandPool();
+		_Window.CreateSwapchain(this);
 	} 
 	catch (const std::exception& e) {
 		std::cout << "VulkanContext initialization failed: " << e.what() << std::endl;

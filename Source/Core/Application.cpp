@@ -16,14 +16,12 @@ Application::Application()
 	
 	_Window = MEM::MakeScope<Window>(config);
 	_VulkanContext = MEM::MakeScope<VulkanContext>();
-	_Window->CreateSwapchain();
-
-	_Renderer = MEM::MakeScope<Renderer>();
+	Renderer::Init();
 }
 
 Application::~Application()
 {
-	_Renderer = nullptr;
+	Renderer::Destroy();
 	_Window = nullptr;
 	_VulkanContext = nullptr;
 }

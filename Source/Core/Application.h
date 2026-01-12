@@ -32,13 +32,11 @@ public:
 	void Run();
 public:
 	Window& GetWindow() { return *_Window; }
-	Renderer& GetRenderer() { return *_Renderer; }
 	VulkanContext& GetVulkanContext() { return *_VulkanContext; }
 private:
 	static Application* _Instance;
 
 	MEM::Scope<Window> _Window;
-	MEM::Scope<Renderer> _Renderer;
 	MEM::Scope<VulkanContext> _VulkanContext;
 
 	float _DeltaTime;

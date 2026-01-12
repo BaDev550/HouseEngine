@@ -10,7 +10,7 @@ VkDeviceSize VulkanBuffer::GetAlignment(VkDeviceSize instanceSize, VkDeviceSize 
 }
 
 VulkanBuffer::VulkanBuffer(VkDeviceSize instanceSize, uint32_t instanceCount, VkBufferUsageFlags usageFlags, VkMemoryPropertyFlags mempropFlags, VkDeviceSize minOffsetAlignment)
-    : _InstanceSize(instanceSize), _InstanceCount(instanceCount), _UsageFlags(usageFlags), _MemoryPropertyFlags(mempropFlags), _Context(*Application::Get()->GetVulkanContext())
+    : _InstanceSize(instanceSize), _InstanceCount(instanceCount), _UsageFlags(usageFlags), _MemoryPropertyFlags(mempropFlags), _Context(Application::Get()->GetVulkanContext())
 {
     _AligmentSize = GetAlignment(instanceSize, minOffsetAlignment);
     _BufferSize = _AligmentSize * instanceCount;

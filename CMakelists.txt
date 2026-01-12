@@ -70,3 +70,13 @@ target_precompile_headers(Engine
 )
 
 set_target_properties(Engine PROPERTIES FOLDER "Engine")
+add_custom_command(
+    TARGET Engine
+    POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+            ${CMAKE_CURRENT_SOURCE_DIR}/Shaders
+            ${CMAKE_BINARY_DIR}/Shaders
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+            ${CMAKE_CURRENT_SOURCE_DIR}/Resources
+            ${CMAKE_BINARY_DIR}/Resources
+)

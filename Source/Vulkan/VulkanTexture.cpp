@@ -35,6 +35,9 @@ VulkanTexture::VulkanTexture(const std::string& path)
 		CreateTextureImageView();
 		CreateTextureSampler();
 	}
+	else {
+		throw std::runtime_error("Failed to load texture");
+	}
 }
 
 VulkanTexture::~VulkanTexture()

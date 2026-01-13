@@ -5,6 +5,7 @@
 #include <assimp/types.h>
 #include <glm/glm.hpp>
 #include <array>
+#include <filesystem>
 #include <Vulkan/vulkan.h>
 
 #include "Vulkan/VulkanBuffer.h"
@@ -72,9 +73,11 @@ public:
 		std::vector<uint32_t>& indices,
 		const uint32_t materialID);
 	~Mesh() = default;
-	void Bind(VkCommandBuffer cmd);
 	const std::string& GetName() const { return _Name; }
 	const uint32_t GetMaterialID() const { return _MaterialId; }
+	const uint32_t GetIndexCount() const { return _IndexCount; }
+	const MEM::Ref<VulkanBuffer>& GetVertexBuffer() const { return _VertexBuffer; }
+	const MEM::Ref<VulkanBuffer>& GetIndexBuffer() const { return _IndexBuffer; }
 private:
 	std::string _Name = "EMPTY_MESH";
 	MEM::Ref<VulkanBuffer> _VertexBuffer;
@@ -90,20 +93,24 @@ private:
 
 	void CreateVertexBuffer(std::vector<Vertex>& vertices);
 	void CreateIndexBuffer(std::vector<uint32_t>& indices);
+
+	friend class Model;
 };
 
 class Model {
 public:
-	Model(const std::string& path) { LoadModelFromFile(path); }
+	Model(const std::filesystem::path& path) { LoadModelFromFile(path); }
 
+	MEM::Ref<Material>& GetMaterialByID(uint32_t id) { return _Materials[id]; }
 	std::vector<Mesh>& GetMeshes() { return _Meshes; }
-	std::unordered_map<uint32_t, Material>& GetMaterials() { return _Materials; }
+	std::vector<MEM::Ref<Material>>& GetMaterials() { return _Materials; }
 private:
-	void LoadModelFromFile(const std::string& path);
-	void ProcessNode(aiNode* node);
+	void LoadModelFromFile(const std::filesystem::path& path);
+	void ProcessNode(aiNode* node, const aiScene* scene);
 	void ProcessMaterials(const aiScene* scene);
+	Mesh ProcessMesh(aiMesh* mesh, const aiScene* scene);
 
-	std::string _ModelDirectory = "EMPTY_MODEL_DIRECTORY";
+	std::filesystem::path _ModelDirectory = "EMPTY_MODEL_DIRECTORY";
 	std::vector<Mesh> _Meshes;
-	std::unordered_map<uint32_t, Material> _Materials;
+	std::vector<MEM::Ref<Material>> _Materials;
 };

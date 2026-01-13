@@ -2,7 +2,9 @@
 #include "Vulkan/VulkanPipeline.h"
 #include "Vulkan/VulkanCommands.h"
 #include "Vulkan/VulkanDescriptor.h"
+#include "World/Object.h"
 #include "Core/Memory.h"
+#include "Camera.h"
 #include <array>
 
 class SceneRenderer
@@ -10,6 +12,8 @@ class SceneRenderer
 public:
 	SceneRenderer();
 	~SceneRenderer();
+
+	void DrawScene(std::vector<MEM::Ref<Object>>& objects, MEM::Ref<Camera>& cam);
 private:
 	struct CameraUniformData {
 		glm::mat4 View;

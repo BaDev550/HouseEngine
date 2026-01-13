@@ -19,11 +19,37 @@ SceneRenderer::SceneRenderer()
 	}
 
 	VkDescriptorBufferInfo cameraBufferInfo = _CameraUB->DescriptorInfo();
-	VulkanDescriptorWriter(*Renderer::GetVulkanDescriptorSetLayout(0), *Renderer::GetDescriptorPool())
+	VulkanDescriptorWriter(*Renderer::GetGlobalDescriptorLayout(), *Renderer::GetDescriptorPool())
 		.WriteBuffer(0, &cameraBufferInfo)
 		.Build(_CameraDS);
 }
 
 SceneRenderer::~SceneRenderer()
 {
+}
+
+void SceneRenderer::DrawScene(std::vector<MEM::Ref<Object>>& objects, MEM::Ref<Camera>& cam)
+{
+	VkCommandBuffer cmd = Renderer::BeginFrame();
+	VulkanCommands::BeginSwapchainRenderPass(cmd);
+
+	_CameraUD.View = cam->GetView();
+	_CameraUD.Proj = cam->GetProjection();
+	_CameraUB->WriteToBuffer(&_CameraUD);
+	vkCmdBindDescriptorSets(
+		cmd,
+		VK_PIPELINE_BIND_POINT_GRAPHICS,
+		Renderer::GetPipelineLayout(),
+		0, 1,
+		&_CameraDS,
+		0,
+		nullptr
+	);
+
+	for (auto& object : objects) {
+		Renderer::RenderMesh(cmd, Renderer::GetPipelineLibrary()->GetPipeline("MainPipeline"), object->_Model, object->_transform.Mat4());
+	}
+
+	VulkanCommands::EndSwapchainRenderPass(cmd);
+	Renderer::EndFrame();
 }

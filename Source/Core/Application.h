@@ -32,6 +32,9 @@ private:
 	MEM::Scope<Window> _Window;
 	MEM::Scope<VulkanContext> _VulkanContext;
 	MEM::Scope<SceneRenderer> _SceneRenderer; // Move to world class;
+	std::vector<MEM::Ref<Object>> _Objects; // Move to world class
 
+	MEM::Ref<Camera> _Camera;
+	MEM::Ref<Object> _CameraObject;
 	float _DeltaTime;
 };

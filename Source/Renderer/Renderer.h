@@ -3,6 +3,7 @@
 #include "Vulkan/VulkanContext.h"
 #include "Vulkan/VulkanSwapchain.h"
 #include "Vulkan/VulkanCommands.h"
+#include "DescriptorAllocator.h"
 #include "PipelineLibrary.h"
 #include "Core/Memory.h"
 #include <functional>
@@ -13,23 +14,23 @@ class Renderer
 public:
 	static void Init();
 	static void Destroy();
-	static void BeginFrame();
+
+	static VkCommandBuffer BeginFrame();
 	static void EndFrame();
 
+	static void RenderMesh(VkCommandBuffer cmd, MEM::Ref<VulkanPipeline>& pipeline, MEM::Ref<Model>& model, const glm::mat4& transform);
+
+	static uint32_t GetDrawCall();
 	static uint32_t GetFrameIndex();
 	static MEM::Ref<PipelineLibrary>& GetPipelineLibrary();
-	static MEM::Scope<VulkanDescriptorPool>& GetDescriptorPool();
-	static std::vector<VkDescriptorSetLayout>& GetDescriptorSetLayouts();
-	static MEM::Scope<VulkanDescriptorSetLayout>& GetVulkanDescriptorSetLayout(int index);
-private:
-	//VkCommandBuffer BeginRecordCommandBuffer();
-	//void EndRecordCommandBuffer();
-
-	//MEM::Scope<VulkanDescriptorPool> _DescriptorPool;
-	//std::array<MEM::Scope<VulkanDescriptorSetLayout>, 2> _DescriptorSetLayouts;
-
-	//MEM::Scope<VulkanBuffer> _UniformBuffer;
-	//VkDescriptorSet _TextureDescriptorSet;
-	//VkDescriptorSet _UniformDescriptorSet; TODO - Move to scene renderer
+	static MEM::Ref<DescriptorAllocator>& GetDescriptorAllocator();
+public:
+	static VkCommandBuffer GetCurrentCommandBuffer();
+	static VkDescriptorSet AllocateMaterialSet();
+	static VkPipelineLayout GetPipelineLayout();
+	static MEM::Ref<VulkanTexture>& GetWhiteTexture();
+	static MEM::Ref<VulkanDescriptorPool>& GetDescriptorPool();
+	static MEM::Ref<VulkanDescriptorSetLayout>& GetMaterialDescriptorLayout();
+	static MEM::Ref<VulkanDescriptorSetLayout>& GetGlobalDescriptorLayout();
 };
 

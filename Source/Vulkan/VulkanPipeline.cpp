@@ -24,17 +24,8 @@ VulkanPipeline::VulkanPipeline(VulkanPipelineConfig& config, const std::string& 
 	fragShaderStageInfo.module = _FragmentShaderModule;
 	fragShaderStageInfo.pName = "main";
 	
-	auto& setLayouts = Renderer::GetDescriptorSetLayouts();
-
 	VkPipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageInfo, fragShaderStageInfo };
-	VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
-	pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-	pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(setLayouts.size());
-	pipelineLayoutInfo.pSetLayouts = setLayouts.data();
-	pipelineLayoutInfo.pushConstantRangeCount = 0;
-	pipelineLayoutInfo.pPushConstantRanges = nullptr;
-	
-	CHECKF(vkCreatePipelineLayout(_VulkanContext.GetDevice(), &pipelineLayoutInfo, nullptr, &_PipelineLayout) != VK_SUCCESS, "failed to create pipeline layout!");
+
 	auto bindingDescription = Vertex::GetBindingDescription();
 	auto attributeDescriptons = Vertex::GetAttributeDescriptions();
 
@@ -57,7 +48,7 @@ VulkanPipeline::VulkanPipeline(VulkanPipelineConfig& config, const std::string& 
 	createInfo.pDepthStencilState =  nullptr;
 	createInfo.pColorBlendState =	 &config.ColorBlendStateCreateInfo;
 	createInfo.pDynamicState =		 &config.DynamicStateCreateInfo;
-	createInfo.layout =				 _PipelineLayout;
+	createInfo.layout =				 config.PipelineLayout;
 	createInfo.renderPass =			 config.RenderPass;
 	createInfo.subpass = 0;
 	CHECKF(vkCreateGraphicsPipelines(_VulkanContext.GetDevice(), VK_NULL_HANDLE, 1, &createInfo, nullptr, &_VulkanPipeline) != VK_SUCCESS, "Failed to create pipeline");
@@ -65,7 +56,6 @@ VulkanPipeline::VulkanPipeline(VulkanPipelineConfig& config, const std::string& 
 
 VulkanPipeline::~VulkanPipeline()
 {
-	vkDestroyPipelineLayout(_VulkanContext.GetDevice(), _PipelineLayout, nullptr);
 	vkDestroyShaderModule(_VulkanContext.GetDevice(), _FragmentShaderModule, nullptr);
 	vkDestroyShaderModule(_VulkanContext.GetDevice(), _VertexShaderModule, nullptr);
 	vkDestroyPipeline(_VulkanContext.GetDevice(), _VulkanPipeline, nullptr);

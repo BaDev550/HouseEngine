@@ -9,7 +9,6 @@ public:
 	static void BeginSwapchainRenderPass(VkCommandBuffer cmd);
 	static void EndSwapchainRenderPass(VkCommandBuffer cmd);
 	static void SubmitSwapchain(VkCommandBuffer cmd);
-	static void DrawVertex(VkCommandBuffer cmd, MEM::Ref<VulkanPipeline>& pipeline, MEM::Ref<VulkanBuffer> vertexBuffer, uint32_t vertexCount);
-	static void DrawIndexed(VkCommandBuffer cmd, MEM::Ref<VulkanPipeline>& pipeline, MEM::Ref<VulkanBuffer> indexBuffer, uint32_t indicesCount);
-	static void DrawModelWithMaterial(VkCommandBuffer cmd, MEM::Ref<Model>& model);
+	static void DrawVertex(VkCommandBuffer cmd, MEM::Ref<VulkanPipeline>& pipeline, const MEM::Ref<VulkanBuffer>& vertexBuffer, uint32_t vertexCount);
+	static void DrawIndexed(VkCommandBuffer cmd, MEM::Ref<VulkanPipeline>& pipeline, const MEM::Ref<VulkanBuffer>& vertexBuffer, const MEM::Ref<VulkanBuffer>& indexBuffer, uint32_t indicesCount);
 };

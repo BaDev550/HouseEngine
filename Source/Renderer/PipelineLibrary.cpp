@@ -16,4 +16,4 @@ void PipelineLibrary::RemovePipeline(const std::string& name)
 	_Pipelines.erase(name);
 }
 
-VulkanPipeline* PipelineLibrary::GetPipeline(const std::string& name) { return _Pipelines[name].get(); }
+MEM::Ref<VulkanPipeline>& PipelineLibrary::GetPipeline(const std::string& name) { return _Pipelines[name]; }

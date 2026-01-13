@@ -32,6 +32,7 @@ struct VulkanPipelineConfig {
 	VkPipelineDynamicStateCreateInfo DynamicStateCreateInfo{};
 
 	VkRenderPass RenderPass = VK_NULL_HANDLE;
+	VkPipelineLayout PipelineLayout = VK_NULL_HANDLE;
 };
 
 constexpr int MAX_FRAMES_IN_FLIGHT = 2;

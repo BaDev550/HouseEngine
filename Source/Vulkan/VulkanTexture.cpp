@@ -9,33 +9,18 @@ VulkanTexture::VulkanTexture(const std::string& path)
 {
 	int width, height, channels;
 	stbi_uc* pixels = stbi_load(path.c_str(), &width, &height, &channels, STBI_rgb_alpha);
-	VkDeviceSize imageSize = width * height * STBI_rgb_alpha;
-	CHECKF(!pixels, "Failed to load texture");
-
-	std::unique_ptr<VulkanBuffer> stagingBuffer;
-	stagingBuffer = std::make_unique<VulkanBuffer>(
-		imageSize,
-		1,
-		VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
-	);
-	stagingBuffer->Map();
-	stagingBuffer->WriteToBuffer(pixels);
-	stagingBuffer->Unmap();
+	if (!pixels) {
+		std::cout << "Failed to load " << path << std::endl;
+		return;
+	}
+	LoadTexture(pixels, width, height, STBI_rgb_alpha);
 	stbi_image_free(pixels);
-	_TextureFormat = VK_FORMAT_R8G8B8A8_SRGB;
-	_Context.CreateImage(
-		width,
-		height,
-		_TextureFormat,
-		VK_IMAGE_TILING_OPTIMAL,
-		VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, _TextureImage, _TextureImageMemory);
-	_Context.TransitionImageLayout(_TextureImage, _TextureFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-	_Context.CopyBufferToImage(stagingBuffer->GetBuffer(), _TextureImage, static_cast<uint32_t>(width), static_cast<uint32_t>(height));
-	_Context.TransitionImageLayout(_TextureImage, _TextureFormat, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-	CreateTextureImageView();
-	CreateTextureSampler();
+}
+
+VulkanTexture::VulkanTexture(uint32_t* data, uint32_t width, uint32_t height)
+	: _Context(Application::Get()->GetVulkanContext())
+{
+	LoadTexture(data, width, height, STBI_rgb_alpha);
 }
 
 VulkanTexture::~VulkanTexture()
@@ -53,6 +38,35 @@ VkDescriptorImageInfo VulkanTexture::GetImageDescriptorInfo()
 	imageInfo.imageView = _TextureImageView;
 	imageInfo.sampler = _TextureImageSampler;
 	return imageInfo;
+}
+
+void VulkanTexture::LoadTexture(void* data, uint32_t width, uint32_t height, uint32_t channels)
+{
+	VkDeviceSize imageSize = width * height * STBI_rgb_alpha;
+
+	std::unique_ptr<VulkanBuffer> stagingBuffer;
+	stagingBuffer = std::make_unique<VulkanBuffer>(
+		imageSize,
+		1,
+		VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+	);
+	stagingBuffer->Map();
+	stagingBuffer->WriteToBuffer(data);
+	stagingBuffer->Unmap();
+	_TextureFormat = VK_FORMAT_R8G8B8A8_SRGB;
+	_Context.CreateImage(
+		width,
+		height,
+		_TextureFormat,
+		VK_IMAGE_TILING_OPTIMAL,
+		VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, _TextureImage, _TextureImageMemory);
+	_Context.TransitionImageLayout(_TextureImage, _TextureFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+	_Context.CopyBufferToImage(stagingBuffer->GetBuffer(), _TextureImage, static_cast<uint32_t>(width), static_cast<uint32_t>(height));
+	_Context.TransitionImageLayout(_TextureImage, _TextureFormat, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+	CreateTextureImageView();
+	CreateTextureSampler();
 }
 
 void VulkanTexture::CreateTextureImageView()

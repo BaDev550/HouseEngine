@@ -18,7 +18,7 @@ public:
 	static VkCommandBuffer BeginFrame();
 	static void EndFrame();
 
-	static void RenderMesh(VkCommandBuffer cmd, MEM::Ref<VulkanPipeline>& pipeline, MEM::Ref<Model>& model, const glm::mat4& transform);
+	static void RenderMesh(VkCommandBuffer cmd, MEM::Ref<VulkanPipeline>& pipeline, MEM::Ref<Model>& model, glm::mat4& transform);
 
 	static uint32_t GetDrawCall();
 	static uint32_t GetFrameIndex();

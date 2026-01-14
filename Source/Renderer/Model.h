@@ -60,9 +60,8 @@ struct Vertex {
 
 static constexpr uint32_t S_ASSIMPIMPORTERFLAGS =
 	aiProcess_Triangulate |
-	aiProcess_GenSmoothNormals |
-	aiProcess_GenUVCoords |
 	aiProcess_FlipUVs |
+	aiProcess_GenSmoothNormals |
 	aiProcess_CalcTangentSpace;
 
 class Mesh {
@@ -103,7 +102,7 @@ public:
 
 	MEM::Ref<Material>& GetMaterialByID(uint32_t id) { return _Materials[id]; }
 	std::vector<Mesh>& GetMeshes() { return _Meshes; }
-	std::vector<MEM::Ref<Material>>& GetMaterials() { return _Materials; }
+	std::unordered_map<uint32_t, MEM::Ref<Material>>& GetMaterials() { return _Materials; }
 private:
 	void LoadModelFromFile(const std::filesystem::path& path);
 	void ProcessNode(aiNode* node, const aiScene* scene);
@@ -112,5 +111,5 @@ private:
 
 	std::filesystem::path _ModelDirectory = "EMPTY_MODEL_DIRECTORY";
 	std::vector<Mesh> _Meshes;
-	std::vector<MEM::Ref<Material>> _Materials;
+	std::unordered_map<uint32_t, MEM::Ref<Material>> _Materials;
 };

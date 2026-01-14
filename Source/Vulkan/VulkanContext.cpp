@@ -100,6 +100,18 @@ void VulkanContext::DefaultPipelineConfigInfo(VulkanPipelineConfig& config)
 	config.ColorBlendStateCreateInfo.blendConstants[2] = 0.0f;
 	config.ColorBlendStateCreateInfo.blendConstants[3] = 0.0f;
 
+	config.DepthStencilCreateInfo = {};
+	config.DepthStencilCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+	config.DepthStencilCreateInfo.depthTestEnable = VK_TRUE;
+	config.DepthStencilCreateInfo.depthWriteEnable = VK_TRUE;
+	config.DepthStencilCreateInfo.depthCompareOp = VK_COMPARE_OP_LESS;
+	config.DepthStencilCreateInfo.depthBoundsTestEnable = VK_FALSE;
+	config.DepthStencilCreateInfo.minDepthBounds = 0.0f;
+	config.DepthStencilCreateInfo.maxDepthBounds = 1.0f;
+	config.DepthStencilCreateInfo.stencilTestEnable = VK_FALSE;
+	config.DepthStencilCreateInfo.front = {};
+	config.DepthStencilCreateInfo.back = {};
+
 	config.DynamicStateEnables = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
 	config.DynamicStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
 	config.DynamicStateCreateInfo.pDynamicStates = config.DynamicStateEnables.data();
@@ -251,6 +263,22 @@ uint32_t VulkanContext::FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlag
 		}
 	}
 	CHECKF(false, "Failed to find any usable memory type");
+}
+
+VkFormat VulkanContext::FindSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features)
+{
+	for (VkFormat format : candidates) {
+		VkFormatProperties props;
+		vkGetPhysicalDeviceFormatProperties(_PhysicalDevice, format, &props);
+		if (tiling == VK_IMAGE_TILING_LINEAR && (props.linearTilingFeatures & features) == features) {
+			return format;
+		}
+		else if (
+			tiling == VK_IMAGE_TILING_OPTIMAL && (props.optimalTilingFeatures & features) == features) {
+			return format;
+		}
+	}
+	CHECKF(false, "Failed to find supported format");
 }
 
 void VulkanContext::WaitToDeviceIdle()

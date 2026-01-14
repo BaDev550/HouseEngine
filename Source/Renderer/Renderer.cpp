@@ -161,7 +161,7 @@ void Renderer::EndFrame() {
 	s_Data.Reset();
 }
 
-void Renderer::RenderMesh(VkCommandBuffer cmd, MEM::Ref<VulkanPipeline>& pipeline, MEM::Ref<Model>& model, const glm::mat4& transform)
+void Renderer::RenderMesh(VkCommandBuffer cmd, MEM::Ref<VulkanPipeline>& pipeline, MEM::Ref<Model>& model, glm::mat4& transform)
 {
 	pipeline->Bind(cmd);
 	vkCmdPushConstants(cmd, s_Data.PipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), &transform);

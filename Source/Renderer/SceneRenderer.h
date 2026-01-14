@@ -4,6 +4,7 @@
 #include "Vulkan/VulkanDescriptor.h"
 #include "World/Object.h"
 #include "Core/Memory.h"
+#include "Core/ImGuiLayer.h"
 #include "Camera.h"
 #include <array>
 
@@ -22,5 +23,9 @@ private:
 
 	MEM::Scope<VulkanBuffer> _CameraUB;
 	VkDescriptorSet _CameraDS; // Move this to uniform buffer class
+
+	MEM::Scope<ImGuiLayer> _ImGuiLayer;
+
+	Object* _SelectedObject = nullptr;
 };
 

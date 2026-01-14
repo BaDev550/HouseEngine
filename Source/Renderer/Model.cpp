@@ -5,6 +5,7 @@
 Mesh::Mesh(const std::string& name, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, const uint32_t materialID)
 	: _Name(name), _MaterialId(materialID), _Context(Application::Get()->GetVulkanContext())
 {
+	_IndexCount = indices.size();
 	CreateVertexBuffer(vertices);
 	CreateIndexBuffer(indices);
 }
@@ -69,7 +70,7 @@ void Model::LoadModelFromFile(const std::filesystem::path& path) {
 void Model::ProcessMaterials(const aiScene* scene) {
 	for (uint32_t i = 0; i < scene->mNumMaterials; i++) {
 		aiMaterial* aiMat = scene->mMaterials[i];
-
+		
 		auto& pipeline = Renderer::GetPipelineLibrary()->GetPipeline("MainPipeline");
 		auto material = MEM::MakeRef<Material>(pipeline);
 		aiString path;
@@ -92,7 +93,8 @@ void Model::ProcessMaterials(const aiScene* scene) {
 		}
 		material->Build();
 
-		_Materials.push_back(material);
+		material->_Id = i;
+		_Materials[i] = (material);
 	}
 }
 
@@ -127,6 +129,5 @@ Mesh Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
 			indices.push_back(face.mIndices[j]);
 		}
 	}
-
 	return Mesh(mesh->mName.C_Str(), vertices, indices, mesh->mMaterialIndex);
 }

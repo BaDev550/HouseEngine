@@ -18,8 +18,10 @@ public:
 	VkRenderPass GetRenderPass() const { return _RenderPass; }
 	VkFramebuffer GetSwapchainFramebuffer(int index) const { return _SwapChainFramebuffers[index]; }
 	VkExtent2D GetSwapChainExtent() const { return _SwapChainExtent; }
+	VkFormat GetSwapChainFormat() const { return _SwapChainImageFormat; }
 private:
 	void CreateSwapChain();
+	void CreateDepthResources();
 	void CreateImageViews();
 	void CreateRenderPass();
 	void CreateFramebuffers();
@@ -29,6 +31,7 @@ private:
 	VkSurfaceFormatKHR ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
 	VkPresentModeKHR ChooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
 	VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
+	VkFormat FindDepthFormat();
 private:
 	uint32_t _FrameIndex = 0;
 
@@ -42,6 +45,10 @@ private:
 	std::vector<VkSemaphore> _ImageAvailableSemaphores;
 	std::vector<VkSemaphore> _RenderFinishedSemaphores;
 	std::vector<VkFence> _InFlightFences;
+
+	VkImage _DepthImage;
+	VkDeviceMemory _DepthImageMemory;
+	VkImageView _DepthImageView;
 
 	VulkanContext& _Context;
 };

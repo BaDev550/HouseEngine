@@ -9,6 +9,7 @@
 #include "Renderer/SceneRenderer.h"
 #include "Core/Window.h"
 #include "Core/Memory.h"
+#include "Core/ImGuiLayer.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <chrono>
@@ -26,8 +27,10 @@ public:
 public:
 	Window& GetWindow() { return *_Window; }
 	VulkanContext& GetVulkanContext() { return *_VulkanContext; }
+	float GetDeltaTime() const { return _DeltaTime; }
+	float GetFPS() const { return 1 / _DeltaTime; }
 private:
-	static Application* _Instance;
+	static Application* _Instance; // BUG FIX WITH; sawapchain, destroy
 
 	MEM::Scope<Window> _Window;
 	MEM::Scope<VulkanContext> _VulkanContext;

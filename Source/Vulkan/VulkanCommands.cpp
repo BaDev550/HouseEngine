@@ -13,9 +13,11 @@ void VulkanCommands::BeginSwapchainRenderPass(VkCommandBuffer cmd)
 	renderPassInfo.renderArea.offset = { 0,0 };
 	renderPassInfo.renderArea.extent = swapchain.GetSwapChainExtent();
 
-	VkClearValue clearColor = { 0.1f, 0.1f, 0.1f, 1.0f };
-	renderPassInfo.clearValueCount = 1;
-	renderPassInfo.pClearValues = &clearColor;
+	std::array<VkClearValue, 2> clearValues{};
+	clearValues[0] = { 0.1f, 0.1f, 0.1f, 1.0f };
+	clearValues[1] = { 1.0f, 0.0f };
+	renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+	renderPassInfo.pClearValues = clearValues.data();
 	vkCmdBeginRenderPass(cmd, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
 	VkViewport viewport{};

@@ -16,6 +16,6 @@ layout(set = 0, binding = 0) uniform CameraUniformData {
 } camera;
 
 void main() {
-	gl_Position = camera.proj * camera.view * transform.model * vec4(aPos, 1.0);
 	fragTextureCoords = aTexCoords;
+	gl_Position = camera.proj * camera.view * transform.model * vec4(aPos, 1.0);
 }

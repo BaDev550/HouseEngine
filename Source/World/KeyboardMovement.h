@@ -20,6 +20,6 @@ public:
 	void MoveInPlaneXZ(GLFWwindow* window, float dt, Object& gameObject);
 
 	float _moveSpeed{ 1.0f };
-	float _lookSpeed{ 0.5f };
+	float _lookSpeed{ 1.0f };
 };
 

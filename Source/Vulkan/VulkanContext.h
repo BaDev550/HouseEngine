@@ -27,6 +27,7 @@ struct VulkanPipelineConfig {
 	VkPipelineMultisampleStateCreateInfo   MultisampleStateCreateInfo{};
 	VkPipelineColorBlendAttachmentState    ColorBlendAttachment{};
 	VkPipelineColorBlendStateCreateInfo    ColorBlendStateCreateInfo{};
+	VkPipelineDepthStencilStateCreateInfo  DepthStencilCreateInfo{};
 
 	std::vector<VkDynamicState> DynamicStateEnables;
 	VkPipelineDynamicStateCreateInfo DynamicStateCreateInfo{};
@@ -47,6 +48,7 @@ public:
 	VulkanContext& operator=(const VulkanContext&) = delete;
 	~VulkanContext();
 
+	VkInstance GetInstance() const { return _Instance; }
 	VkDevice GetDevice() const { return _Device; }
 	VkPhysicalDevice GetPhysicalDevice() const { return _PhysicalDevice; }
 	VkPhysicalDeviceProperties GetPhysicalDeviceProperties() const { return _PhysicalDeviceProperties; }
@@ -62,6 +64,7 @@ public:
 	void TransitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
 	uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 
+	VkFormat FindSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
 	QueueFamilyIndices FindPhysicalDeviceQueueFamilies() { return FindQueueFamilies(_PhysicalDevice); }
 	SwapChainSupportDetails QuerySwapChainSupportOnPhysicalDevice() { return QuerySwapChainSupport(_PhysicalDevice); }
 private:

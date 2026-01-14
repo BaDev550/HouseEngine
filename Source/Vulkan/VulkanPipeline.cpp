@@ -45,7 +45,7 @@ VulkanPipeline::VulkanPipeline(VulkanPipelineConfig& config, const std::string& 
 	createInfo.pViewportState =		 &config.ViewportStateCreateInfo;
 	createInfo.pRasterizationState = &config.ResterizationStateCreateInfo;
 	createInfo.pMultisampleState =   &config.MultisampleStateCreateInfo;
-	createInfo.pDepthStencilState =  nullptr;
+	createInfo.pDepthStencilState =  &config.DepthStencilCreateInfo;
 	createInfo.pColorBlendState =	 &config.ColorBlendStateCreateInfo;
 	createInfo.pDynamicState =		 &config.DynamicStateCreateInfo;
 	createInfo.layout =				 config.PipelineLayout;

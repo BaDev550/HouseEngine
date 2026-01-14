@@ -26,7 +26,7 @@ target_include_directories(Engine
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Source>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Platform>
 	${CMAKE_CURRENT_SOURCE_DIR}/vendor/spdlog
-	${CMAKE_CURRENT_SOURCE_DIR}/vendor/entt
+	${CMAKE_CURRENT_SOURCE_DIR}/vendor/entt/include
         ${CMAKE_CURRENT_SOURCE_DIR}/vendor/GLFW/include
         ${CMAKE_CURRENT_SOURCE_DIR}/vendor/imgui
         ${CMAKE_CURRENT_SOURCE_DIR}/vendor/glm

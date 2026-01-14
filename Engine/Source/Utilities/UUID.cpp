@@ -15,6 +15,11 @@ UUID::UUID(const std::string& str) {
 	_UUID = std::stoull(str, nullptr, 16);
 }
 
+UUID::UUID(const entt::entity& handle)
+{
+	//_UUID = handle;
+}
+
 std::string UUID::ToString() const {
 	std::stringstream ss;
 	ss << std::hex << std::setw(16) << std::setfill('0') << _UUID;

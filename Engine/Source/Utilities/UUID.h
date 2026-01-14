@@ -4,12 +4,14 @@
 #include <sstream>
 #include <iomanip>
 #include <functional>
+#include <entt/entt.hpp>
 
 class UUID {
 public:
 	UUID();
 	UUID(uint64_t uuid);
 	UUID(const std::string& str);
+	UUID(const entt::entity& handle);
 
 	std::string ToString() const;
 

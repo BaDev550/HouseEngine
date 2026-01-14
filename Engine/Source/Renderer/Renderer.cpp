@@ -102,10 +102,7 @@ void Renderer::Init() {
 		.AddBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
 		.Build();
 
-	std::vector<VkDescriptorSetLayout> layouts = {
-		s_Data.GlobalLayout->GetDescriptorSetLayout(),
-		s_Data.MaterialLayout->GetDescriptorSetLayout()
-	};
+	std::vector<VkDescriptorSetLayout> layouts = { s_Data.GlobalLayout->GetDescriptorSetLayout(), s_Data.MaterialLayout->GetDescriptorSetLayout() };
 	VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 	VkPushConstantRange push_constant;
 	push_constant.offset = 0;
@@ -177,7 +174,7 @@ void Renderer::RenderMesh(VkCommandBuffer cmd, MEM::Ref<VulkanPipeline>& pipelin
 	pipeline->Bind(cmd);
 	vkCmdPushConstants(cmd, s_Data.PipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), &transform);
 	for (const auto& mesh : model->GetMeshes()) {
-		s_Data.DrawCall += 1;
+		s_Data.DrawCall++;
 		model->GetMaterialByID(mesh.GetMaterialID())->Bind(cmd, s_Data.PipelineLayout);
 		VulkanCommands::DrawIndexed(cmd, pipeline, mesh.GetVertexBuffer(), mesh.GetIndexBuffer(), mesh.GetIndexCount());
 	}

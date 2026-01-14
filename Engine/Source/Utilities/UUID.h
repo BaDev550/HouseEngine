@@ -11,7 +11,7 @@ public:
 	UUID();
 	UUID(uint64_t uuid);
 	UUID(const std::string& str);
-	UUID(const entt::entity& handle);
+	UUID(entt::entity handle);
 
 	std::string ToString() const;
 

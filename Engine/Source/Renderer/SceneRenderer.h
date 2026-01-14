@@ -3,6 +3,7 @@
 #include "Vulkan/VulkanCommands.h"
 #include "Vulkan/VulkanDescriptor.h"
 #include "Utilities/Memory.h"
+#include "World/Entity/Entity.h"
 #include "Camera.h"
 #include <array>
 
@@ -12,7 +13,7 @@ public:
 	SceneRenderer();
 	~SceneRenderer();
 
-	//void DrawScene(std::vector<MEM::Ref<Object>>& objects, MEM::Ref<Camera>& cam);
+	void DrawScene(std::unordered_map<UUID, Entity>& entities, const MEM::Ref<Camera>& cam);
 private:
 	struct CameraUniformData {
 		glm::mat4 View;

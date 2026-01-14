@@ -31,6 +31,7 @@ public:
 	bool HasResized() const;
 	void ResetResizeFlag();
 	void PollEvents() const { glfwPollEvents(); }
+	void EnableCursor(bool enabled);
 	bool SwapBuffers();
 	int GetWidth() const { return _Config.Width; }
 	int GetHeight() const { return _Config.Height; }

@@ -27,29 +27,32 @@ SceneRenderer::~SceneRenderer()
 {
 }
 
-//void SceneRenderer::DrawScene(std::vector<MEM::Ref<Object>>& objects, MEM::Ref<Camera>& cam)
-//{
-//	VkCommandBuffer cmd = Renderer::BeginFrame();
-//	VulkanCommands::BeginSwapchainRenderPass(cmd);
-//
-//	_CameraUD.View = cam->GetView();
-//	_CameraUD.Proj = cam->GetProjection();
-//	_CameraUB->WriteToBuffer(&_CameraUD);
-//	vkCmdBindDescriptorSets(
-//		cmd,
-//		VK_PIPELINE_BIND_POINT_GRAPHICS,
-//		Renderer::GetPipelineLayout(),
-//		0, 1,
-//		&_CameraDS,
-//		0,
-//		nullptr
-//	);
-//
-//	for (auto& object : objects) {
-//		glm::mat4 transform = object->_transform.Mat4();
-//		Renderer::RenderMesh(cmd, Renderer::GetPipelineLibrary()->GetPipeline("MainPipeline"), object->_Model, transform);
-//	}
-//
-//	VulkanCommands::EndSwapchainRenderPass(cmd);
-//	Renderer::EndFrame();
-//}
+void SceneRenderer::DrawScene(std::unordered_map<UUID, Entity>& entities, const MEM::Ref<Camera>& cam)
+{
+	_CameraUD.View = cam->GetView();
+	_CameraUD.Proj = cam->GetProjection();
+	_CameraUB->WriteToBuffer(&_CameraUD);
+	vkCmdBindDescriptorSets(
+		Renderer::GetCurrentCommandBuffer(),
+		VK_PIPELINE_BIND_POINT_GRAPHICS,
+		Renderer::GetPipelineLayout(),
+		0, 1,
+		&_CameraDS,
+		0,
+		nullptr
+	);
+	
+	for (auto& object : entities) {
+		if (!object.second.HasComponent<StaticMeshComponent>())
+			continue;
+
+		auto& model = object.second.GetComponent<StaticMeshComponent>();
+		glm::mat4 transform = object.second.GetComponent<TransformComponent>().ModelMatrix();
+		Renderer::RenderMesh(
+			Renderer::GetCurrentCommandBuffer(), 
+			Renderer::GetPipelineLibrary()->GetPipeline("MainPipeline"), 
+			model.Handle,
+			transform
+		);
+	}
+}

@@ -15,9 +15,9 @@ UUID::UUID(const std::string& str) {
 	_UUID = std::stoull(str, nullptr, 16);
 }
 
-UUID::UUID(const entt::entity& handle)
+UUID::UUID(entt::entity handle)
 {
-	//_UUID = handle;
+	_UUID = static_cast<uint64_t>(handle);
 }
 
 std::string UUID::ToString() const {

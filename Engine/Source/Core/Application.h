@@ -6,7 +6,10 @@
 #include "Renderer/Renderer.h"
 #include "Renderer/SceneRenderer.h"
 #include "Core/Window.h"
+#include "Layers/LayerRegistry.h"
+#include "Layers/ImGuiLayer.h"
 #include "Utilities/Memory.h"
+#include "Input/Input.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -32,7 +35,10 @@ class Application
 {
 public:
 	Application(const ApplicationSpecs& applicationSpecs);
-	~Application();
+	virtual ~Application();
+
+	void PushLayer(Layer* layer) { _LayerRegistry.PushLayer(layer); }
+	void PushOverlay(Layer* layer) { _LayerRegistry.PushOverlay(layer); }
 
 	static Application* Get() { return _Instance; }
 	void Run();
@@ -46,6 +52,8 @@ private:
 	static Application* _Instance;
 
 	ApplicationSpecs _ApplicationSpecs;
+	LayerRegistry _LayerRegistry;
+	ImGuiLayer* _ImGuiLayer;
 	MEM::Scope<Window> _Window;
 	MEM::Scope<VulkanContext> _Context;
 

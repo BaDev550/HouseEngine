@@ -1,11 +1,14 @@
 #pragma once
 #include <imgui.h>
+#include "Layer.h"
 
-class ImGuiLayer {
+class ImGuiLayer : public Layer {
 public:
 	ImGuiLayer();
 	~ImGuiLayer();
 
-	void BeginFrame();
-	void EndFrame(VkCommandBuffer cmd);
+	virtual void OnAttach() override;
+	virtual void OnDetach() override;
+	void Begin();
+	void End(VkCommandBuffer cmd);
 };

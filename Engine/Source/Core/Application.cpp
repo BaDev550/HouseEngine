@@ -22,11 +22,16 @@ Application::Application(const ApplicationSpecs& applicationSpecs)
 	
 	_Window = MEM::MakeScope<Window>(config);
 	_Context = MEM::MakeScope<VulkanContext>();
+	Input::Init();
 	Renderer::Init();
+
+	_ImGuiLayer = new ImGuiLayer();
+	PushOverlay(_ImGuiLayer);
 }
 
 Application::~Application()
 {
+	_LayerRegistry.Clear();
 	Renderer::Destroy();
 	_Window = nullptr;
 	_Context = nullptr;
@@ -34,6 +39,7 @@ Application::~Application()
 
 void Application::Run()
 {
+	bool cursor = true;
 	while (!_Window->ShouldClose()) {
 		static auto lastFrameTime = std::chrono::high_resolution_clock::now();
 		auto currentTime = std::chrono::high_resolution_clock::now();
@@ -41,6 +47,23 @@ void Application::Run()
 		lastFrameTime = currentTime;
 
 		_Window->PollEvents();
+		Input::Update();
+
+		if (Input::IsKeyJustPressed(Key::F1)) {
+			cursor = !cursor;
+			_Window->EnableCursor(cursor);
+		}
+
+		auto cmd = Renderer::BeginFrame();
+		VulkanCommands::BeginSwapchainRenderPass(cmd);
+		for (auto& layer : _LayerRegistry) { layer->OnUpdate(_DeltaTime); }
+
+		_ImGuiLayer->Begin();
+		for (auto& layer : _LayerRegistry) { layer->OnImGuiRender(); }
+		_ImGuiLayer->End(cmd);
+
+		VulkanCommands::EndSwapchainRenderPass(cmd);
+		Renderer::EndFrame();
 	}
 	_Context->WaitToDeviceIdle();
 }

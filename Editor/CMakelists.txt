@@ -1,0 +1,32 @@
+add_executable(Editor)
+
+file(GLOB_RECURSE EDITOR_SOURCES CONFIGURE_DEPENDS
+    ${CMAKE_CURRENT_SOURCE_DIR}/Source/*.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Source/*.h
+)
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/Source PREFIX "Source" FILES ${EDITOR_SOURCES})
+
+target_sources(Editor
+    PRIVATE
+        ${EDITOR_SOURCES}
+        ${EDITOR_SOURCES}
+)
+
+target_link_libraries(Editor
+    PRIVATE
+        Engine
+)
+
+target_include_directories(Editor
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/Source
+)
+
+add_custom_command(
+    TARGET Editor
+    POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+            "${CMAKE_CURRENT_SOURCE_DIR}/Shaders"
+            "$<TARGET_FILE_DIR:Engine>/Shaders"
+    COMMENT "Copying shaders to output directory..."
+)

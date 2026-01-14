@@ -19,64 +19,8 @@ set(SPIRV_CROSS_GLSL_LIB "${VULKAN_LIB_DIR}/spirv-cross-glsl.lib")
 set(SPIRV_TOOLS_LIB "${VULKAN_LIB_DIR}/SPIRV-Tools.lib")
 set(VULKAN_LIB "${VULKAN_LIB_DIR}/vulkan-1.lib")
 
-add_subdirectory(vendor)
-
-add_executable(Engine)
-file(GLOB_RECURSE ENGINE_SOURCES CONFIGURE_DEPENDS
-    ${CMAKE_CURRENT_SOURCE_DIR}/Source/*.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/Source/*.h
-)
-source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/Source FILES ${ENGINE_SOURCES})
-
-target_sources(Engine
-    PRIVATE
-        ${ENGINE_SOURCES}
-        ${CMAKE_CURRENT_SOURCE_DIR}/vendor/stb/stb_image.cpp
-    PUBLIC
-        FILE_SET HEADERS
-        TYPE HEADERS
-        BASE_DIRS 
-            ${CMAKE_CURRENT_SOURCE_DIR}/Source
-        FILES
-            ${CMAKE_CURRENT_SOURCE_DIR}/Source/hepch.h
-)
-
-target_include_directories(Engine
-    PUBLIC
-        ${CMAKE_CURRENT_SOURCE_DIR}/Source
-        ${CMAKE_CURRENT_SOURCE_DIR}/vendor/GLFW/include
-        ${CMAKE_CURRENT_SOURCE_DIR}/vendor/imgui
-        ${CMAKE_CURRENT_SOURCE_DIR}/vendor/glm
-        ${CMAKE_CURRENT_SOURCE_DIR}/vendor/assimp/include
-        ${CMAKE_CURRENT_SOURCE_DIR}/vendor/stb/
-        ${VULKAN_INCLUDE_DIR}
-)
-
-target_link_libraries(Engine 
-    PRIVATE
-        glfw
-        ImGui
-        assimp
-        ${VULKAN_LIB}
-        ${SHADERC_LIB}
-        ${SPIRV_CROSS_CORE_LIB}
-        ${SPIRV_CROSS_GLSL_LIB}
-        ${SPIRV_TOOLS_LIB}
-)
-
-target_precompile_headers(Engine
-    PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/Source/hepch.h
-)
+add_subdirectory(Engine)
+add_subdirectory(Editor)
 
 set_target_properties(Engine PROPERTIES FOLDER "Engine")
-add_custom_command(
-    TARGET Engine
-    POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-            ${CMAKE_CURRENT_SOURCE_DIR}/Shaders
-            ${CMAKE_BINARY_DIR}/Shaders
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-            ${CMAKE_CURRENT_SOURCE_DIR}/Resources
-            ${CMAKE_BINARY_DIR}/Resources
-)
+set_target_properties(Editor PROPERTIES FOLDER "Editor")

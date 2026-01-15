@@ -11,12 +11,14 @@ public:
 	VulkanPipeline(const VulkanPipeline&) = delete;
 	VulkanPipeline& operator=(const VulkanPipeline&) = delete;
 	
-	MEM::Ref<VulkanShader>& GetShader() { return _VulkanShader; }
+	MEM::Ref<VulkanShader>& GetShader() { return _Shader; }
+	VkPipelineLayout GetPipelineLayout() { return _PipelineLayout; }
 
 	void Bind(VkCommandBuffer cmd);
 private:
-	VkPipeline _VulkanPipeline;
-	MEM::Ref<VulkanShader> _VulkanShader;
+	VkPipeline _Pipeline;
+	VkPipelineLayout _PipelineLayout;
+	MEM::Ref<VulkanShader> _Shader;
 	
 	VulkanContext& _VulkanContext;
 };

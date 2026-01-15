@@ -19,13 +19,13 @@ void Material::Build() {
 	writer.Overwrite(_MaterialVariables.MaterialDescriptorSet);
 }
 
-void Material::Bind(VkCommandBuffer cmd, VkPipelineLayout layout)
+void Material::Bind(VkCommandBuffer cmd)
 {
 	_Pipeline->Bind(cmd);
 	vkCmdBindDescriptorSets(
 		cmd, 
 		VK_PIPELINE_BIND_POINT_GRAPHICS, 
-		layout, 
+		_Pipeline->GetPipelineLayout(),
 		1, 1, 
 		&_MaterialVariables.MaterialDescriptorSet, 
 		0, 

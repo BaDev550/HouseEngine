@@ -144,6 +144,10 @@ bool VulkanDescriptorWriter::Build(VkDescriptorSet& set)
     return true;
 }
 
+void VulkanDescriptorWriter::Clear() {
+    _Writes.clear();
+}
+
 void VulkanDescriptorWriter::Overwrite(VkDescriptorSet& set)
 {
     for (auto& write : _Writes) {

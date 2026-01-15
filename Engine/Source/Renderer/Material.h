@@ -23,7 +23,7 @@ public:
 	Material& operator=(Material&) = delete;
 
 	void Build();
-	void Bind(VkCommandBuffer cmd, VkPipelineLayout layout);
+	void Bind(VkCommandBuffer cmd);
 	MaterialVariables& GetMaterialVariables() { return _MaterialVariables; }
 	void SetMaterialVariables(const MaterialVariables& newVar) { _MaterialVariables = newVar; }
 private:

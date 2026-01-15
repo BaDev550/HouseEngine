@@ -55,7 +55,7 @@ namespace helpers {
     }
 }
 
-std::vector<char> ShaderCompiler::CompileShaderFileToSpirv(const std::filesystem::path& path, std::map<uint32_t, std::map<uint32_t, std::string>>& reflectData, bool optimize)
+std::vector<char> ShaderCompiler::CompileShaderFileToSpirv(const std::filesystem::path& path, std::map<uint32_t, std::map<uint32_t, DescriptorInfo>>& reflectData, bool optimize)
 {
     if (path.extension() == ".spv") {
         std::ifstream in(path, std::ios::binary);
@@ -103,7 +103,7 @@ std::vector<char> ShaderCompiler::CompileShaderFileToSpirv(const std::filesystem
     return bytes;
 }
 
-void ShaderCompiler::CollectReflectionData(std::map<uint32_t, std::map<uint32_t, std::string>>& reflectData, const void* code, size_t sizeInBytes)
+void ShaderCompiler::CollectReflectionData(std::map<uint32_t, std::map<uint32_t, DescriptorInfo>>& reflectData, const void* code, size_t sizeInBytes)
 {
     SpvReflectShaderModule module;
     SpvReflectResult result = spvReflectCreateShaderModule(sizeInBytes, code, &module);
@@ -124,15 +124,7 @@ void ShaderCompiler::CollectReflectionData(std::map<uint32_t, std::map<uint32_t,
         spvReflectEnumerateDescriptorBindings(&module, &count, bindings.data());
         
         for (const auto& ds : bindings) {
-            uint32_t set = ds->set;
-            uint32_t binding = ds->binding;
-            std::cout << "Descriptor Binding:\n";
-            std::cout << "  Name: " << ds->name << "\n";
-            std::cout << "  Set: " << set << "\n";
-            std::cout << "  Binding: " << binding << "\n";
-            //reflectData[set][binding] = helpers::GetResourceType(ds);
-            std::string name = ds->name;
-            reflectData[set][binding] = name;
+            reflectData[ds->set][ds->binding] = { ds->name, helpers::GetResourceType(ds) };
         }
     }
     spvReflectDestroyShaderModule(&module);

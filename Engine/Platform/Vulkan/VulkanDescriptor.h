@@ -67,6 +67,7 @@ public:
 	VulkanDescriptorWriter& WriteImage(uint32_t binding, VkDescriptorImageInfo* imageInfo);
 	bool Build(VkDescriptorSet& set);
 	void Overwrite(VkDescriptorSet& set);
+	void Clear();
 private:
 	VulkanDescriptorSetLayout& _SetLayout;
 	VulkanDescriptorPool& _Pool;

@@ -18,6 +18,19 @@ DescriptorAllocator::DescriptorAllocator()
 		.AddPoolSize(VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000)
 		.SetPoolFlags(VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT)
 		.Build();
+
+	_Specs.Pipeline;
+}
+
+void DescriptorAllocator::WriteInput(std::string_view name, MEM::Ref<VulkanBuffer> buffer)
+{
+	const RenderPassInputDeclaration* decl = GetInputDeclaration(name);
+	if (decl)
+		_InputResources.at(decl->Set).at(decl->Binding).Set(buffer);
+}
+
+void DescriptorAllocator::WriteInput(std::string_view name, MEM::Ref<VulkanTexture> texture, uint32_t index)
+{
 }
 
 VkDescriptorSet DescriptorAllocator::Allocate(MEM::Ref<VulkanDescriptorSetLayout>& layout)
@@ -33,4 +46,15 @@ VkDescriptorSet DescriptorAllocator::Allocate(MEM::Ref<VulkanDescriptorSetLayout
 
 	CHECKF(vkAllocateDescriptorSets(Application::Get()->GetVulkanContext().GetDevice(), &allocInfo, &set) != VK_SUCCESS, "Failed to allocate descriptor set");
 	return set;
+}
+
+const std::vector<VkDescriptorSet>& DescriptorAllocator::GetDescriptorSets(uint32_t frameIndex) const { return _DescriptorSets[frameIndex]; }
+const RenderPassInputDeclaration* DescriptorAllocator::GetInputDeclaration(std::string_view name) const
+{
+	std::string nameStr(name);
+	if (_InputDeclarations.find(nameStr) == _InputDeclarations.end())
+		return nullptr;
+
+	const RenderPassInputDeclaration& decl = _InputDeclarations.at(nameStr);
+	return &decl;
 }

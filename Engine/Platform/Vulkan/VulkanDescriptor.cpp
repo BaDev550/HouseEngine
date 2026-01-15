@@ -14,8 +14,8 @@ VulkanDescriptorSetLayout::Builder& VulkanDescriptorSetLayout::Builder::AddBindi
     return *this;
 }
 
-std::unique_ptr<VulkanDescriptorSetLayout> VulkanDescriptorSetLayout::Builder::Build() const { return std::make_unique<VulkanDescriptorSetLayout>(_Bindings); }
-std::unique_ptr<VulkanDescriptorPool> VulkanDescriptorPool::Builder::Build() const { return std::make_unique<VulkanDescriptorPool>(_MaxSets, _PoolFlags, _PoolSizes); }
+MEM::Ref<VulkanDescriptorSetLayout> VulkanDescriptorSetLayout::Builder::Build() const { return MEM::Ref<VulkanDescriptorSetLayout>::Create(_Bindings); }
+MEM::Ref<VulkanDescriptorPool> VulkanDescriptorPool::Builder::Build() const { return MEM::Ref<VulkanDescriptorPool>::Create(_MaxSets, _PoolFlags, _PoolSizes); }
 
 VulkanDescriptorSetLayout::VulkanDescriptorSetLayout(std::unordered_map<uint32_t, VkDescriptorSetLayoutBinding> bindings)
     : _Context(Application::Get()->GetVulkanContext()), _Bindings(bindings)

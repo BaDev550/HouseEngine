@@ -26,7 +26,7 @@ Window::~Window()
 	glfwTerminate();
 }
 
-void Window::CreateSwapchain(VulkanContext* context) { _Swapchain = MEM::MakeRef<VulkanSwapchain>(context); }
+void Window::CreateSwapchain(VulkanContext* context) { _Swapchain = MEM::Ref<VulkanSwapchain>::Create(context); }
 bool Window::ShouldClose() const { return glfwWindowShouldClose(_Handle); }
 bool Window::HasResized() const { return _Config.Resized; }
 void Window::ResetResizeFlag() { _Config.Resized = false; }

@@ -47,21 +47,21 @@
 class Logger {
 public:
     static void init() {
-        auto consoleSink = MEM::MakeRef<spdlog::sinks::stdout_color_sink_mt>();
+        auto consoleSink = MEM::Ref<spdlog::sinks::stdout_color_sink_mt>::Create();
         spdlog::set_pattern("%^[%n][%l] %T: %v%$");
 
-        s_CoreLogger = MEM::MakeRef<spdlog::logger>("CORE", consoleSink);
+        s_CoreLogger = std::make_shared<spdlog::logger>("CORE", consoleSink);
         spdlog::register_logger(s_CoreLogger);
         s_CoreLogger->set_level(spdlog::level::trace);
 
-        s_ClientLogger = MEM::MakeRef<spdlog::logger>("APP", consoleSink);
+        s_ClientLogger = std::make_shared<spdlog::logger>("APP", consoleSink);
         spdlog::register_logger(s_ClientLogger);
         s_ClientLogger->set_level(spdlog::level::trace);
     }
 
-    inline static MEM::Ref<spdlog::logger>& GetCoreLogger() { return s_CoreLogger; }
-    inline static MEM::Ref<spdlog::logger>& GetClientLogger() { return s_ClientLogger; }
+    inline static std::shared_ptr<spdlog::logger>& GetCoreLogger() { return s_CoreLogger; }
+    inline static std::shared_ptr<spdlog::logger>& GetClientLogger() { return s_ClientLogger; }
 private:
-    static MEM::Ref<spdlog::logger> s_CoreLogger;
-    static MEM::Ref<spdlog::logger> s_ClientLogger;
+    static std::shared_ptr<spdlog::logger> s_CoreLogger;
+    static std::shared_ptr<spdlog::logger> s_ClientLogger;
 };

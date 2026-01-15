@@ -72,9 +72,9 @@ void Renderer::Init() {
 	auto& context = Application::Get()->GetVulkanContext();
 
 	uint32_t whiteTextureData = 0xffffffff;
-	s_Context.PipelineLibrary = MEM::MakeRef<PipelineLibrary>();
-	s_Context.WhiteTexture = MEM::MakeRef<VulkanTexture>(&whiteTextureData, 1, 1);
-	s_Data.GlobalDescriptorAllocator = MEM::MakeRef<DescriptorAllocator>();
+	s_Context.PipelineLibrary = MEM::Ref<PipelineLibrary>::Create();
+	s_Context.WhiteTexture = MEM::Ref<VulkanTexture>::Create(&whiteTextureData, 1, 1);
+	s_Data.GlobalDescriptorAllocator = MEM::Ref<DescriptorAllocator>::Create();
 
 	for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
 		auto& frame = s_Frames[i];

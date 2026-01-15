@@ -41,12 +41,12 @@ struct CameraComponent {
 	
 	void Update(float dt) { Handle->Update(dt); }
 	const MEM::Ref<Camera>& GetCamera() const { return Handle; }
-	CameraComponent(bool isActive = false) : IsActive(isActive) { Handle = MEM::MakeRef<Camera>(); }
+	CameraComponent(bool isActive = false) : IsActive(isActive) { Handle = MEM::Ref<Camera>::Create(); }
 	CameraComponent(const CameraComponent&) = default;
 };
 
 struct StaticMeshComponent {
 	MEM::Ref<Model> Handle; // TODO - make this asset handle
-	StaticMeshComponent(const std::string& path = "Resources/mario_2/mario_2.obj") { Handle = MEM::MakeRef<Model>(path); }
+	StaticMeshComponent(const std::string& path = "Resources/mario_2/mario_2.obj") { Handle = MEM::Ref<Model>::Create(path); }
 	StaticMeshComponent(const StaticMeshComponent&) = default;
 };

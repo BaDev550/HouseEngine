@@ -72,12 +72,12 @@ void Model::ProcessMaterials(const aiScene* scene) {
 		aiMaterial* aiMat = scene->mMaterials[i];
 		
 		auto& pipeline = Renderer::GetPipelineLibrary()->GetPipeline("MainPipeline");
-		auto material = MEM::MakeRef<Material>(pipeline);
+		auto material = MEM::Ref<Material>::Create(pipeline);
 		aiString path;
 		
 		if (aiMat->GetTexture(aiTextureType_DIFFUSE, 0, &path) == AI_SUCCESS) {
 			std::filesystem::path texturePath = _ModelDirectory / path.C_Str();
-			MEM::Ref<VulkanTexture> texture = MEM::MakeRef<VulkanTexture>(texturePath.string());
+			MEM::Ref<VulkanTexture> texture = MEM::Ref<VulkanTexture>::Create(texturePath.string());
 			material->GetMaterialVariables().DiffuseTexture = texture;
 		}
 		else {
@@ -85,7 +85,7 @@ void Model::ProcessMaterials(const aiScene* scene) {
 		}
 		if (aiMat->GetTexture(aiTextureType_NORMALS, 0, &path) == AI_SUCCESS) {
 			std::filesystem::path texturePath = _ModelDirectory / path.C_Str();
-			MEM::Ref<VulkanTexture> texture = MEM::MakeRef<VulkanTexture>(texturePath.string());
+			MEM::Ref<VulkanTexture> texture = MEM::Ref<VulkanTexture>::Create(texturePath.string());
 			material->GetMaterialVariables().NormalTexture = texture;
 		}
 		else {

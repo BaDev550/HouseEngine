@@ -19,3 +19,9 @@ private:
 	VulkanContext& _VulkanContext;
 };
 
+/*
+	TODO List: make a diffirent shader class apart from pipeline,
+		Make a shader reflector with spriv
+		Implement everythink to renderpass
+*/
+

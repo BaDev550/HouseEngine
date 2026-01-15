@@ -5,9 +5,9 @@ void HouseEditorLayer::OnAttach()
 {
 	_ActiveScene = MEM::MakeScope<Scene>("Test Scene");
 	_SceneRenderer = MEM::MakeScope<SceneRenderer>();
-	_EditorCamera = MEM::MakeRef<EditorCamera>();
+	_EditorCamera = MEM::Ref<EditorCamera>::Create();
 
-	for (int i = 0; i < 30; i++) {
+	for (int i = 0; i < 10; i++) {
 		auto entity = _ActiveScene->CreateEntity("NEW_ENTITY");
 		entity.GetComponent<TransformComponent>().Position = glm::vec3(i * 3.0f, 0.0f, 0.0f);
 		entity.AddComponent<StaticMeshComponent>();

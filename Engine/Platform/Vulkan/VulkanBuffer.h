@@ -1,7 +1,7 @@
 #pragma once
 #include "VulkanContext.h"
 
-class VulkanBuffer
+class VulkanBuffer : public MEM::RefCounted
 {
 public:
 	static VkDeviceSize GetAlignment(VkDeviceSize instanceSize, VkDeviceSize minOffsetAlignment);

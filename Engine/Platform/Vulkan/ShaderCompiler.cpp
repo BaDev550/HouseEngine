@@ -6,6 +6,8 @@
 #include <stdexcept>
 #include <iostream>
 #include <shaderc/shaderc.hpp>
+#include <spirv_cross/spirv.h>
+#include <spirv_cross/spirv_reflect.hpp>
 
 namespace {
 

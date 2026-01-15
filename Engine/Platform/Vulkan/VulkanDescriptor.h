@@ -11,7 +11,7 @@ public:
 	public:
 		Builder() {}
 		Builder& AddBinding(uint32_t binding, VkDescriptorType descriptorType, VkShaderStageFlags stageFlags, uint32_t count = 1);
-		std::unique_ptr<VulkanDescriptorSetLayout> Build() const;
+		MEM::Ref<VulkanDescriptorSetLayout> Build() const;
 	private:
 		std::unordered_map<uint32_t, VkDescriptorSetLayoutBinding> _Bindings{};
 	};
@@ -37,7 +37,7 @@ public:
 		Builder& AddPoolSize(VkDescriptorType descriptorType, uint32_t count);
 		Builder& SetPoolFlags(VkDescriptorPoolCreateFlags flags);
 		Builder& SetMaxSets(uint32_t count);
-		std::unique_ptr<VulkanDescriptorPool> Build() const;
+		MEM::Ref<VulkanDescriptorPool> Build() const;
 	private:
 		uint32_t _MaxSets = 1000;
 		std::vector<VkDescriptorPoolSize> _PoolSizes{};

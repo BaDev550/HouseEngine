@@ -14,6 +14,8 @@ target_sources(Engine
     PRIVATE
         ${ENGINE_SOURCES}
         ${CMAKE_CURRENT_SOURCE_DIR}/vendor/stb/stb_image.cpp
+	"${CMAKE_CURRENT_SOURCE_DIR}/vendor/SPIRV-Reflect/spirv_reflect.h"
+	"${CMAKE_CURRENT_SOURCE_DIR}/vendor/SPIRV-Reflect/spirv_reflect.cpp"
     PUBLIC
         FILE_SET HEADERS
         TYPE HEADERS
@@ -26,6 +28,7 @@ target_include_directories(Engine
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Source>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Platform>
 	${CMAKE_CURRENT_SOURCE_DIR}/vendor/spdlog
+	${CMAKE_CURRENT_SOURCE_DIR}/vendor/SPIRV-Reflect
 	${CMAKE_CURRENT_SOURCE_DIR}/vendor/entt/include
         ${CMAKE_CURRENT_SOURCE_DIR}/vendor/GLFW/include
         ${CMAKE_CURRENT_SOURCE_DIR}/vendor/imgui
@@ -48,6 +51,7 @@ target_link_libraries(Engine
 )
 
 target_compile_options(Engine PRIVATE /utf-8)
+target_compile_definitions(Engine PUBLIC SPIRV_REFLECT_USE_SYSTEM_SPIRV_H)
 target_precompile_headers(Engine
     PRIVATE
         "${CMAKE_CURRENT_SOURCE_DIR}/Source/hepch.h"

@@ -20,7 +20,6 @@ private:
 		glm::mat4 Proj;
 	} _CameraUD;
 
-	MEM::Scope<VulkanBuffer> _CameraUB;
-	VkDescriptorSet _CameraDS;
+	MEM::Ref<VulkanBuffer> _CameraUB;
 };
 

@@ -25,8 +25,8 @@ namespace MEM {
 		Ref() : _Instance(nullptr) {}
 		Ref(std::nullptr_t null) : _Instance(nullptr) {}
 		Ref(T* instance) : _Instance(instance) {
-			static_assert(std::is_base_of<RefCounted, T>::value, "Class in not RefCounted");
-			IncRef();
+			//static_assert(std::is_base_of<RefCounted, T>::value, "Class in not RefCounted");
+			//IncRef();
 		}
 		template<typename T2>
 		Ref(const Ref<T2>& other) {
@@ -123,15 +123,15 @@ namespace MEM {
 		}
 	private:
 		void IncRef() const {
-			_Instance->IncRefCount();
+			//_Instance->IncRefCount();
 		}
 		void DecRef() const {
 			if (_Instance) {
-				_Instance->IncRefCount();
-				if (_Instance->GetRefCount() == 0) {
-					delete _Instance;
-					_Instance = nullptr;
-				}
+				//_Instance->IncRefCount();
+				//if (_Instance->GetRefCount() == 0) {
+				//	delete _Instance;
+				//	_Instance = nullptr;
+				//}
 			}
 		}
 	private:

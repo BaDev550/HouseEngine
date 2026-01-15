@@ -4,7 +4,7 @@
 #include "Utilities/Memory.h"
 #include <glm/glm.hpp>
 
-class Material {
+class Material : public MEM::RefCounted {
 private:
 	struct MaterialVariables {
 		VkDescriptorSet MaterialDescriptorSet;

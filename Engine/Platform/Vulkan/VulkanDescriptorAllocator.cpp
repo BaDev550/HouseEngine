@@ -1,8 +1,8 @@
 #include "hepch.h"
-#include "DescriptorAllocator.h"
+#include "VulkanDescriptorAllocator.h"
 #include "Core/Application.h"
 
-DescriptorAllocator::DescriptorAllocator()
+DescriptorAllocator::DescriptorAllocator(DescriptorAllocatorSpecification& spec)
 {
 	_Pool = VulkanDescriptorPool::Builder()
 		.SetMaxSets(1000)
@@ -19,14 +19,30 @@ DescriptorAllocator::DescriptorAllocator()
 		.SetPoolFlags(VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT)
 		.Build();
 
-	_Specs.Pipeline;
+	const auto& shader = spec.Pipeline->GetShader();
+	const auto& reflectionData = shader->GetReflectData();
+
+	for (const auto& [set, bt] : shader->GetReflectData()) {
+		for (const auto& [binding, name] : bt) {
+			RenderPassInputDeclaration declaration{};
+			declaration.Binding = binding;
+			declaration.Set = set;
+			//declaration.Type = type;
+			declaration.Name = name;
+
+			_InputDeclarations[set][binding] = declaration;
+			_Pool->Allocate(Renderer::GetGlobalDescriptorLayout()->GetDescriptorSetLayout(), _DescriptorSets[name]);
+		}
+	}
 }
 
 void DescriptorAllocator::WriteInput(std::string_view name, MEM::Ref<VulkanBuffer> buffer)
 {
-	const RenderPassInputDeclaration* decl = GetInputDeclaration(name);
-	if (decl)
-		_InputResources.at(decl->Set).at(decl->Binding).Set(buffer);
+	std::string nameStr(name);
+	VkDescriptorBufferInfo bufferInfo = buffer->DescriptorInfo();
+	VulkanDescriptorWriter(*Renderer::GetGlobalDescriptorLayout(), *Renderer::GetDescriptorPool())
+		.WriteBuffer(0, &bufferInfo)
+		.Build(_DescriptorSets[nameStr]);
 }
 
 void DescriptorAllocator::WriteInput(std::string_view name, MEM::Ref<VulkanTexture> texture, uint32_t index)
@@ -48,13 +64,15 @@ VkDescriptorSet DescriptorAllocator::Allocate(MEM::Ref<VulkanDescriptorSetLayout
 	return set;
 }
 
-const std::vector<VkDescriptorSet>& DescriptorAllocator::GetDescriptorSets(uint32_t frameIndex) const { return _DescriptorSets[frameIndex]; }
-const RenderPassInputDeclaration* DescriptorAllocator::GetInputDeclaration(std::string_view name) const
-{
-	std::string nameStr(name);
-	if (_InputDeclarations.find(nameStr) == _InputDeclarations.end())
-		return nullptr;
+VkDescriptorSet& DescriptorAllocator::GetDescriptorSet(const std::string& name) { return _DescriptorSets[name]; }
+const std::map<uint32_t, std::map<uint32_t, RenderPassInputDeclaration>>& DescriptorAllocator::GetInputDeclarations() const { return _InputDeclarations; }
 
-	const RenderPassInputDeclaration& decl = _InputDeclarations.at(nameStr);
-	return &decl;
-}
+//const RenderPassInputDeclaration* DescriptorAllocator::GetInputDeclaration(std::string_view name) const
+//{
+//	std::string nameStr(name);
+//	if (_InputDeclarations.find(nameStr) == _InputDeclarations.end())
+//		return nullptr;
+//
+//	const RenderPassInputDeclaration& decl = _InputDeclarations.at(nameStr);
+//	return &decl;
+//}

@@ -8,7 +8,6 @@ VulkanTexture::VulkanTexture(const std::string& path)
 	: _Context(Application::Get()->GetVulkanContext())
 {
 	int width, height, channels;
-	stbi_set_flip_vertically_on_load(true);
 	stbi_uc* pixels = stbi_load(path.c_str(), &width, &height, &channels, STBI_rgb_alpha);
 	if (!pixels) {
 		LOG_CORE_WARN("Failed to load {} using fallback white texture", path);

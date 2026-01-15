@@ -47,7 +47,7 @@
 class Logger {
 public:
     static void init() {
-        auto consoleSink = MEM::Ref<spdlog::sinks::stdout_color_sink_mt>::Create();
+        auto consoleSink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
         spdlog::set_pattern("%^[%n][%l] %T: %v%$");
 
         s_CoreLogger = std::make_shared<spdlog::logger>("CORE", consoleSink);

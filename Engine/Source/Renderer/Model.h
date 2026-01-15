@@ -96,7 +96,7 @@ private:
 	friend class Model;
 };
 
-class Model {
+class Model : public MEM::RefCounted {
 public:
 	Model(const std::filesystem::path& path) { LoadModelFromFile(path); }
 

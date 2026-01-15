@@ -3,7 +3,7 @@
 #include "Vulkan/VulkanContext.h"
 #include "Vulkan/VulkanSwapchain.h"
 #include "Vulkan/VulkanCommands.h"
-#include "DescriptorAllocator.h"
+#include "Vulkan/VulkanDescriptorAllocator.h"
 #include "PipelineLibrary.h"
 #include "Utilities/Memory.h"
 #include <functional>

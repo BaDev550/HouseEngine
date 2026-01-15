@@ -101,10 +101,10 @@ VulkanDescriptorWriter::VulkanDescriptorWriter(VulkanDescriptorSetLayout& setLay
 VulkanDescriptorWriter& VulkanDescriptorWriter::WriteBuffer(uint32_t binding, VkDescriptorBufferInfo* bufferInfo)
 {
     assert(_SetLayout._Bindings.count(binding) == 1 && "Layout does not contain specified binding");
-
+    
     auto& bindingDescription = _SetLayout._Bindings[binding];
     assert(bindingDescription.descriptorCount == 1 && "Binding single descriptor info, but binding expects multiple");
-
+    
     VkWriteDescriptorSet write{};
     write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
     write.descriptorType = bindingDescription.descriptorType;

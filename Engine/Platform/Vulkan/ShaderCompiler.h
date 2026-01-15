@@ -3,8 +3,16 @@
 #include <vector>
 #include <filesystem>
 #include <cstdint>
+#include <map>
 
-namespace pipeline::utils {
-    std::vector<char> CompileShaderFileToSpirv(const std::filesystem::path& path, bool optimize = true);
-}
+enum class ShaderReflectionDataType : uint8_t {
+	None = 0,
+	UniformBuffer,
+	Sampler2D
+};
 
+class ShaderCompiler {
+public:
+    static std::vector<char> CompileShaderFileToSpirv(const std::filesystem::path& path, std::map<uint32_t, std::map<uint32_t, std::string>>& reflectData, bool optimize = false);
+    static void CollectReflectionData(std::map<uint32_t, std::map<uint32_t, std::string>>& reflectData, const void* code, size_t sizeInBytes);
+};

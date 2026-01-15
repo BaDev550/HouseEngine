@@ -36,12 +36,12 @@ struct TransformComponent {
 };
 
 struct CameraComponent {
-	MEM::Ref<Camera> Handle;
+	Camera Handle;
 	bool IsActive;
 	
-	void Update(float dt) { Handle->Update(dt); }
-	const MEM::Ref<Camera>& GetCamera() const { return Handle; }
-	CameraComponent(bool isActive = false) : IsActive(isActive) { Handle = MEM::Ref<Camera>::Create(); }
+	void Update(float dt) { Handle.Update(dt); }
+	const Camera& GetCamera() const { return Handle; }
+	CameraComponent(bool isActive = false) : IsActive(isActive) {}
 	CameraComponent(const CameraComponent&) = default;
 };
 

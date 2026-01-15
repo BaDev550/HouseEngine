@@ -9,18 +9,13 @@ SceneRenderer::SceneRenderer()
 {
 	// Camera Uniform buffer set
 	VkDeviceSize camerabufferSize = sizeof(CameraUniformData);
-	_CameraUB = MEM::MakeScope<VulkanBuffer>(
+	_CameraUB = MEM::Ref<VulkanBuffer>::Create(
 		camerabufferSize,
 		1,
 		VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
 		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
 	);
 	_CameraUB->Map();
-
-	VkDescriptorBufferInfo cameraBufferInfo = _CameraUB->DescriptorInfo();
-	VulkanDescriptorWriter(*Renderer::GetGlobalDescriptorLayout(), *Renderer::GetDescriptorPool())
-		.WriteBuffer(0, &cameraBufferInfo)
-		.Build(_CameraDS);
 }
 
 SceneRenderer::~SceneRenderer()
@@ -32,19 +27,12 @@ void SceneRenderer::DrawScene(std::unordered_map<UUID, Entity>& entities, const 
 	_CameraUD.View = cam->GetView();
 	_CameraUD.Proj = cam->GetProjection();
 	_CameraUB->WriteToBuffer(&_CameraUD);
-	vkCmdBindDescriptorSets(
-		Renderer::GetCurrentCommandBuffer(),
-		VK_PIPELINE_BIND_POINT_GRAPHICS,
-		Renderer::GetPipelineLayout(),
-		0, 1,
-		&_CameraDS,
-		0,
-		nullptr
-	);
+	Renderer::GetDescriptorAllocator()->WriteInput("camera", _CameraUB);
 	
 	for (auto& object : entities) {
 		if (!object.second.HasComponent<StaticMeshComponent>())
 			continue;
+
 
 		auto& model = object.second.GetComponent<StaticMeshComponent>();
 		glm::mat4 transform = object.second.GetComponent<TransformComponent>().ModelMatrix();

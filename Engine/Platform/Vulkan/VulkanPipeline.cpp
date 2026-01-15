@@ -7,34 +7,31 @@
 VulkanPipeline::VulkanPipeline(VulkanPipelineConfig& config, const std::string& vertexPath, const std::string& fragmentPath)
 	: _VulkanContext(Application::Get()->GetVulkanContext())
 {
-	std::vector<char> vertShaderCode = pipeline::utils::CompileShaderFileToSpirv(vertexPath);
-	std::vector<char> fragShaderCode = pipeline::utils::CompileShaderFileToSpirv(fragmentPath);
-	CreateShaderModule(vertShaderCode, &_VertexShaderModule);
-	CreateShaderModule(fragShaderCode, &_FragmentShaderModule);
-
-	VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
-	vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-	vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-	vertShaderStageInfo.module = _VertexShaderModule;
-	vertShaderStageInfo.pName = "main";
-
-	VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
-	fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-	fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-	fragShaderStageInfo.module = _FragmentShaderModule;
-	fragShaderStageInfo.pName = "main";
-	
-	VkPipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageInfo, fragShaderStageInfo };
+	_VulkanShader = MEM::Ref<VulkanShader>::Create(vertexPath, fragmentPath);
 
 	auto bindingDescription = Vertex::GetBindingDescription();
 	auto attributeDescriptons = Vertex::GetAttributeDescriptions();
-
+	
 	VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
 	vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 	vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptons.size());
 	vertexInputInfo.vertexBindingDescriptionCount = 1;
 	vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptons.data();
 	vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
+
+	VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
+	vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+	vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
+	vertShaderStageInfo.module = _VulkanShader->GetVertexModule();
+	vertShaderStageInfo.pName = "main";
+
+	VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
+	fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+	fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+	fragShaderStageInfo.module = _VulkanShader->GetFragmentModule();
+	fragShaderStageInfo.pName = "main";
+
+	VkPipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageInfo, fragShaderStageInfo };
 
 	VkGraphicsPipelineCreateInfo createInfo{};
 	createInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -56,21 +53,10 @@ VulkanPipeline::VulkanPipeline(VulkanPipelineConfig& config, const std::string& 
 
 VulkanPipeline::~VulkanPipeline()
 {
-	vkDestroyShaderModule(_VulkanContext.GetDevice(), _FragmentShaderModule, nullptr);
-	vkDestroyShaderModule(_VulkanContext.GetDevice(), _VertexShaderModule, nullptr);
 	vkDestroyPipeline(_VulkanContext.GetDevice(), _VulkanPipeline, nullptr);
 }
 
 void VulkanPipeline::Bind(VkCommandBuffer cmd)
 {
 	vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, _VulkanPipeline);
-}
-
-void VulkanPipeline::CreateShaderModule(const std::vector<char>& code, VkShaderModule* shaderModule)
-{
-	VkShaderModuleCreateInfo createInfo{};
-	createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-	createInfo.codeSize = code.size();
-	createInfo.pCode = reinterpret_cast<const uint32_t*>(code.data());
-	CHECKF(vkCreateShaderModule(_VulkanContext.GetDevice(), &createInfo, nullptr, shaderModule) != VK_SUCCESS, "failed to create shader module!");
 }

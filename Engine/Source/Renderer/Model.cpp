@@ -23,7 +23,7 @@ void Mesh::CreateVertexBuffer(std::vector<Vertex>& vertices)
 	stagingBuffer->WriteToBuffer(vertices.data());
 	stagingBuffer->Unmap();
 
-	_VertexBuffer = std::make_unique<VulkanBuffer>(
+	_VertexBuffer = MEM::Ref<VulkanBuffer>::Create(
 		bufferSize,
 		1,
 		VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
@@ -45,7 +45,7 @@ void Mesh::CreateIndexBuffer(std::vector<uint32_t>& indices)
 	stagingBuffer->WriteToBuffer(indices.data());
 	stagingBuffer->Unmap();
 
-	_IndexBuffer = MEM::MakeScope<VulkanBuffer>(
+	_IndexBuffer = MEM::Ref<VulkanBuffer>::Create(
 		bufferSize,
 		1,
 		VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,

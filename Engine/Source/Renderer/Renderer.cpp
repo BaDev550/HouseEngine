@@ -74,7 +74,6 @@ void Renderer::Init() {
 	uint32_t whiteTextureData = 0xffffffff;
 	s_Context.PipelineLibrary = MEM::Ref<PipelineLibrary>::Create();
 	s_Context.WhiteTexture = MEM::Ref<VulkanTexture>::Create(&whiteTextureData, 1, 1);
-	s_Data.GlobalDescriptorAllocator = MEM::Ref<DescriptorAllocator>::Create();
 
 	for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
 		auto& frame = s_Frames[i];
@@ -121,6 +120,10 @@ void Renderer::Init() {
 	defaultConfig.PipelineLayout = s_Data.PipelineLayout;
 
 	Renderer::GetPipelineLibrary()->AddPipeline("MainPipeline", "Shaders/base.vert", "Shaders/base.frag", defaultConfig);
+
+	DescriptorAllocatorSpecification specs{};
+	specs.Pipeline = Renderer::GetPipelineLibrary()->GetPipeline("MainPipeline");
+	s_Data.GlobalDescriptorAllocator = MEM::Ref<DescriptorAllocator>::Create(specs);
 }
 
 void Renderer::Destroy()
@@ -156,6 +159,21 @@ VkCommandBuffer Renderer::BeginFrame() {
 
 	CHECKF((vkResetCommandPool(Application::Get()->GetVulkanContext().GetDevice(), frame.CommandPool, 0) != VK_SUCCESS), "Failed to reset command pool");
 	CHECKF((vkBeginCommandBuffer(cmd, &beginInfo) != VK_SUCCESS), "Failed to begin recording to command buffer");
+
+	for (const auto& [set, bt] : s_Data.GlobalDescriptorAllocator->GetInputDeclarations()) {
+		for (const auto& [binding, inputDeclaration] : bt) {
+			vkCmdBindDescriptorSets(
+				Renderer::GetCurrentCommandBuffer(),
+				VK_PIPELINE_BIND_POINT_GRAPHICS,
+				Renderer::GetPipelineLayout(),
+				set, 1,
+				&s_Data.GlobalDescriptorAllocator->GetDescriptorSet(inputDeclaration.Name),
+				0,
+				nullptr
+			);
+		}
+	}
+
 	return cmd;
 }
 

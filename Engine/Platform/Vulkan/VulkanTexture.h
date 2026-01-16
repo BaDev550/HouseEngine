@@ -1,7 +1,8 @@
 #pragma once
 #include "VulkanContext.h"
+#include "Renderer/Texture.h"
 
-class VulkanTexture : public MEM::RefCounted
+class VulkanTexture : public Texture2D
 {
 public:
 	VulkanTexture(const std::string& path);

@@ -17,7 +17,7 @@ public:
 
 	static VkCommandBuffer BeginFrame();
 	static void EndFrame();
-
+	
 	template<typename FuncT>
 	static void Submit(FuncT&& func) {}
 

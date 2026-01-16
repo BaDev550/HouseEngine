@@ -21,6 +21,10 @@ struct FrameContext {
 static uint32_t s_FrameIndex;
 static bool s_FrameStarted = false;
 
+/*
+	buffer da önceki komutlarý tutarak otomatik barrier falan koyabilirsin
+*/
+
 VkCommandBuffer Renderer::GetCurrentCommandBuffer() {
 	CHECKF(!s_FrameStarted, "Cannot get a command buffer while frame is not in progress");
 	return s_Frames[s_FrameIndex].CommandBuffer;

@@ -2,15 +2,17 @@
 
 #include "Camera.h"
 
-class EditorCamera : public Camera
-{
-public:
-	EditorCamera() = default;
+namespace House {
+	class EditorCamera : public Camera
+	{
+	public:
+		EditorCamera() = default;
 
-	virtual void Update(float dt) override;
-	void SetProccessingMouse(bool processing) { _proccessingMouse = processing; }
-private:
-	float _lastX = 0.0f;
-	float _lastY = 0.0f;
-	bool _proccessingMouse = true;
-};
+		virtual void Update(float dt) override;
+		void SetProccessingMouse(bool processing) { _proccessingMouse = processing; }
+	private:
+		float _lastX = 0.0f;
+		float _lastY = 0.0f;
+		bool _proccessingMouse = true;
+	};
+}

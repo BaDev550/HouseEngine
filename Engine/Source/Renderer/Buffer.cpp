@@ -12,6 +12,7 @@ namespace House {
 		}
 	}
 
+#if 0
 	MEM::Ref<Buffer> UniformBuffer::Create(uint64_t size) {
 		switch (RenderAPI::CurrentAPI())
 		{
@@ -19,4 +20,5 @@ namespace House {
 		case GrapichsAPI::OpenGL: return nullptr;
 		}
 	}
+#endif
 }

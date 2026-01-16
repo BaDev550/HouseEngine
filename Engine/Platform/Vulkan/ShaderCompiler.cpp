@@ -153,25 +153,28 @@ namespace House {
                 }
             }
             {
-                spvReflectEnumerateInputVariables(&module, &count, nullptr);
-                std::vector<SpvReflectInterfaceVariable*> inputs(count);
-                spvReflectEnumerateInputVariables(&module, &count, inputs.data());
+                if (module.shader_stage & SPV_REFLECT_SHADER_STAGE_VERTEX_BIT) {
+                    spvReflectEnumerateInputVariables(&module, &count, nullptr);
+                    std::vector<SpvReflectInterfaceVariable*> inputs(count);
+                    spvReflectEnumerateInputVariables(&module, &count, inputs.data());
+                    std::sort(inputs.begin(), inputs.end(), [](SpvReflectInterfaceVariable* a, SpvReflectInterfaceVariable* b) { return a->location < b->location; });
 
-                uint32_t stride = 0;
-                for (const auto& input : inputs) {
-                    VkFormat format = static_cast<VkFormat>(input->format);
-                    uint32_t size = helpers::GetFormatSize(format);
-                   
-                    VkVertexInputAttributeDescription attrib{};
-                    attrib.location = input->location;
-                    attrib.format = format;
-                    attrib.offset = stride;
-                    stride += size;
-                    shaderInfo.ArrtibDescriptions.emplace_back(attrib);
+                    uint32_t stride = 0;
+                    for (const auto& input : inputs) {
+                        VkFormat format = static_cast<VkFormat>(input->format);
+                        uint32_t size = helpers::GetFormatSize(format);
+
+                        VkVertexInputAttributeDescription attrib{};
+                        attrib.location = input->location;
+                        attrib.format = format;
+                        attrib.offset = stride;
+                        stride += size;
+                        shaderInfo.ArrtibDescriptions.emplace_back(attrib);
+                    }
+                    shaderInfo.BindingDescription.binding = 0;
+                    shaderInfo.BindingDescription.stride = stride;
+                    shaderInfo.BindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
                 }
-                shaderInfo.BindingDescription.binding = 0;
-                shaderInfo.BindingDescription.stride = stride;
-                shaderInfo.BindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
             }
         }
         spvReflectDestroyShaderModule(&module);

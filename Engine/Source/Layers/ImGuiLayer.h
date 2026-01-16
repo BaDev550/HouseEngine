@@ -2,13 +2,15 @@
 #include <imgui.h>
 #include "Layer.h"
 
-class ImGuiLayer : public Layer {
-public:
-	ImGuiLayer();
-	~ImGuiLayer();
+namespace House {
+	class ImGuiLayer : public Layer {
+	public:
+		ImGuiLayer();
+		~ImGuiLayer();
 
-	virtual void OnAttach() override;
-	virtual void OnDetach() override;
-	void Begin();
-	void End(VkCommandBuffer cmd);
-};
+		virtual void OnAttach() override;
+		virtual void OnDetach() override;
+		void Begin();
+		void End(VkCommandBuffer cmd);
+	};
+}

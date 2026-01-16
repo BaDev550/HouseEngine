@@ -1,20 +1,23 @@
 #pragma once
 #include "Utilities/Memory.h"
 #include "Utilities/Flag.h"
+#include "Utilities/Defines.h"
 
 namespace House {
 	enum class BufferType : uint8_t {
-		UniformBuffer,
-		VertexBuffer,
-		IndexBuffer,
-		TransferDst,
-		TransferSrc,
+		None = 0,
+		UniformBuffer = BIT(0),
+		VertexBuffer  = BIT(1),
+		IndexBuffer   = BIT(2),
+		TransferDst   = BIT(3),
+		TransferSrc   = BIT(4),
 	};
 
 	enum class MemoryProperties : uint8_t {
-		HOST_VISIBLE,
-		HOST_COHERENT,
-		DEVICE
+		None = 0,
+		HOST_VISIBLE  = BIT(0),
+		HOST_COHERENT = BIT(1),
+		DEVICE        = BIT(2)
 	};
 
 	template <>
@@ -37,8 +40,10 @@ namespace House {
 		static MEM::Ref<Buffer> Create(uint64_t size, BufferFlags typeFlags, MemoryFlags memprops = MemoryProperties::HOST_VISIBLE);
 	};
 
+#if 0
 	class UniformBuffer : public Buffer {
 	public:
 		static MEM::Ref<Buffer> Create(uint64_t size);
 	};
+#endif
 }

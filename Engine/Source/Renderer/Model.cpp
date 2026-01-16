@@ -74,24 +74,24 @@ namespace House {
 		for (uint32_t i = 0; i < scene->mNumMaterials; i++) {
 			aiMaterial* aiMat = scene->mMaterials[i];
 
-			auto material = MEM::Ref<Material>::Create(Renderer::GetPipeline("MainShader"));
+			auto material = Material::Create(Renderer::GetPipeline("MainShader"));
 			aiString path;
 
 			if (aiMat->GetTexture(aiTextureType_DIFFUSE, 0, &path) == AI_SUCCESS) {
 				std::filesystem::path texturePath = _ModelDirectory / path.C_Str();
 				MEM::Ref<Texture2D> texture = Texture2D::Create(texturePath.string());
-				material->GetMaterialVariables().DiffuseTexture = texture;
+				material->GetMaterialData().DiffuseTexture = texture;
 			}
 			else {
-				material->GetMaterialVariables().DiffuseTexture = Renderer::GetWhiteTexture();
+				material->GetMaterialData().DiffuseTexture = Renderer::GetWhiteTexture();
 			}
 			if (aiMat->GetTexture(aiTextureType_NORMALS, 0, &path) == AI_SUCCESS) {
 				std::filesystem::path texturePath = _ModelDirectory / path.C_Str();
 				MEM::Ref<Texture2D> texture = Texture2D::Create(texturePath.string());
-				material->GetMaterialVariables().NormalTexture = texture;
+				material->GetMaterialData().NormalTexture = texture;
 			}
 			else {
-				material->GetMaterialVariables().NormalTexture = Renderer::GetWhiteTexture();
+				material->GetMaterialData().NormalTexture = Renderer::GetWhiteTexture();
 			}
 			material->Build();
 

@@ -5,31 +5,30 @@
 #include <glm/glm.hpp>
 
 namespace House {
+	struct MaterialData {
+		MEM::Ref<Texture2D> DiffuseTexture = nullptr;
+		MEM::Ref<Texture2D> NormalTexture = nullptr;
+		float Metallic = 0.0f;
+		float Roughness = 0.0f;
+
+		bool HasNormalMap = false;
+	};
+
 	class Material : public MEM::RefCounted {
 	private:
-		struct MaterialVariables {
-			MEM::Ref<Texture2D> DiffuseTexture = nullptr;
-			MEM::Ref<Texture2D> NormalTexture = nullptr;
-			float Metallic = 0.0f;
-			float Roughness = 0.0f;
-
-			bool HasNormalMap = false;
-		} _MaterialVariables;
 	public:
-		Material(MEM::Ref<Pipeline>& pipeline);
-		~Material() = default;
-		Material(const Material&) = delete;
-		Material& operator=(Material&) = delete;
+		virtual ~Material() = default;
 
-		void Build();
-		void Bind(VkCommandBuffer cmd);
-		MaterialVariables& GetMaterialVariables() { return _MaterialVariables; }
-		void SetMaterialVariables(const MaterialVariables& newVar) { _MaterialVariables = newVar; }
-	private:
+		virtual void Build() = 0;
+		virtual void Bind() = 0;
+
+		MaterialData& GetMaterialData() { return _Data; };
+		void SetMaterialData(const MaterialData& data) { _Data = data; }
+
+		static MEM::Ref<Material> Create(MEM::Ref<Pipeline>& pipeline);
+	protected:
 		uint32_t _Id = UINT32_MAX;
-		MEM::Ref<Pipeline> _Pipeline;
-		//std::vector<VkDescriptorSet> _DescriptorSets;
-		//MEM::Ref<VulkanDescriptorPool> _MaterialPool;
+		MaterialData _Data;
 
 		friend class Model;
 	};

@@ -61,8 +61,16 @@ namespace House {
 		pipelineLayoutInfo.pPushConstantRanges = &push_constant;
 		CHECKF(vkCreatePipelineLayout(_Context.GetDevice(), &pipelineLayoutInfo, nullptr, &_PipelineLayout) != VK_SUCCESS, "failed to create pipeline layout!");
 
+		VkPipelineRenderingCreateInfo pipelineRenderingCreateInfo{};
+		pipelineRenderingCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
+		pipelineRenderingCreateInfo.colorAttachmentCount = 1;
+		VkFormat colorFormat = Application::Get()->GetWindow().GetSwapchain().GetSwapChainFormat();
+		pipelineRenderingCreateInfo.pColorAttachmentFormats = &colorFormat;
+		pipelineRenderingCreateInfo.depthAttachmentFormat = VK_FORMAT_D32_SFLOAT;
+
 		VkGraphicsPipelineCreateInfo createInfo{};
 		createInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+		createInfo.pNext = &pipelineRenderingCreateInfo;
 		createInfo.stageCount = 2;
 		createInfo.pStages = shaderStages;
 		createInfo.pVertexInputState = &vertexInputInfo;
@@ -74,7 +82,8 @@ namespace House {
 		createInfo.pColorBlendState = &config.ColorBlendStateCreateInfo;
 		createInfo.pDynamicState = &config.DynamicStateCreateInfo;
 		createInfo.layout = _PipelineLayout;
-		createInfo.renderPass = config.RenderPass;
+
+		createInfo.renderPass = VK_NULL_HANDLE;
 		createInfo.subpass = 0;
 		CHECKF(vkCreateGraphicsPipelines(_Context.GetDevice(), VK_NULL_HANDLE, 1, &createInfo, nullptr, &_Pipeline) != VK_SUCCESS, "Failed to create pipeline");
 	}

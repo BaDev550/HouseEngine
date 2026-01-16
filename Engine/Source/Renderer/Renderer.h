@@ -1,9 +1,11 @@
 #pragma once
 #include "Texture.h"
 #include "Pipeline.h"
+#include "RenderPass.h"
 #include "Buffer.h"
 #include "Model.h"
 #include "ShaderLibrary.h"
+#include "RenderAPI.h"
 
 #include "Utilities/Memory.h"
 #include <functional>
@@ -21,8 +23,10 @@ namespace House {
 		static void BeginFrame();
 		static void EndFrame();
 		static void CopyBuffer(MEM::Ref<Buffer>& srcBuffer, MEM::Ref<Buffer>& dstBuffer, uint64_t size);
-		static void DrawMesh(MEM::Ref<Pipeline>& pipeline, MEM::Ref<Model>& model, glm::mat4& transform);
 
+		static void DrawMesh(MEM::Ref<RenderPass>& renderPass, MEM::Ref<Model>& model, glm::mat4& transform);
+
+		static RenderAPI* GetAPI();
 		static uint32_t GetDrawCall();
 		static uint32_t GetFrameIndex();
 		static MEM::Ref<Pipeline>& GetPipeline(const std::string& pipeline);

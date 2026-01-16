@@ -1,5 +1,6 @@
 #pragma once
 #include "Utilities/Memory.h"
+#include <map>
 
 namespace House {
 	enum class ShaderReflectionDataType : uint8_t {

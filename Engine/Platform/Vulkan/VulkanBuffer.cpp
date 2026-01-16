@@ -6,7 +6,7 @@ namespace House {
     namespace Utils {
         VkBufferUsageFlags BufferTypeToVulkanUsageFlag(BufferFlags flags)
         {
-            VkBufferUsageFlags vkFlags; 
+            VkBufferUsageFlags vkFlags = 0;
             if (flags.Has(BufferType::UniformBuffer)) vkFlags |= VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
             if (flags.Has(BufferType::IndexBuffer))   vkFlags |= VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
             if (flags.Has(BufferType::VertexBuffer))  vkFlags |= VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
@@ -17,7 +17,7 @@ namespace House {
 
         VkMemoryPropertyFlags MemoryPropertiesToVulkanMemoryProperites(MemoryFlags flags)
         {
-            VkMemoryPropertyFlags vkFlags;
+            VkMemoryPropertyFlags vkFlags = 0;
             if (flags.Has(MemoryProperties::HOST_COHERENT)) vkFlags |= VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
             if (flags.Has(MemoryProperties::HOST_VISIBLE))  vkFlags |= VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
             if (flags.Has(MemoryProperties::DEVICE))        vkFlags |= VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;

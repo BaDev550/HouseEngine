@@ -3,21 +3,23 @@
 #include "Core/Application.h"
 #include "Core/EntryPoint.h"
 
-class HouseEditor : public Application {
-public:
-	HouseEditor(const ApplicationSpecs& applicationSpecs)
-		: Application(applicationSpecs)
-	{
-		PushLayer(new HouseEditorLayer());
-	}
-};
+namespace House::Editor {
+	class HouseEditor : public Application {
+	public:
+		HouseEditor(const ApplicationSpecs& applicationSpecs)
+			: Application(applicationSpecs)
+		{
+			PushLayer(new HouseEditorLayer());
+		}
+	};
 
+}
 
-Application* CreateApplication(ApplicationCommandLineArgs args) {
-	ApplicationSpecs specs;
+House::Application* CreateApplication(House::ApplicationCommandLineArgs args) {
+	House::ApplicationSpecs specs;
 	specs.Name = "HouseEngine";
 	specs.WindowSettings.Width = 1280;
 	specs.WindowSettings.Height = 720;
 	specs.CommandLineArgs = args;
-	return new HouseEditor(specs);
+	return new House::Editor::HouseEditor(specs);
 }

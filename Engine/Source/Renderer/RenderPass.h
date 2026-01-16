@@ -1,13 +1,7 @@
 #pragma once
-#include "Vulkan/VulkanPipeline.h"
-#include "Vulkan/VulkanCommands.h"
-#include "Vulkan/VulkanDescriptor.h"
+#include "Buffer.h"
+#include "Texture.h"
 #include "Utilities/Memory.h"
-
-#include "World/Entity/Entity.h"
-#include "World/Scene/Scene.h"
-#include "Camera.h"
-#include <array>
 
 namespace House {
 	class RenderPass : public MEM::RefCounted
@@ -15,6 +9,12 @@ namespace House {
 	public:
 		virtual ~RenderPass() = default;
 		
-		
+		virtual void Begin() = 0;
+		virtual void End() = 0;
+
+		virtual void SetInput(std::string_view name, MEM::Ref<Buffer>& buffer) = 0;
+		virtual void SetInput(std::string_view name, MEM::Ref<Texture2D>& texture) = 0;
+
+		static MEM::Ref<RenderPass> Create(MEM::Ref<Pipeline>& pipeline);
 	};
 }

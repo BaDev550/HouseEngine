@@ -19,7 +19,7 @@ namespace House {
 		VkShaderModule GetVertexModule() const { return _VertexShaderModule; }
 		MEM::Ref<VulkanDescriptorSetLayout>& GetDescriptorLayout(uint32_t set) { return _DescriptorLayouts[set]; }
 
-		const CompiledShaderInfo& GetCompiledShaderData() const { _CompiledData; }
+		const CompiledShaderInfo& GetCompiledShaderData() const { return _CompiledData; }
 		const std::map<uint32_t, MEM::Ref<VulkanDescriptorSetLayout>>& GetDesciptorLayouts() const { return _DescriptorLayouts; }
 		virtual std::map<uint32_t, std::map<uint32_t, DescriptorInfo>>& GetReflectData() override { return _CompiledData.ReflectData; }
 	private:

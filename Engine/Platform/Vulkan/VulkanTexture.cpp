@@ -43,14 +43,13 @@ namespace House {
 
 	void VulkanTexture::LoadTexture(void* data, uint32_t width, uint32_t height, uint32_t channels)
 	{
-		VkDeviceSize imageSize = width * height * STBI_rgb_alpha;
+		uint64_t imageSize = width * height * STBI_rgb_alpha;
 
-		std::unique_ptr<VulkanBuffer> stagingBuffer;
-		stagingBuffer = std::make_unique<VulkanBuffer>(
+		MEM::Scope<VulkanBuffer> stagingBuffer;
+		stagingBuffer = MEM::MakeScope<VulkanBuffer>(
 			imageSize,
-			1,
-			VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+			BufferType::TransferSrc,
+			MemoryProperties::HOST_VISIBLE | MemoryProperties::HOST_COHERENT
 		);
 		stagingBuffer->Map();
 		stagingBuffer->WriteToBuffer(data);

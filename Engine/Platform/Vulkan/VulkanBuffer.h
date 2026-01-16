@@ -11,7 +11,7 @@ namespace House {
 	{
 	public:
 		static VkDeviceSize GetAlignment(VkDeviceSize instanceSize, VkDeviceSize minOffsetAlignment);
-
+		
 		VulkanBuffer(uint64_t size, BufferFlags typeFlags, MemoryFlags memprops);
 		~VulkanBuffer();
 		VulkanBuffer(const VulkanBuffer&) = delete;

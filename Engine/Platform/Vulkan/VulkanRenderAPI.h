@@ -11,9 +11,10 @@ namespace House {
 		virtual void EndFrame() override;
 
 		virtual void CopyBuffer(MEM::Ref<Buffer>& srcBuffer, MEM::Ref<Buffer>& dstBuffer, uint64_t size) override;
-		virtual void DrawMesh(MEM::Ref<Pipeline>& pipeline, MEM::Ref<Model>& model, glm::mat4& transform) override;
+		virtual void DrawMesh(MEM::Ref<RenderPass>& renderPass, MEM::Ref<Model>& model, glm::mat4& transform) override;
 		virtual uint32_t GetDrawCall() override;
-	private:
+	public:
+		void InsertImageMemoryBarrier(VkCommandBuffer cmd, VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout, VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask, VkAccessFlags srcAccessMask, VkAccessFlags dstAccessMask, VkImageAspectFlags aspectMask);
 		VkCommandBuffer GetCurrentCommandBuffer();
 	};
 }

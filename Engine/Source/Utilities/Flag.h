@@ -21,7 +21,7 @@ public:
     constexpr Flags operator|(Flags o) const noexcept { return Flags(value | o.value); }
     constexpr Flags operator&(Flags o) const noexcept { return Flags(value & o.value); }
     constexpr Flags operator^(Flags o) const noexcept { return Flags(value ^ o.value); }
-    constexpr bool operator<=>(const Flags& o) const noexcept = default;
+    //constexpr bool operator<=>(const Flags& o) const noexcept = default;
     constexpr Flags operator~() const noexcept { return Flags(~value); }
 
     constexpr Flags& operator|=(Flags o) noexcept { value |= o.value; return *this; }

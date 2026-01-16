@@ -2,6 +2,7 @@
 #include <iostream>
 #include "Logger.h"
 
+#define BIT(x) (1 << (x))
 #define USE_CUSTOM_LOGGER
 #ifdef USE_CUSTOM_LOGGER
 #define CHECKF(x, ...) \

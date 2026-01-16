@@ -6,7 +6,6 @@ namespace House {
 		VkCommandPool CommandPool;
 		VkCommandBuffer CommandBuffer;
 	} static s_Frames[MAX_FRAMES_IN_FLIGHT];
-	static uint32_t s_FrameIndex;
 	static bool s_FrameStarted = false;
 
 	struct DrawData {
@@ -15,7 +14,7 @@ namespace House {
 
 	VkCommandBuffer VulkanRenderAPI::GetCurrentCommandBuffer() {
 		CHECKF(!s_FrameStarted, "Cannot get a command buffer while frame is not in progress");
-		return s_Frames[s_FrameIndex].CommandBuffer;
+		return s_Frames[Renderer::GetFrameIndex()].CommandBuffer;
 	}
 
 	void VulkanRenderAPI::Init()
@@ -51,7 +50,7 @@ namespace House {
 		Application::Get()->GetWindow().SwapBuffers();
 		s_FrameStarted = true;
 		VkCommandBuffer cmd = GetCurrentCommandBuffer();
-		FrameContext& frame = s_Frames[s_FrameIndex];
+		FrameContext& frame = s_Frames[Renderer::GetFrameIndex()];
 		VkCommandBufferBeginInfo beginInfo{};
 		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 		beginInfo.flags = 0;
@@ -66,34 +65,47 @@ namespace House {
 		CHECKF(!s_FrameStarted, "Cant submit a not recorded frame");
 		VkCommandBuffer cmd = GetCurrentCommandBuffer();
 		CHECKF(vkEndCommandBuffer(cmd) != VK_SUCCESS, "Failed to record commad buffer");
-		VulkanCommands::SubmitSwapchain(cmd);
+		auto& window = Application::Get()->GetWindow();
+		auto& swapchain = window.GetSwapchain();
+		auto& imageIndex = window.GetImageIndex();
+		VkResult result = swapchain.Submit(&cmd, &imageIndex);
+		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || window.HasResized()) {
+			window.ResetResizeFlag();
+			swapchain.Recreate();
+		}
+
 		s_DrawData.DrawCall = 0;
 		s_FrameStarted = false;
-		s_FrameIndex = (s_FrameIndex + 1) % MAX_FRAMES_IN_FLIGHT;
+	}
+	 
+	void VulkanRenderAPI::CopyBuffer(MEM::Ref<Buffer>& srcBuffer, MEM::Ref<Buffer>& dstBuffer, uint64_t size)
+	{
+		auto& device = Application::Get()->GetVulkanContext();
+		const auto& vulkanSrcBuffer = srcBuffer.As<VulkanBuffer>();
+		const auto& vulkanDstBuffer = srcBuffer.As<VulkanBuffer>();
+		device.CopyBuffer(vulkanSrcBuffer->GetBuffer(), vulkanDstBuffer->GetBuffer(), size);
 	}
 
-	void VulkanRenderAPI::DrawMesh(MEM::Ref<VulkanPipeline>& pipeline, MEM::Ref<Model>& model, glm::mat4& transform)
+	void VulkanRenderAPI::DrawMesh(MEM::Ref<Pipeline>& pipeline, MEM::Ref<Model>& model, glm::mat4& transform)
 	{
 		auto cmd = GetCurrentCommandBuffer();
-		pipeline->Bind(cmd);
+		const auto& vulkanPipeline = pipeline.As<VulkanPipeline>();
+		vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, vulkanPipeline->GetVulkanPipeline());
 		//VkDescriptorSet globalSet = s_Data.GlobalDescriptorManager->GetDescriptorSet(s_FrameIndex, 0);
 		//vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->GetPipelineLayout(), 0, 1, &globalSet, 0, nullptr);
-		vkCmdPushConstants(cmd, pipeline->GetPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), &transform);
+		vkCmdPushConstants(cmd, vulkanPipeline->GetPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), &transform);
 		for (const auto& mesh : model->GetMeshes()) {
-			s_DrawData.DrawCall++;
 			model->GetMaterialByID(mesh.GetMaterialID())->Bind(cmd);
-			VulkanCommands::DrawIndexed(cmd, pipeline, mesh.GetVertexBuffer(), mesh.GetIndexBuffer(), mesh.GetIndexCount());
+
+			const auto& vulkanVertexBuffer = mesh.GetVertexBuffer().As<VulkanBuffer>();
+			const auto& vulkanIndexBuffer = mesh.GetIndexBuffer().As<VulkanBuffer>();
+			VkBuffer buffers[] = { vulkanVertexBuffer->GetBuffer()};
+			VkDeviceSize offsets[] = { 0 };
+			vkCmdBindVertexBuffers(cmd, 0, 1, buffers, offsets);
+			vkCmdBindIndexBuffer(cmd, vulkanIndexBuffer->GetBuffer(), offsets[0], VK_INDEX_TYPE_UINT32);
+			vkCmdDrawIndexed(cmd, mesh.GetIndexCount(), 1, 0, 0, 0);
+			s_DrawData.DrawCall++;
 		}
-	}
-
-	void VulkanRenderAPI::DrawVertex(MEM::Ref<VulkanPipeline>& pipeline, const MEM::Ref<VulkanBuffer>& vertexBuffer, uint32_t vertexCount)
-	{
-
-	}
-
-	void VulkanRenderAPI::DrawIndexed(MEM::Ref<VulkanPipeline>& pipeline, const MEM::Ref<VulkanBuffer>& vertexBuffer, const MEM::Ref<VulkanBuffer>& indexBuffer, uint32_t indicesCount)
-	{
-
 	}
 
 	uint32_t VulkanRenderAPI::GetDrawCall() { return s_DrawData.DrawCall; }

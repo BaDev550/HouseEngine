@@ -44,6 +44,7 @@ public:
 	ApplicationSpecs GetApplicationSpecs() const { return _ApplicationSpecs; }
 	float GetDeltaTime() const { return _DeltaTime; }
 	float GetFPS() const { return 1 / _DeltaTime; }
+	uint32_t GetFrameIndex() const { return _FrameIndex; }
 private:
 	static Application* _Instance;
 
@@ -54,6 +55,7 @@ private:
 	MEM::Scope<VulkanContext> _Context;
 
 	float _DeltaTime;
+	uint32_t _FrameIndex = 0;
 };
 
 Application* CreateApplication(ApplicationCommandLineArgs specs);

@@ -8,109 +8,83 @@
 #include <filesystem>
 #include <Vulkan/vulkan.h>
 
-#include "Vulkan/VulkanBuffer.h"
+#include "Buffer.h"
 #include "Material.h"
 
-template<typename T, typename... Rest>
-void HashCombine(std::size_t& seed, const T& v, const Rest&... rest) {
-	seed ^= std::hash<T>{}(v)+0x9e37779b9 + (seed << 6) + (seed >> 2);
-	(HashCombine(seed, rest), ...);
+namespace House {
+	template<typename T, typename... Rest>
+	void HashCombine(std::size_t& seed, const T& v, const Rest&... rest) {
+		seed ^= std::hash<T>{}(v)+0x9e37779b9 + (seed << 6) + (seed >> 2);
+		(HashCombine(seed, rest), ...);
+	}
+
+	struct Vertex {
+		glm::vec3 Position;
+		glm::vec2 TexCoords;
+		glm::vec3 Normal;
+
+		bool operator=(const Vertex& other) const {
+			return Position == other.Position &&
+				TexCoords == other.TexCoords &&
+				Normal == other.Normal;
+		}
+
+		Vertex() = default;
+	};
+
+	static constexpr uint32_t S_ASSIMPIMPORTERFLAGS =
+		aiProcess_Triangulate |
+		aiProcess_FlipUVs |
+		aiProcess_GenSmoothNormals |
+		aiProcess_CalcTangentSpace;
+
+	class Mesh {
+	public:
+		Mesh(
+			const std::string& name,
+			std::vector<Vertex>& vertices,
+			std::vector<uint32_t>& indices,
+			const uint32_t materialID);
+		~Mesh() = default;
+		const std::string& GetName() const { return _Name; }
+		const uint32_t GetMaterialID() const { return _MaterialId; }
+		const uint32_t GetIndexCount() const { return _IndexCount; }
+		const MEM::Ref<Buffer>& GetVertexBuffer() const { return _VertexBuffer; }
+		const MEM::Ref<Buffer>& GetIndexBuffer() const { return _IndexBuffer; }
+	private:
+		std::string _Name = "EMPTY_MESH";
+		MEM::Ref<Buffer> _VertexBuffer;
+		MEM::Ref<Buffer> _IndexBuffer;
+		std::vector<Vertex> _Vertices;
+		std::vector<uint32_t> _Indices;
+		uint32_t _MaterialId = UINT32_MAX;
+		uint32_t _VertexCount = 0;
+		uint32_t _IndexCount = 0;
+
+		bool _IsVisible = true;
+
+		void CreateVertexBuffer(std::vector<Vertex>& vertices);
+		void CreateIndexBuffer(std::vector<uint32_t>& indices);
+
+		friend class Model;
+	};
+
+	class Model : public MEM::RefCounted {
+	public:
+		Model(const std::filesystem::path& path) { LoadModelFromFile(path); }
+		~Model();
+
+		MEM::Ref<Material>& GetMaterialByID(uint32_t id) { return _Materials[id]; }
+		std::vector<Mesh>& GetMeshes() { return _Meshes; }
+		std::unordered_map<uint32_t, MEM::Ref<Material>>& GetMaterials() { return _Materials; }
+	private:
+		void LoadModelFromFile(const std::filesystem::path& path);
+		void ProcessNode(aiNode* node, const aiScene* scene);
+		void ProcessMaterials(const aiScene* scene);
+		Mesh ProcessMesh(aiMesh* mesh, const aiScene* scene);
+
+		std::filesystem::path _ModelDirectory = "EMPTY_MODEL_DIRECTORY";
+		std::vector<Mesh> _Meshes;
+		std::unordered_map<uint32_t, MEM::Ref<Material>> _Materials;
+	};
 }
-
-struct Vertex {
-	glm::vec3 Position;
-	glm::vec2 TexCoords;
-	glm::vec3 Normal;
-
-	static VkVertexInputBindingDescription GetBindingDescription() {
-		VkVertexInputBindingDescription bindingDescription{};
-		bindingDescription.binding = 0;
-		bindingDescription.stride = sizeof(Vertex);
-		bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-		return bindingDescription;
-	}
-
-	static std::array<VkVertexInputAttributeDescription, 3> GetAttributeDescriptions() {
-		std::array<VkVertexInputAttributeDescription, 3> attributeDescriptions{};
-		attributeDescriptions[0].binding = 0;
-		attributeDescriptions[0].location = 0;
-		attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
-		attributeDescriptions[0].offset = offsetof(Vertex, Position);
-
-		attributeDescriptions[1].binding = 0;
-		attributeDescriptions[1].location = 1;
-		attributeDescriptions[1].format = VK_FORMAT_R32G32_SFLOAT;
-		attributeDescriptions[1].offset = offsetof(Vertex, TexCoords);
-
-		attributeDescriptions[2].binding = 0;
-		attributeDescriptions[2].location = 2;
-		attributeDescriptions[2].format = VK_FORMAT_R32G32B32_SFLOAT;
-		attributeDescriptions[2].offset = offsetof(Vertex, Normal);
-		return attributeDescriptions;
-	}
-
-	bool operator=(const Vertex& other) const {
-		return Position == other.Position &&
-			TexCoords == other.TexCoords &&
-			Normal == other.Normal;
-	}
-
-	Vertex() = default;
-};
-
-static constexpr uint32_t S_ASSIMPIMPORTERFLAGS =
-	aiProcess_Triangulate |
-	aiProcess_FlipUVs |
-	aiProcess_GenSmoothNormals |
-	aiProcess_CalcTangentSpace;
-
-class Mesh {
-public:
-	Mesh(
-		const std::string& name,
-		std::vector<Vertex>& vertices,
-		std::vector<uint32_t>& indices,
-		const uint32_t materialID);
-	~Mesh() = default;
-	const std::string& GetName() const { return _Name; }
-	const uint32_t GetMaterialID() const { return _MaterialId; }
-	const uint32_t GetIndexCount() const { return _IndexCount; }
-	const MEM::Ref<VulkanBuffer>& GetVertexBuffer() const { return _VertexBuffer; }
-	const MEM::Ref<VulkanBuffer>& GetIndexBuffer() const { return _IndexBuffer; }
-private:
-	std::string _Name = "EMPTY_MESH";
-	MEM::Ref<VulkanBuffer> _VertexBuffer;
-	MEM::Ref<VulkanBuffer> _IndexBuffer;
-	std::vector<Vertex> _Vertices;
-	std::vector<uint32_t> _Indices;
-	uint32_t _MaterialId = UINT32_MAX;
-	uint32_t _VertexCount = 0;
-	uint32_t _IndexCount = 0;
-	VulkanContext& _Context;
-
-	bool _IsVisible = true;
-
-	void CreateVertexBuffer(std::vector<Vertex>& vertices);
-	void CreateIndexBuffer(std::vector<uint32_t>& indices);
-
-	friend class Model;
-};
-
-class Model : public MEM::RefCounted {
-public:
-	Model(const std::filesystem::path& path) { LoadModelFromFile(path); }
-	~Model();
-
-	MEM::Ref<Material>& GetMaterialByID(uint32_t id) { return _Materials[id]; }
-	std::vector<Mesh>& GetMeshes() { return _Meshes; }
-	std::unordered_map<uint32_t, MEM::Ref<Material>>& GetMaterials() { return _Materials; }
-private:
-	void LoadModelFromFile(const std::filesystem::path& path);
-	void ProcessNode(aiNode* node, const aiScene* scene);
-	void ProcessMaterials(const aiScene* scene);
-	Mesh ProcessMesh(aiMesh* mesh, const aiScene* scene);
-
-	std::filesystem::path _ModelDirectory = "EMPTY_MODEL_DIRECTORY";
-	std::vector<Mesh> _Meshes;
-	std::unordered_map<uint32_t, MEM::Ref<Material>> _Materials;
-};

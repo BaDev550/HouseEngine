@@ -13,7 +13,7 @@ public:
 	
 	MEM::Ref<VulkanShader>& GetShader() { return _Shader; }
 	VkPipelineLayout GetPipelineLayout() { return _PipelineLayout; }
-
+	
 	void Bind(VkCommandBuffer cmd);
 private:
 	VkPipeline _Pipeline;

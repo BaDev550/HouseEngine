@@ -1,11 +1,12 @@
 #pragma once
 
 #include "VulkanContext.h"
+#include "Utilities/Memory.h"
 #include <unordered_map>
 #include <memory>
 #include <vector>
 
-class VulkanDescriptorSetLayout {
+class VulkanDescriptorSetLayout : public MEM::RefCounted {
 public:
 	class Builder {
 	public:
@@ -29,7 +30,7 @@ private:
 	friend class VulkanDescriptorWriter;
 };
 
-class VulkanDescriptorPool {
+class VulkanDescriptorPool : public MEM::RefCounted {
 public:
 	class Builder {
 	public:
@@ -60,7 +61,7 @@ private:
 	friend class VulkanDescriptorWriter;
 };
 
-class VulkanDescriptorWriter {
+class VulkanDescriptorWriter : public MEM::RefCounted {
 public:
 	VulkanDescriptorWriter(VulkanDescriptorSetLayout& setLayout, VulkanDescriptorPool& pool);
 	VulkanDescriptorWriter& WriteBuffer(uint32_t binding, VkDescriptorBufferInfo* bufferInfo);

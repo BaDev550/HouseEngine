@@ -3,7 +3,7 @@
 #include <unordered_map>
 #include "Utilities/Memory.h"
 
-class PipelineLibrary
+class PipelineLibrary : public MEM::RefCounted
 {
 public:
 	MEM::Ref<VulkanPipeline>& AddPipeline(const std::string& name, const std::string& vertexPath, const std::string& fragPath, VulkanPipelineConfig& pipelineConfig);

@@ -17,11 +17,11 @@ VkPresentModeKHR VulkanSwapchain::ChooseSwapPresentMode(const std::vector<VkPres
 {
 	for (const auto& availablePresentMode : availablePresentModes) {
 		if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR) {
-			LOG_CORE_INFO("Using MAILBOX present mode.");
+			LOG_RENDERER_INFO("Using MAILBOX present mode.");
 			return availablePresentMode;
 		}
 	}
-	LOG_CORE_INFO("Using VSYNC present mode.");
+	LOG_RENDERER_INFO("Using VSYNC present mode.");
 	return VK_PRESENT_MODE_FIFO_KHR;
 }
 
@@ -67,7 +67,7 @@ VulkanSwapchain::VulkanSwapchain(VulkanContext* context)
 		CreateSyncObjects();
 	}
 	catch (const std::exception& e){
-		LOG_CORE_ERROR("SwapChain: {}", e.what());
+		LOG_RENDERER_ERROR("SwapChain: {}", e.what());
 	}
 }
 

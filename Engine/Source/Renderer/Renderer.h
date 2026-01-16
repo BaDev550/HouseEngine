@@ -3,7 +3,7 @@
 #include "Vulkan/VulkanContext.h"
 #include "Vulkan/VulkanSwapchain.h"
 #include "Vulkan/VulkanCommands.h"
-#include "Vulkan/VulkanDescriptorAllocator.h"
+#include "Vulkan/VulkanDescriptorManager.h"
 #include "PipelineLibrary.h"
 #include "Utilities/Memory.h"
 #include <functional>
@@ -18,19 +18,18 @@ public:
 	static VkCommandBuffer BeginFrame();
 	static void EndFrame();
 
+	template<typename FuncT>
+	static void Submit(FuncT&& func) {}
+
 	static void RenderMesh(VkCommandBuffer cmd, MEM::Ref<VulkanPipeline>& pipeline, MEM::Ref<Model>& model, glm::mat4& transform);
 
 	static uint32_t GetDrawCall();
 	static uint32_t GetFrameIndex();
 	static MEM::Ref<PipelineLibrary>& GetPipelineLibrary();
-	static MEM::Ref<DescriptorAllocator>& GetDescriptorAllocator();
+	static MEM::Ref<DescriptorManager>& GetDescriptorManager();
 public:
 	static VkCommandBuffer GetCurrentCommandBuffer();
-	static VkDescriptorSet AllocateMaterialSet();
-	static VkPipelineLayout GetPipelineLayout();
 	static MEM::Ref<VulkanTexture>& GetWhiteTexture();
 	static MEM::Ref<VulkanDescriptorPool>& GetDescriptorPool();
-	static MEM::Ref<VulkanDescriptorSetLayout>& GetMaterialDescriptorLayout();
-	static MEM::Ref<VulkanDescriptorSetLayout>& GetGlobalDescriptorLayout();
 };
 

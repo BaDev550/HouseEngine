@@ -22,11 +22,13 @@ Window::Window(const WindowConfig& config)
 
 Window::~Window()
 {
+	delete _Swapchain;
+	_Swapchain = nullptr;
 	glfwDestroyWindow(_Handle);
 	glfwTerminate();
 }
 
-void Window::CreateSwapchain(VulkanContext* context) { _Swapchain = MEM::Ref<VulkanSwapchain>::Create(context); }
+void Window::CreateSwapchain(VulkanContext* context) { _Swapchain = new VulkanSwapchain(context); }
 bool Window::ShouldClose() const { return glfwWindowShouldClose(_Handle); }
 bool Window::HasResized() const { return _Config.Resized; }
 void Window::ResetResizeFlag() { _Config.Resized = false; }

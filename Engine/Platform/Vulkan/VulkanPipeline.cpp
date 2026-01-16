@@ -35,7 +35,7 @@ VulkanPipeline::VulkanPipeline(VulkanPipelineConfig& config, const std::string& 
 
 	std::vector<VkDescriptorSetLayout> layouts;
 	const auto& layoutMap = _Shader->GetDesciptorLayouts();
-	for (auto const& [set, layout] : layoutMap) { layouts.push_back(layout); }
+	for (auto const& [set, layout] : layoutMap) { layouts.push_back(layout->GetDescriptorSetLayout()); }
 
 	VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 	VkPushConstantRange push_constant;

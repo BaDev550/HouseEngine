@@ -4,19 +4,18 @@
 void LayerRegistry::PushLayer(Layer* layer) {
 	_Layers.emplace(_Layers.begin() + _LayerInsertIndex, layer);
 	_LayerInsertIndex++;
-	layer->OnAttach();
 }
 
 void LayerRegistry::PushOverlay(Layer* layer)
 {
 	_Layers.emplace_back(layer);
-	layer->OnAttach();
 }
 
 void LayerRegistry::PopLayer(Layer* layer){ }
 
 void LayerRegistry::Clear() {
 	for (Layer* layer : _Layers) {
+		layer->OnDetach();
 		delete layer;
 		layer = nullptr;
 	}

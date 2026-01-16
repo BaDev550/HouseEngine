@@ -18,6 +18,7 @@ struct DescriptorInfo {
 
 class ShaderCompiler {
 public:
+    static VkDescriptorType ShaderReflectionTypeToVulkanType(const ShaderReflectionDataType& type);
     static std::vector<char> CompileShaderFileToSpirv(const std::filesystem::path& path, std::map<uint32_t, std::map<uint32_t, DescriptorInfo>>& reflectData, bool optimize = false);
     static void CollectReflectionData(std::map<uint32_t, std::map<uint32_t, DescriptorInfo>>& reflectData, const void* code, size_t sizeInBytes);
 };

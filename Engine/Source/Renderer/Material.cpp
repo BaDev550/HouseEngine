@@ -8,27 +8,28 @@ Material::Material(MEM::Ref<VulkanPipeline>& pipeline)
 }
 
 void Material::Build() {
-	_MaterialVariables.MaterialDescriptorSet = Renderer::AllocateMaterialSet();
-	VkDescriptorImageInfo diffuseInfo = _MaterialVariables.DiffuseTexture->GetImageDescriptorInfo();
-	VkDescriptorImageInfo normalInfo = _MaterialVariables.NormalTexture->GetImageDescriptorInfo();
+    auto& manager = Renderer::GetDescriptorManager();
+    auto& shader = _Pipeline->GetShader();
+    auto& layout = shader->GetDescriptorLayout(1);
 
-	VulkanDescriptorWriter writer(*Renderer::GetMaterialDescriptorLayout(), *Renderer::GetDescriptorPool());
-	
-	writer.WriteImage(0, &diffuseInfo);
-	writer.WriteImage(1, &normalInfo);
-	writer.Overwrite(_MaterialVariables.MaterialDescriptorSet);
+    _DescriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
+
+    for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+        _DescriptorSets[i] = manager->Allocate(layout);
+        VulkanDescriptorWriter writer(*layout, *manager->GetPool());
+
+        VkDescriptorImageInfo diffInfo = _MaterialVariables.DiffuseTexture->GetImageDescriptorInfo();
+        VkDescriptorImageInfo normInfo = _MaterialVariables.NormalTexture->GetImageDescriptorInfo();
+
+        writer.WriteImage(0, &diffInfo);
+        writer.WriteImage(1, &normInfo);
+        writer.Overwrite(_DescriptorSets[i]);
+    }
 }
 
 void Material::Bind(VkCommandBuffer cmd)
 {
 	_Pipeline->Bind(cmd);
-	vkCmdBindDescriptorSets(
-		cmd, 
-		VK_PIPELINE_BIND_POINT_GRAPHICS, 
-		_Pipeline->GetPipelineLayout(),
-		1, 1, 
-		&_MaterialVariables.MaterialDescriptorSet, 
-		0, 
-		nullptr
-	);
+    uint32_t frameIndex = Renderer::GetFrameIndex();
+    vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, _Pipeline->GetPipelineLayout(), 1, 1, &_DescriptorSets[frameIndex], 0, nullptr);
 }

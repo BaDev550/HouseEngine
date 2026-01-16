@@ -2,7 +2,7 @@
 
 class Layer {
 public:
-	Layer(const char* name = "EMPT_LAYER") {}
+	Layer(const char* name = "EMPT_LAYER") : _Name(name) {}
 	virtual ~Layer() = default;
 	virtual void OnAttach() {}
 	virtual void OnDetach() {}

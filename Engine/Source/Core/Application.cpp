@@ -27,14 +27,33 @@ Application::Application(const ApplicationSpecs& applicationSpecs)
 
 	_ImGuiLayer = new ImGuiLayer();
 	PushOverlay(_ImGuiLayer);
+	LOG_CORE_INFO("Application started");
 }
 
 Application::~Application()
 {
-	_LayerRegistry.Clear();
+	LOG_CORE_INFO("Exiting...");
+	_Context->WaitToDeviceIdle();
+
+	for (Layer* layer : _LayerRegistry) {
+		layer->OnDetach();
+		delete layer;
+	}
+
 	Renderer::Destroy();
 	_Window = nullptr;
 	_Context = nullptr;
+	Logger::Destroy();
+}
+
+void Application::PushLayer(Layer* layer) { 
+	_LayerRegistry.PushLayer(layer);
+	layer->OnAttach();
+}
+
+void Application::PushOverlay(Layer* layer) { 
+	_LayerRegistry.PushOverlay(layer); 
+	layer->OnAttach();
 }
 
 void Application::Run()
@@ -65,5 +84,4 @@ void Application::Run()
 		VulkanCommands::EndSwapchainRenderPass(cmd);
 		Renderer::EndFrame();
 	}
-	_Context->WaitToDeviceIdle();
 }

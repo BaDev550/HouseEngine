@@ -40,6 +40,6 @@ private:
 	GLFWwindow* _Handle;
 	WindowConfig _Config;
 	uint32_t _ImageIndex;
-	MEM::Ref<VulkanSwapchain> _Swapchain;
+	VulkanSwapchain* _Swapchain;
 };
 

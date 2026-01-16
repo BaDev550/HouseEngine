@@ -1,10 +1,17 @@
 #include "HouseEditor.h"
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/string_cast.hpp>
 #include <glm/gtc/type_ptr.hpp>
+
+HouseEditorLayer::HouseEditorLayer()
+	: Layer("EditorLayer")
+{
+}
 
 void HouseEditorLayer::OnAttach()
 {
-	_ActiveScene = MEM::MakeScope<Scene>("Test Scene");
-	_SceneRenderer = MEM::MakeScope<SceneRenderer>();
+	_ActiveScene = MEM::Ref<Scene>::Create("Test Scene");
+	_SceneRenderer = MEM::Ref<SceneRenderer>::Create(_ActiveScene);
 	_EditorCamera = MEM::Ref<EditorCamera>::Create();
 
 	for (int i = 0; i < 1; i++) {
@@ -16,12 +23,15 @@ void HouseEditorLayer::OnAttach()
 
 void HouseEditorLayer::OnDetach()
 {
+	_SceneRenderer = nullptr;
+	_ActiveScene->Clear();
+	_ActiveScene = nullptr;
 }
 
 void HouseEditorLayer::OnUpdate(float dt)
 {
 	_EditorCamera->Update(dt);
-	_SceneRenderer->DrawScene(_ActiveScene->GetEntities(), _EditorCamera);
+	_SceneRenderer->DrawScene(_EditorCamera);
 }
 
 void HouseEditorLayer::OnImGuiRender()

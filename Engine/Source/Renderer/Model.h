@@ -99,6 +99,7 @@ private:
 class Model : public MEM::RefCounted {
 public:
 	Model(const std::filesystem::path& path) { LoadModelFromFile(path); }
+	~Model();
 
 	MEM::Ref<Material>& GetMaterialByID(uint32_t id) { return _Materials[id]; }
 	std::vector<Mesh>& GetMeshes() { return _Meshes; }

@@ -1,8 +1,10 @@
 #pragma once
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include "Utilities/Memory.h"
 
-class Camera {
+class Camera : public MEM::RefCounted {
 public:
 	virtual ~Camera() = default;
 	virtual void Update(float dt) {}

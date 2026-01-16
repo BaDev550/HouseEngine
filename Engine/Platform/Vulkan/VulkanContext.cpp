@@ -15,7 +15,7 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(
 	void*                                        pUserData)
 {
 	if (messageSeverity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT)
-		std::cerr << "[ERR] Validation layer: " << pCallbackData->pMessage << std::endl;
+		LOG_RENDERER_ERROR("Validation layer : {}", pCallbackData->pMessage);
 	return VK_FALSE;
 }
 
@@ -132,7 +132,7 @@ VulkanContext::VulkanContext()
 		_Window.CreateSwapchain(this);
 	} 
 	catch (const std::exception& e) {
-		LOG_CORE_ERROR("VulkanContext initialization failed: {}", e.what());
+		LOG_RENDERER_ERROR("VulkanContext initialization failed: {}", e.what());
 		throw;
 	}
 }
@@ -146,7 +146,7 @@ VulkanContext::~VulkanContext()
 	if (_Surface != VK_NULL_HANDLE) vkDestroySurfaceKHR(_Instance, _Surface, nullptr);
 	if (_Device != VK_NULL_HANDLE) vkDestroyDevice(_Device, nullptr);
 	if (_Instance != VK_NULL_HANDLE) vkDestroyInstance(_Instance, nullptr);
-	LOG_CORE_INFO("VulkanContext destroyed successfully.");
+	LOG_RENDERER_INFO("VulkanContext destroyed successfully.");
 }
 
 void VulkanContext::CreateInstance()
@@ -197,9 +197,9 @@ void VulkanContext::PickPhysicalDevice()
 	CHECKF(_PhysicalDevice == VK_NULL_HANDLE, "Failed to find a suitable GPU")
 
 	vkGetPhysicalDeviceProperties(_PhysicalDevice, &_PhysicalDeviceProperties);
-	LOG_CORE_INFO("Selected GPU Properties: ");
-	LOG_CORE_INFO("	GPU Name: {}", _PhysicalDeviceProperties.deviceName);
-	LOG_CORE_INFO("	GPU Driver version: {}", _PhysicalDeviceProperties.driverVersion);
+	LOG_RENDERER_INFO("Selected GPU Properties: ");
+	LOG_RENDERER_INFO("	GPU Name: {}", _PhysicalDeviceProperties.deviceName);
+	LOG_RENDERER_INFO("	GPU Driver version: {}", _PhysicalDeviceProperties.driverVersion);
 }
 
 void VulkanContext::CreateLogicalDevice()
@@ -561,7 +561,7 @@ SwapChainSupportDetails VulkanContext::QuerySwapChainSupport(VkPhysicalDevice de
 		vkGetPhysicalDeviceSurfaceFormatsKHR(device, _Surface, &formatCount, details.formats.data());
 	}
 	else {
-		LOG_CORE_ERROR("Device has no supported surface formats.");
+		LOG_RENDERER_ERROR("Device has no supported surface formats.");
 	}
 
 	uint32_t presentModeCount;

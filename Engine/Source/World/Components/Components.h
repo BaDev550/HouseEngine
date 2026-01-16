@@ -2,6 +2,7 @@
 #include <iostream>
 #include "Utilities/Memory.h"
 #include "Utilities/UUID.h"
+#include "Utilities/Logger.h"
 #include "Renderer/Camera.h"
 #include <entt/entt.hpp>
 #include <glm/glm.hpp>
@@ -48,5 +49,8 @@ struct CameraComponent {
 struct StaticMeshComponent {
 	MEM::Ref<Model> Handle; // TODO - make this asset handle
 	StaticMeshComponent(const std::string& path = "Resources/mario_2/mario_2.obj") { Handle = MEM::Ref<Model>::Create(path); }
-	StaticMeshComponent(const StaticMeshComponent&) = default;
+	StaticMeshComponent(const StaticMeshComponent& other) : Handle(other.Handle) {}
+	~StaticMeshComponent() {
+		Handle = nullptr;
+	}
 };

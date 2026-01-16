@@ -55,6 +55,15 @@ namespace helpers {
     }
 }
 
+VkDescriptorType ShaderCompiler::ShaderReflectionTypeToVulkanType(const ShaderReflectionDataType& type)
+{
+    switch (type) 
+    {
+    case ShaderReflectionDataType::UniformBuffer: return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    case ShaderReflectionDataType::Sampler2D: return VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    }
+}
+
 std::vector<char> ShaderCompiler::CompileShaderFileToSpirv(const std::filesystem::path& path, std::map<uint32_t, std::map<uint32_t, DescriptorInfo>>& reflectData, bool optimize)
 {
     if (path.extension() == ".spv") {

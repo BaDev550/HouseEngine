@@ -22,8 +22,8 @@ public:
 	template<typename T>
 	T& GetComponent();
 
-	//template<typename T>
-	//const T& GetComponent();
+	template<typename T>
+	const T& GetComponent() const;
 
 	template<typename T>
 	void RemoveComponent();
@@ -39,8 +39,4 @@ public:
 private:
 	entt::entity _Handle;
 	Scene* _Scene = nullptr;
-
-	entt::registry& GetSceneRegistry();
-}; // TODO Make a helper function to get registry inside of scene to feed template functions
-
-#include "World/Entity/EntityFunctions.h"
+};

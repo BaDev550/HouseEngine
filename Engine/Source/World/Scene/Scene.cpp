@@ -3,13 +3,11 @@
 
 #include "World/Entity/Entity.h"
 
-Scene::Scene(const std::string& name) 
-	: _Name(name)
-{
+Scene::Scene(const std::string& name) : _Name(name) {}
+Scene::~Scene() {}
 
-}
-
-Scene::~Scene() {
+void Scene::Clear() {
+	LOG_CORE_INFO("Cleaning up Scene...");
 	_Entities.clear();
 	_Registry.clear();
 }
@@ -28,24 +26,24 @@ void Scene::DestroyEntity(Entity entity) {
 	_Registry.destroy(entity);
 }
 
-Entity& Scene::GetEntityByUUID(UUID ID) { return _Entities[ID]; }
-Entity& Scene::GetEntityByID(entt::entity ID) {
+Entity Scene::GetEntityByUUID(UUID ID) { return _Entities[ID]; }
+Entity Scene::GetEntityByID(entt::entity ID) {
 	if (_Registry.valid(ID)) {
 		UUID id = _Registry.get<IdentityComponent>(ID).UniqeId;
-		return GetEntityByUUID(id);
+		return Entity{ ID, this };
 	}
 }
 
-Entity& Scene::FindEntityByName(std::string_view name) {
+Entity Scene::FindEntityByName(std::string_view name) {
 	auto view = _Registry.view<IdentityComponent>();
 	for (auto& entity : view) {
 		const auto& ic = view.get<IdentityComponent>(entity);
 		if (ic.Name == name)
-			return GetEntityByID(entity);
+			return Entity{ entity, this };
 	}
 }
 
-Entity& Scene::GetPrimaryCamera() {
+Entity Scene::GetPrimaryCamera() {
 	auto view = _Registry.view<IdentityComponent, CameraComponent>();
 	for (auto& entity : view) {
 		const auto& camera = view.get<CameraComponent>(entity);

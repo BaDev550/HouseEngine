@@ -7,8 +7,6 @@
 class Material : public MEM::RefCounted {
 private:
 	struct MaterialVariables {
-		VkDescriptorSet MaterialDescriptorSet;
-
 		MEM::Ref<VulkanTexture> DiffuseTexture = nullptr;
 		MEM::Ref<VulkanTexture> NormalTexture = nullptr;
 		float Metallic = 0.0f;
@@ -18,7 +16,7 @@ private:
 	} _MaterialVariables;
 public:
 	Material(MEM::Ref<VulkanPipeline>& pipeline);
-	~Material() {}
+	~Material() = default;
 	Material(const Material&) = delete;
 	Material& operator=(Material&) = delete;
 
@@ -29,6 +27,8 @@ public:
 private:
 	uint32_t _Id = UINT32_MAX;
 	MEM::Ref<VulkanPipeline> _Pipeline;
+	std::vector<VkDescriptorSet> _DescriptorSets;
+	MEM::Ref<VulkanDescriptorPool> _MaterialPool;
 
 	friend class Model;
 };

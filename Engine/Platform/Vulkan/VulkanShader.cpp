@@ -8,10 +8,22 @@ VulkanShader::VulkanShader(const std::string& vertexPath, const std::string& fra
 	std::vector<char> fragShaderCode = ShaderCompiler::CompileShaderFileToSpirv(fragmentPath, _ReflectData);
 	CreateShaderModule(vertShaderCode, &_VertexShaderModule);
 	CreateShaderModule(fragShaderCode, &_FragmentShaderModule);
+
+	for (auto const& [set, bindings] : _ReflectData)
+	{
+		auto builder = VulkanDescriptorSetLayout::Builder();
+		for (auto const& [binding, info] : bindings)
+		{
+			VkDescriptorType vkType = ShaderCompiler::ShaderReflectionTypeToVulkanType(info.Type);
+			builder.AddBinding(binding, vkType, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT);
+		}
+		_DescriptorLayouts[set] = builder.Build();
+	}
 }
 
 VulkanShader::~VulkanShader()
 {
+	_DescriptorLayouts.clear();
 	vkDestroyShaderModule(_VulkanContext.GetDevice(), _FragmentShaderModule, nullptr);
 	vkDestroyShaderModule(_VulkanContext.GetDevice(), _VertexShaderModule, nullptr);
 }

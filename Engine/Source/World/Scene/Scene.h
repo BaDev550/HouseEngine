@@ -1,22 +1,23 @@
 #pragma once
 #include "World/Components/Components.h"
+#include "World/Entity/Entity.h"
+
 #include "Renderer/Camera.h"
 #include "Utilities/Defines.h"
-#include <entt/entt.hpp>
 
-class Entity;
-class Scene {
+class Scene : public MEM::RefCounted {
 public:
 	Scene(const std::string& name);
 	~Scene();
 
 	Entity CreateEntity(const std::string& name);
 	void DestroyEntity(Entity entity);
+	void Clear();
 
-	Entity& GetEntityByUUID(UUID ID);
-	Entity& GetEntityByID(entt::entity ID);
-	Entity& FindEntityByName(std::string_view name);
-	Entity& GetPrimaryCamera();
+	Entity GetEntityByUUID(UUID ID);
+	Entity GetEntityByID(entt::entity ID);
+	Entity FindEntityByName(std::string_view name);
+	Entity GetPrimaryCamera();
 
 	void OnRuntimeStart();
 	void OnRumtimeStop();
@@ -33,3 +34,5 @@ private:
 protected:
 	friend class Entity;
 };
+
+#include "World/Entity/EntityFunctions.h"

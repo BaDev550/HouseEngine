@@ -7,7 +7,7 @@
 struct RenderData {
 	MEM::Ref<VulkanTexture> WhiteTexture = nullptr;
 	MEM::Ref<PipelineLibrary> PipelineLibrary = nullptr;
-	MEM::Ref<DescriptorAllocator> GlobalDescriptorAllocator;
+	MEM::Ref<DescriptorManager> GlobalDescriptorManager;
 
 	uint32_t DrawCall = 0;
 
@@ -29,17 +29,7 @@ VkCommandBuffer Renderer::GetCurrentCommandBuffer() {
 uint32_t Renderer::GetDrawCall() { return s_Data.DrawCall; }
 uint32_t Renderer::GetFrameIndex() { return s_FrameIndex; }
 MEM::Ref<PipelineLibrary>& Renderer::GetPipelineLibrary() { return s_Data.PipelineLibrary; }
-MEM::Ref<DescriptorAllocator>& Renderer::GetDescriptorAllocator() { return s_Data.GlobalDescriptorAllocator; }
-
-VkDescriptorSet Renderer::AllocateMaterialSet()
-{
-	return s_Data.GlobalDescriptorAllocator->Allocate(s_Data.MaterialLayout);
-}
-
-VkPipelineLayout Renderer::GetPipelineLayout()
-{
-	return s_Data.PipelineLayout;
-}
+MEM::Ref<DescriptorManager>& Renderer::GetDescriptorManager() { return s_Data.GlobalDescriptorManager; }
 
 MEM::Ref<VulkanTexture>& Renderer::GetWhiteTexture()
 {
@@ -48,17 +38,7 @@ MEM::Ref<VulkanTexture>& Renderer::GetWhiteTexture()
 
 MEM::Ref<VulkanDescriptorPool>& Renderer::GetDescriptorPool()
 {
-	return s_Data.GlobalDescriptorAllocator->GetPool();
-}
-
-MEM::Ref<VulkanDescriptorSetLayout>& Renderer::GetGlobalDescriptorLayout()
-{
-	return s_Data.GlobalLayout;
-}
-
-MEM::Ref<VulkanDescriptorSetLayout>& Renderer::GetMaterialDescriptorLayout()
-{
-	return s_Data.MaterialLayout;
+	return s_Data.GlobalDescriptorManager->GetPool();
 }
 
 void Renderer::Init() {
@@ -85,30 +65,26 @@ void Renderer::Init() {
 		CHECKF((vkAllocateCommandBuffers(context.GetDevice(), &allocInfo, &frame.CommandBuffer) != VK_SUCCESS), "Failed to create command buffer");
 	}
 
-
-
 	VulkanPipelineConfig defaultConfig;
 	VulkanContext::DefaultPipelineConfigInfo(defaultConfig);
 	defaultConfig.RenderPass = Application::Get()->GetWindow().GetSwapchain().GetRenderPass();
 
 	Renderer::GetPipelineLibrary()->AddPipeline("MainPipeline", "Shaders/base.vert", "Shaders/base.frag", defaultConfig);
 
-	DescriptorAllocatorSpecification specs{};
+	DescriptorManagerSpecification specs{};
 	specs.Pipeline = Renderer::GetPipelineLibrary()->GetPipeline("MainPipeline");
-	s_Data.GlobalDescriptorAllocator = MEM::Ref<DescriptorAllocator>::Create(specs);
+	s_Data.GlobalDescriptorManager = MEM::Ref<DescriptorManager>::Create(specs);
 }
 
 void Renderer::Destroy()
 {
 	auto device = Application::Get()->GetVulkanContext().GetDevice();
 
+	s_Data.GlobalDescriptorManager = nullptr;
 	s_Data.PipelineLibrary = nullptr;
 	s_Data.WhiteTexture = nullptr;
-	s_Data.GlobalDescriptorAllocator = nullptr;
 
-	for (auto& frame : s_Frames) {
-		vkDestroyCommandPool(device, frame.CommandPool, nullptr);
-	}
+	for (auto& frame : s_Frames) { vkDestroyCommandPool(device, frame.CommandPool, nullptr); }
 }
 
 VkCommandBuffer Renderer::BeginFrame() {
@@ -140,6 +116,8 @@ void Renderer::EndFrame() {
 void Renderer::RenderMesh(VkCommandBuffer cmd, MEM::Ref<VulkanPipeline>& pipeline, MEM::Ref<Model>& model, glm::mat4& transform)
 {
 	pipeline->Bind(cmd);
+	VkDescriptorSet globalSet = s_Data.GlobalDescriptorManager->GetDescriptorSet(s_FrameIndex, 0);
+	vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->GetPipelineLayout(), 0, 1, &globalSet, 0, nullptr);
 	vkCmdPushConstants(cmd, pipeline->GetPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), &transform);
 	for (const auto& mesh : model->GetMeshes()) {
 		s_Data.DrawCall++;

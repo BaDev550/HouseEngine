@@ -54,11 +54,17 @@ void Mesh::CreateIndexBuffer(std::vector<uint32_t>& indices)
 	_Context.CopyBuffer(stagingBuffer->GetBuffer(), _IndexBuffer->GetBuffer(), bufferSize);
 }
 
+Model::~Model() {
+	_Meshes.clear();
+	_Materials.clear();
+	LOG_RENDERER_INFO("Model destroyed");
+}
+
 void Model::LoadModelFromFile(const std::filesystem::path& path) {
 	Assimp::Importer importer;
 	const aiScene* scene = importer.ReadFile(path.string(), S_ASSIMPIMPORTERFLAGS);
 	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
-		LOG_CORE_ERROR("Failed to laod model from : {}", path.string());
+		LOG_RENDERER_ERROR("Failed to laod model from : {}", path.string());
 		return;
 	}
 	_ModelDirectory = path.parent_path();

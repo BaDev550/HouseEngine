@@ -1,8 +1,8 @@
 #include "hepch.h"
-#include "VulkanDescriptorAllocator.h"
+#include "VulkanDescriptorManager.h"
 #include "Core/Application.h"
 
-DescriptorAllocator::DescriptorAllocator(DescriptorAllocatorSpecification& spec)
+DescriptorManager::DescriptorManager(DescriptorManagerSpecification& spec)
 {
 	_Pool = VulkanDescriptorPool::Builder()
 		.SetMaxSets(1000)
@@ -19,9 +19,9 @@ DescriptorAllocator::DescriptorAllocator(DescriptorAllocatorSpecification& spec)
 		.SetPoolFlags(VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT)
 		.Build();
 
-	const auto& shader = spec.Pipeline->GetShader();
-	const auto& reflectionData = shader->GetReflectData();
-	
+	auto& shader = spec.Pipeline->GetShader();
+	auto& reflectionData = shader->GetReflectData();
+
 	uint32_t maxSet = 0;
 	for (auto const& [set, bindings] : reflectionData) {
 		if (set > maxSet) maxSet = set;
@@ -33,7 +33,7 @@ DescriptorAllocator::DescriptorAllocator(DescriptorAllocatorSpecification& spec)
 	}
 
 	for (const auto& [set, bindings] : reflectionData) {
-		auto& layout = spec.Pipeline->GetShader()->GetDescriptorLayout(set);
+		auto& layout = shader->GetDescriptorLayout(set);
 
 		for (const auto& [binding, input] : bindings) {
 			RenderPassInputDeclaration declaration{};
@@ -47,30 +47,40 @@ DescriptorAllocator::DescriptorAllocator(DescriptorAllocatorSpecification& spec)
 		for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
 			_DescriptorSets[i][set] = Allocate(layout);
 		}
+
+		_Writers[set] = MEM::Ref<VulkanDescriptorWriter>::Create(*shader->GetDescriptorLayout(set), *_Pool);
 	}
 
 }
 
-void DescriptorAllocator::WriteInput(std::string_view name, MEM::Ref<VulkanBuffer> buffer)
+DescriptorManager::~DescriptorManager()
+{
+	_DescriptorSets.clear();
+	_InputDeclarations.clear();
+	_StoredResources.clear();
+	_Writers.clear();
+}
+
+void DescriptorManager::WriteInput(std::string_view name, MEM::Ref<VulkanBuffer> buffer)
 {
 	const RenderPassInputDeclaration* decl = GetInputDeclaration(name);
 	if (decl) {
-		_StoredResources[decl->Set][decl->Binding] = { buffer };
+		_StoredResources[decl->Set][decl->Binding].Set(buffer);
 	}
 }
 
-void DescriptorAllocator::WriteInput(std::string_view name, MEM::Ref<VulkanTexture> texture, uint32_t index)
+void DescriptorManager::WriteInput(std::string_view name, MEM::Ref<VulkanTexture> texture, uint32_t index)
 {
 	const RenderPassInputDeclaration* decl = GetInputDeclaration(name);
 	if (decl) {
-		_StoredResources[decl->Set][decl->Binding] = { texture };
+		_StoredResources[decl->Set][decl->Binding].Set(texture);
 	}
 }
 
-void DescriptorAllocator::UpdateSets(uint32_t frameIndex)
+void DescriptorManager::UpdateSets(uint32_t frameIndex)
 {
 	for (auto& [setIndex, bindings] : _StoredResources) {
-		_Writer->Clear();
+		_Writers[setIndex]->Clear();
 		bool hasData = false;
 
 		for (auto& [bindingIndex, resource] : bindings) {
@@ -78,25 +88,30 @@ void DescriptorAllocator::UpdateSets(uint32_t frameIndex)
 			auto& currentData = resource.Data[dataIndex];
 			if (!currentData) continue;
 
-			if (resource.Type == ShaderReflectionDataType::UniformBuffer) {
-				VkDescriptorBufferInfo info = currentData.As<VulkanBuffer>()->DescriptorInfo();
-				_Writer->WriteBuffer(bindingIndex, &info);
-				hasData = true;
-			}
-			else if (resource.Type == ShaderReflectionDataType::Sampler2D) {
-				VkDescriptorImageInfo info = currentData.As<VulkanTexture>()->GetImageDescriptorInfo();
-				_Writer->WriteImage(bindingIndex, &info);
-				hasData = true;
+			switch (resource.Type)
+			{
+				case ShaderReflectionDataType::UniformBuffer: {
+					VkDescriptorBufferInfo info = currentData.As<VulkanBuffer>()->DescriptorInfo();
+					_Writers[setIndex]->WriteBuffer(bindingIndex, &info);
+					hasData = true;
+					break;
+				}
+				case ShaderReflectionDataType::Sampler2D: {
+					VkDescriptorImageInfo info = currentData.As<VulkanTexture>()->GetImageDescriptorInfo();
+					_Writers[setIndex]->WriteImage(bindingIndex, &info);
+					hasData = true;
+					break;
+				}
 			}
 		}
 		if (hasData) {
-			_Writer->Overwrite(_DescriptorSets[frameIndex][setIndex]);
-			_Writer->Clear();
+			_Writers[setIndex]->Overwrite(_DescriptorSets[frameIndex][setIndex]);
+			_Writers[setIndex]->Clear();
 		}
 	}
 }
 
-VkDescriptorSet DescriptorAllocator::Allocate(MEM::Ref<VulkanDescriptorSetLayout>& layout)
+VkDescriptorSet DescriptorManager::Allocate(MEM::Ref<VulkanDescriptorSetLayout>& layout)
 {
 	VkDescriptorSet set;
 	VkDescriptorSetLayout l = layout->GetDescriptorSetLayout();
@@ -111,10 +126,13 @@ VkDescriptorSet DescriptorAllocator::Allocate(MEM::Ref<VulkanDescriptorSetLayout
 	return set;
 }
 
-VkDescriptorSet& DescriptorAllocator::GetDescriptorSet(uint32_t frameIndex, const std::string& name) { return _DescriptorSets[frameIndex][name]; }
-const std::map<std::string, RenderPassInputDeclaration>& DescriptorAllocator::GetInputDeclarations() const { return _InputDeclarations; }
+VkDescriptorSet DescriptorManager::GetDescriptorSet(uint32_t frameIndex, uint32_t setIndex)
+{
+	return _DescriptorSets[frameIndex][setIndex];
+}
 
-const RenderPassInputDeclaration* DescriptorAllocator::GetInputDeclaration(std::string_view name) const
+const std::map<std::string, RenderPassInputDeclaration>& DescriptorManager::GetInputDeclarations() const { return _InputDeclarations; }
+const RenderPassInputDeclaration* DescriptorManager::GetInputDeclaration(std::string_view name) const
 {
 	std::string nameStr(name);
 	if (_InputDeclarations.find(nameStr) == _InputDeclarations.end())

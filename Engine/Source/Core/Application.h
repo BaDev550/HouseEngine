@@ -1,19 +1,15 @@
 #pragma once
 #include <memory>
 #include <vector>
+#include <chrono>
 
-#include "Vulkan/VulkanContext.h"
-#include "Renderer/Renderer.h"
-#include "Renderer/SceneRenderer.h"
-#include "Core/Window.h"
 #include "Layers/LayerRegistry.h"
+#include "Vulkan/VulkanContext.h"
 #include "Layers/ImGuiLayer.h"
 #include "Utilities/Memory.h"
+#include "Renderer/Renderer.h"
 #include "Input/Input.h"
-
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <chrono>
+#include "Core/Window.h"
 
 struct ApplicationCommandLineArgs {
 	int Count = 0;
@@ -35,10 +31,10 @@ class Application
 {
 public:
 	Application(const ApplicationSpecs& applicationSpecs);
-	virtual ~Application();
+	~Application();
 
-	void PushLayer(Layer* layer) { _LayerRegistry.PushLayer(layer); }
-	void PushOverlay(Layer* layer) { _LayerRegistry.PushOverlay(layer); }
+	void PushLayer(Layer* layer);
+	void PushOverlay(Layer* layer);
 
 	static Application* Get() { return _Instance; }
 	void Run();

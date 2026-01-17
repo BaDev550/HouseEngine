@@ -38,18 +38,18 @@ namespace House {
 		auto& context = Application::Get()->GetVulkanContext();
 		auto& window = Application::Get()->GetWindow();
 
-		VkRenderPass renderPass = window.GetSwapchain().GetRenderPass();
 		VkFormat swapchainImageFormat = window.GetSwapchain().GetSwapChainFormat();
 
 		ImGui::CreateContext();
 		ImGui_ImplGlfw_InitForVulkan(window.GetHandle(), true);
 
 		ImGui_ImplVulkan_PipelineInfo pipelineInfo{};
-		pipelineInfo.RenderPass = renderPass;
+		pipelineInfo.RenderPass = VK_NULL_HANDLE;
 		pipelineInfo.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
 		pipelineInfo.PipelineRenderingCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO };
 		pipelineInfo.PipelineRenderingCreateInfo.colorAttachmentCount = 1;
 		pipelineInfo.PipelineRenderingCreateInfo.pColorAttachmentFormats = &swapchainImageFormat;
+		pipelineInfo.PipelineRenderingCreateInfo.depthAttachmentFormat = VK_FORMAT_D32_SFLOAT;
 
 		ImGui_ImplVulkan_InitInfo initInfo{};
 		initInfo.Instance = context.GetInstance();
@@ -59,7 +59,7 @@ namespace House {
 		initInfo.DescriptorPool = _DescriptorPool->GetDescriptorPool();
 		initInfo.MinImageCount = 3;
 		initInfo.ImageCount = 3;
-		initInfo.UseDynamicRendering = false;
+		initInfo.UseDynamicRendering = true;
 		initInfo.PipelineInfoMain = pipelineInfo;
 
 		ImGui_ImplVulkan_Init(&initInfo);
@@ -80,6 +80,26 @@ namespace House {
 	{
 		auto cmd = dynamic_cast<VulkanRenderAPI*>(Renderer::GetAPI())->GetCurrentCommandBuffer();
 		ImGui::Render();
+
+		auto& swapchain = Application::Get()->GetWindow().GetSwapchain();
+		VkExtent2D extent = swapchain.GetSwapChainExtent();
+
+		VkRenderingAttachmentInfo colorAttachment{};
+		colorAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+		colorAttachment.imageView = swapchain.GetSwapchainImageView(Application::Get()->GetWindow().GetImageIndex());
+		colorAttachment.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+		colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+		colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+
+		VkRenderingInfo renderingInfo{};
+		renderingInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
+		renderingInfo.renderArea = { {0, 0}, extent };
+		renderingInfo.layerCount = 1;
+		renderingInfo.colorAttachmentCount = 1;
+		renderingInfo.pColorAttachments = &colorAttachment;
+
+		vkCmdBeginRendering(cmd, &renderingInfo);
 		ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd);
+		vkCmdEndRendering(cmd);
 	}
 }

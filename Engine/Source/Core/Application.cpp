@@ -77,9 +77,9 @@ namespace House {
 			Renderer::BeginFrame();
 			for (auto& layer : _LayerRegistry) { layer->OnUpdate(_DeltaTime); }
 
-			//_ImGuiLayer->Begin();
-			//for (auto& layer : _LayerRegistry) { layer->OnImGuiRender(); }
-			//_ImGuiLayer->End();
+			_ImGuiLayer->Begin();
+			for (auto& layer : _LayerRegistry) { layer->OnImGuiRender(); }
+			_ImGuiLayer->End();
 			Renderer::EndFrame();
 
 			_FrameIndex = (_FrameIndex + 1) % MAX_FRAMES_IN_FLIGHT;

@@ -4,6 +4,7 @@
 #include <iostream>
 #include <assert.h>
 #include "Texture.h"
+#include "Utilities/Frustum.h"
 #include <glm/gtc/type_ptr.hpp>
 
 namespace House {
@@ -52,6 +53,11 @@ namespace House {
 
 	void SceneRenderer::DrawScene(const MEM::Ref<Camera>& cam)
 	{
+#if 0
+		Frustum cameraFrustum;
+		cameraFrustum.Update(cam->GetProjection() * cam->GetView());
+#endif
+
 		_GRenderPass->Begin();
 		
 		_CameraUD.View = cam->GetView();
@@ -62,7 +68,9 @@ namespace House {
 		for (auto entity : view) {
 			auto& transform = view.get<TransformComponent>(entity);
 			auto& model = view.get<StaticMeshComponent>(entity);
+
 			glm::mat4 transformMatrix = transform.ModelMatrix();
+
 			Renderer::DrawMesh(_GRenderPass, model.Handle, transformMatrix);
 		}
 		_GRenderPass->End();

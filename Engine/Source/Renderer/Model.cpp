@@ -54,7 +54,6 @@ namespace House {
 	Model::~Model() {
 		_Meshes.clear();
 		_Materials.clear();
-		LOG_RENDERER_INFO("Model destroyed");
 	}
 
 	void Model::LoadModelFromFile(const std::filesystem::path& path) {
@@ -121,6 +120,8 @@ namespace House {
 	{
 		std::vector<Vertex> vertices;
 		std::vector<uint32_t> indices;
+		AABB meshBounds;
+
 		for (uint32_t i = 0; i < mesh->mNumVertices; i++) {
 			Vertex v;
 			v.Position = { mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z };
@@ -128,6 +129,7 @@ namespace House {
 			if (mesh->mTextureCoords[0]) {
 				v.TexCoords = { mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y };
 			}
+			meshBounds.Merge(v.Position);
 			vertices.push_back(v);
 		}
 
@@ -137,6 +139,12 @@ namespace House {
 				indices.push_back(face.mIndices[j]);
 			}
 		}
-		return Mesh(mesh->mName.C_Str(), vertices, indices, mesh->mMaterialIndex);
+		Mesh resultMesh(mesh->mName.C_Str(), vertices, indices, mesh->mMaterialIndex);
+		resultMesh._BoundingBox = meshBounds;
+
+		_BoundingBox.Merge(meshBounds.Min);
+		_BoundingBox.Merge(meshBounds.Max);
+
+		return resultMesh;
 	}
 }

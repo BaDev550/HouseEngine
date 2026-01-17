@@ -15,7 +15,7 @@ namespace House::Editor {
 		_SceneRenderer = MEM::Ref<SceneRenderer>::Create(_ActiveScene);
 		_EditorCamera = MEM::Ref<EditorCamera>::Create();
 
-		for (int i = 0; i < 1; i++) {
+		for (int i = 0; i < 100; i++) {
 			auto entity = _ActiveScene->CreateEntity("NEW_ENTITY");
 			entity.GetComponent<TransformComponent>().Position = glm::vec3(i * 3.0f, 0.0f, 0.0f);
 			entity.AddComponent<StaticMeshComponent>();

@@ -4,28 +4,28 @@
 #include <cstring>
 #include <iostream>
 
-struct Buffer
+struct DataBuffer
 {
 	uint8_t* Data = nullptr;
 	uint64_t Size = 0;
 
-	Buffer() = default;
+	DataBuffer() = default;
 
-	Buffer(uint64_t size)
+	DataBuffer(uint64_t size)
 	{
 		Allocate(size);
 	}
 
-	Buffer(const void* data, uint64_t size)
+	DataBuffer(const void* data, uint64_t size)
 		: Data((uint8_t*)data), Size(size)
 	{
 	}
 
-	Buffer(const Buffer&) = default;
+	DataBuffer(const DataBuffer&) = default;
 
-	static Buffer Copy(Buffer other)
+	static DataBuffer Copy(DataBuffer other)
 	{
-		Buffer result(other.Size);
+		DataBuffer result(other.Size);
 		memcpy(result.Data, other.Data, other.Size);
 		return result;
 	}
@@ -60,7 +60,7 @@ struct Buffer
 
 struct ScopedBuffer
 {
-	ScopedBuffer(Buffer buffer)
+	ScopedBuffer(DataBuffer buffer)
 		: _Buffer(buffer)
 	{
 	}
@@ -86,5 +86,5 @@ struct ScopedBuffer
 
 	operator bool() const { return _Buffer; }
 private:
-	Buffer _Buffer;
+	DataBuffer _Buffer;
 };

@@ -35,9 +35,12 @@ namespace House {
 		s_RenderAPI = CreateRenderAPI();
 		s_RenderAPI->Init();
 
+		TextureSpecification whiteTextureSpec{};
+		whiteTextureSpec.Width = 1;
+		whiteTextureSpec.Height = 1;
 		uint32_t whiteTextureData = 0xffffffff;
+		s_Data.WhiteTexture = Texture2D::Create(whiteTextureSpec, DataBuffer(&whiteTextureData, sizeof(uint32_t)));
 		s_Data.ShaderLibrary = MEM::Ref<ShaderLibrary>::Create();
-		s_Data.WhiteTexture = Texture2D::Create(&whiteTextureData, 1, 1);
 
 		Renderer::GetShaderLibrary()->Load("MainShader", "Shaders/base.vert", "Shaders/base.frag");
 		Renderer::CompileShaders();
@@ -59,7 +62,6 @@ namespace House {
 		for (auto& [name, shader] : Renderer::GetShaderLibrary()->GetShaders()) {
 			PipelineData data{};
 			data.Shader = shader;
-			data.RenderPass = Application::Get()->GetWindow().GetSwapchain().GetRenderPass();
 			s_Data.CompiledPipelines[name] = Pipeline::Create(data);
 		}
 	}

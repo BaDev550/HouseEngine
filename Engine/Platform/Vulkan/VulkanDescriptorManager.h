@@ -43,12 +43,14 @@ namespace House {
 	{
 	public:
 		DescriptorManager(DescriptorManagerSpecification& spec);
+		DescriptorManager() = default;
 		~DescriptorManager();
 
 		void WriteInput(std::string_view name, MEM::Ref<VulkanBuffer>  buffer);
 		void WriteInput(std::string_view name, MEM::Ref<VulkanTexture> texture, uint32_t index = 0);
 
 		void UpdateSets(uint32_t frameIndex);
+		void Invalidate(DescriptorManagerSpecification& spec);
 
 		VkDescriptorSet Allocate(MEM::Ref<VulkanDescriptorSetLayout>& layout);
 		VkDescriptorSet GetDescriptorSet(uint32_t frameIndex, uint32_t setIndex);

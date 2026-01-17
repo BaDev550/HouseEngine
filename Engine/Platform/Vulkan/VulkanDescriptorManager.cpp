@@ -5,55 +5,7 @@
 namespace House {
 	DescriptorManager::DescriptorManager(DescriptorManagerSpecification& spec)
 	{
-		_Pool = VulkanDescriptorPool::Builder()
-			.SetMaxSets(1000)
-			.AddPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1000)
-			.AddPoolSize(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1000)
-			.AddPoolSize(VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1000)
-			.AddPoolSize(VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1000)
-			.AddPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000)
-			.AddPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 1000)
-			.AddPoolSize(VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 1000)
-			.AddPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1000)
-			.AddPoolSize(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1000)
-			.AddPoolSize(VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000)
-			.SetPoolFlags(VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT)
-			.Build();
-
-		auto& pipeline = spec.Pipeline;
-		auto vulkanPipeline = pipeline.As<VulkanPipeline>();
-		auto vulkanShader =   vulkanPipeline->GetShader().As<VulkanShader>();
-		auto& reflectionData = vulkanShader->GetReflectData();
-
-		uint32_t maxSet = 0;
-		for (auto const& [set, bindings] : reflectionData) {
-			if (set > maxSet) maxSet = set;
-		}
-
-		_DescriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
-		for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-			_DescriptorSets[i].resize(maxSet + 1);
-		}
-
-		for (const auto& [set, bindings] : reflectionData) {
-			auto& layout = vulkanShader->GetDescriptorLayout(set);
-
-			for (const auto& [binding, input] : bindings) {
-				RenderPassInputDeclaration declaration{};
-				declaration.Binding = binding;
-				declaration.Set = set;
-				declaration.Name = input.Name;
-				declaration.Type = input.Type;
-				_InputDeclarations[input.Name] = declaration;
-			}
-
-			for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-				_DescriptorSets[i][set] = Allocate(layout);
-			}
-
-			_Writers[set] = MEM::Ref<VulkanDescriptorWriter>::Create(*vulkanShader->GetDescriptorLayout(set), *_Pool);
-		}
-
+		Invalidate(spec);
 	}
 
 	DescriptorManager::~DescriptorManager()
@@ -112,6 +64,59 @@ namespace House {
 				_Writers[setIndex]->Clear();
 			}
 		}
+	}
+
+	void DescriptorManager::Invalidate(DescriptorManagerSpecification& spec)
+	{
+		_Pool = VulkanDescriptorPool::Builder()
+			.SetMaxSets(1000)
+			.AddPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1000)
+			.AddPoolSize(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1000)
+			.AddPoolSize(VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1000)
+			.AddPoolSize(VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1000)
+			.AddPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000)
+			.AddPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 1000)
+			.AddPoolSize(VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 1000)
+			.AddPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1000)
+			.AddPoolSize(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1000)
+			.AddPoolSize(VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000)
+			.SetPoolFlags(VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT)
+			.Build();
+
+		auto& pipeline = spec.Pipeline;
+		auto vulkanPipeline = pipeline.As<VulkanPipeline>();
+		auto vulkanShader = vulkanPipeline->GetShader().As<VulkanShader>();
+		auto& reflectionData = vulkanShader->GetReflectData();
+
+		uint32_t maxSet = 0;
+		for (auto const& [set, bindings] : reflectionData) {
+			if (set > maxSet) maxSet = set;
+		}
+
+		_DescriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
+		for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+			_DescriptorSets[i].resize(maxSet + 1);
+		}
+
+		for (const auto& [set, bindings] : reflectionData) {
+			auto& layout = vulkanShader->GetDescriptorLayout(set);
+
+			for (const auto& [binding, input] : bindings) {
+				RenderPassInputDeclaration declaration{};
+				declaration.Binding = binding;
+				declaration.Set = set;
+				declaration.Name = input.Name;
+				declaration.Type = input.Type;
+				_InputDeclarations[input.Name] = declaration;
+			}
+
+			for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+				_DescriptorSets[i][set] = Allocate(layout);
+			}
+
+			_Writers[set] = MEM::Ref<VulkanDescriptorWriter>::Create(*vulkanShader->GetDescriptorLayout(set), *_Pool);
+		}
+
 	}
 
 	VkDescriptorSet DescriptorManager::Allocate(MEM::Ref<VulkanDescriptorSetLayout>& layout)

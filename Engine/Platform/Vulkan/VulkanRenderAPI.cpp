@@ -14,33 +14,6 @@ namespace House {
 		uint32_t DrawCall;
 	} s_DrawData;
 
-	void VulkanRenderAPI::InsertImageMemoryBarrier(VkCommandBuffer cmd, VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout, VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask, VkAccessFlags srcAccessMask, VkAccessFlags dstAccessMask, VkImageAspectFlags aspectMask)
-	{
-		VkImageMemoryBarrier barrier{};
-		barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-		barrier.oldLayout = oldLayout;
-		barrier.newLayout = newLayout;
-		barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-		barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-		barrier.image = image;
-		barrier.subresourceRange.aspectMask = aspectMask;
-		barrier.subresourceRange.baseMipLevel = 0;
-		barrier.subresourceRange.levelCount = 1;
-		barrier.subresourceRange.baseArrayLayer = 0;
-		barrier.subresourceRange.layerCount = 1;
-		barrier.srcAccessMask = srcAccessMask;
-		barrier.dstAccessMask = dstAccessMask;
-		vkCmdPipelineBarrier(
-			cmd,
-			srcStageMask,
-			dstStageMask,
-			0,
-			0, nullptr,
-			0, nullptr,
-			1, &barrier
-		);
-	}
-
 	VkCommandBuffer VulkanRenderAPI::GetCurrentCommandBuffer() {
 		CHECKF(!s_FrameStarted, "Cannot get a command buffer while frame is not in progress");
 		return s_Frames[Renderer::GetFrameIndex()].CommandBuffer;
@@ -92,16 +65,7 @@ namespace House {
 
 		CHECKF((vkResetCommandPool(Application::Get()->GetVulkanContext().GetDevice(), frame.CommandPool, 0) != VK_SUCCESS), "Failed to reset command pool");
 		CHECKF((vkBeginCommandBuffer(cmd, &beginInfo) != VK_SUCCESS), "Failed to begin recording to command buffer");
-		InsertImageMemoryBarrier(cmd, swapChainImage,
-			VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-			VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-			0, VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
-			VK_IMAGE_ASPECT_COLOR_BIT);
-		InsertImageMemoryBarrier(cmd, swapChainDepthImage,
-			VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
-			VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT, VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
-			0, VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
-			VK_IMAGE_ASPECT_DEPTH_BIT);
+
 	}
 
 	void VulkanRenderAPI::EndFrame()
@@ -112,12 +76,6 @@ namespace House {
 		auto& swapchain = window.GetSwapchain();
 		auto& imageIndex = window.GetImageIndex();
 		VkImage swapChainImage = swapchain.GetSwapchainImage(imageIndex);
-
-		InsertImageMemoryBarrier(cmd, swapChainImage,
-			VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
-			VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
-			VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, 0,
-			VK_IMAGE_ASPECT_COLOR_BIT);
 
 		CHECKF(vkEndCommandBuffer(cmd) != VK_SUCCESS, "Failed to record commad buffer");
 		VkResult result = swapchain.Submit(&cmd, &imageIndex);

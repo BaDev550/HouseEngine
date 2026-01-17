@@ -5,12 +5,12 @@
 namespace House {
 	class ImGuiLayer : public Layer {
 	public:
-		ImGuiLayer();
-		~ImGuiLayer();
+		ImGuiLayer(const char* Name) : Layer(Name) {}
+		virtual ~ImGuiLayer() = default;
 
-		virtual void OnAttach() override;
-		virtual void OnDetach() override;
-		void Begin();
-		void End(VkCommandBuffer cmd);
+		virtual void Begin() = 0;
+		virtual void End() = 0;
+
+		static ImGuiLayer* Create();
 	};
 }

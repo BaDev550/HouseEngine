@@ -3,6 +3,7 @@
 #include "Renderer/Material.h"
 #include "VulkanDescriptor.h"
 #include "VulkanPipeline.h"
+#include "VulkanDescriptorManager.h"
 #include <glm/glm.hpp>
 
 namespace House {
@@ -16,8 +17,8 @@ namespace House {
 		virtual void Build() override;
 		virtual void Bind() override;
 	private:
+		DescriptorManager _DescriptorManager;
 		std::vector<VkDescriptorSet> _DescriptorSets;
-		MEM::Ref<VulkanDescriptorPool> _MaterialPool;
 		MEM::Ref<VulkanPipeline> _Pipeline;
 
 		friend class Model;

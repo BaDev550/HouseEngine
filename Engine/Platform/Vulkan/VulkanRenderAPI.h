@@ -14,7 +14,6 @@ namespace House {
 		virtual void DrawMesh(MEM::Ref<RenderPass>& renderPass, MEM::Ref<Model>& model, glm::mat4& transform) override;
 		virtual uint32_t GetDrawCall() override;
 	public:
-		void InsertImageMemoryBarrier(VkCommandBuffer cmd, VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout, VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask, VkAccessFlags srcAccessMask, VkAccessFlags dstAccessMask, VkImageAspectFlags aspectMask);
 		VkCommandBuffer GetCurrentCommandBuffer();
 	};
 }

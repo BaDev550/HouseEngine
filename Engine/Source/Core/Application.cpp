@@ -26,7 +26,7 @@ namespace House {
 		Input::Init();
 		Renderer::Init();
 
-		_ImGuiLayer = new ImGuiLayer();
+		_ImGuiLayer = ImGuiLayer::Create();
 		PushOverlay(_ImGuiLayer);
 		LOG_CORE_INFO("Application started");
 	}
@@ -76,11 +76,11 @@ namespace House {
 
 			Renderer::BeginFrame();
 			for (auto& layer : _LayerRegistry) { layer->OnUpdate(_DeltaTime); }
-			Renderer::EndFrame();
 
 			//_ImGuiLayer->Begin();
 			//for (auto& layer : _LayerRegistry) { layer->OnImGuiRender(); }
-			//_ImGuiLayer->End(cmd);
+			//_ImGuiLayer->End();
+			Renderer::EndFrame();
 
 			_FrameIndex = (_FrameIndex + 1) % MAX_FRAMES_IN_FLIGHT;
 		}

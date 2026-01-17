@@ -53,7 +53,7 @@ namespace House {
 		LayerRegistry _LayerRegistry;
 		ImGuiLayer* _ImGuiLayer;
 		MEM::Scope<Window> _Window;
-		MEM::Scope<VulkanContext> _Context;
+		MEM::Scope<VulkanContext> _Context; // Move this to window
 
 		float _DeltaTime;
 		uint32_t _FrameIndex = 0;

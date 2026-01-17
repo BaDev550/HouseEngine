@@ -5,7 +5,7 @@
 #include <stb_image.h>
 
 namespace House {
-	VulkanTexture::VulkanTexture(const std::string& path)
+	VulkanTexture::VulkanTexture(const TextureSpecification& spec, const std::string& path)
 		: _Context(Application::Get()->GetVulkanContext())
 	{
 		int width, height, channels;
@@ -18,10 +18,10 @@ namespace House {
 		stbi_image_free(pixels);
 	}
 
-	VulkanTexture::VulkanTexture(uint32_t* data, uint32_t width, uint32_t height)
+	VulkanTexture::VulkanTexture(const TextureSpecification& spec, DataBuffer data)
 		: _Context(Application::Get()->GetVulkanContext())
 	{
-		LoadTexture(data, width, height, STBI_rgb_alpha);
+		LoadTexture(data.Data, spec.Width, spec.Height, STBI_rgb_alpha);
 	}
 
 	VulkanTexture::~VulkanTexture()

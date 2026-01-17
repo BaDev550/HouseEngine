@@ -77,9 +77,14 @@ namespace House {
 			auto material = Material::Create(Renderer::GetPipeline("MainShader"));
 			aiString path;
 
+			TextureSpecification textureSpec{};
+			textureSpec.Format = TextureImageFormat::RGBA;
+			textureSpec.Wrap = TextureWrap::Repeat;
+
 			if (aiMat->GetTexture(aiTextureType_DIFFUSE, 0, &path) == AI_SUCCESS) {
 				std::filesystem::path texturePath = _ModelDirectory / path.C_Str();
-				MEM::Ref<Texture2D> texture = Texture2D::Create(texturePath.string());
+
+				MEM::Ref<Texture2D> texture = Texture2D::Create(textureSpec, texturePath.string());
 				material->GetMaterialData().DiffuseTexture = texture;
 			}
 			else {
@@ -87,7 +92,8 @@ namespace House {
 			}
 			if (aiMat->GetTexture(aiTextureType_NORMALS, 0, &path) == AI_SUCCESS) {
 				std::filesystem::path texturePath = _ModelDirectory / path.C_Str();
-				MEM::Ref<Texture2D> texture = Texture2D::Create(texturePath.string());
+
+				MEM::Ref<Texture2D> texture = Texture2D::Create(textureSpec, texturePath.string());
 				material->GetMaterialData().NormalTexture = texture;
 			}
 			else {

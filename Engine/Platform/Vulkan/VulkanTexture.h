@@ -6,8 +6,8 @@ namespace House {
 	class VulkanTexture : public Texture2D
 	{
 	public:
-		VulkanTexture(const std::string& path);
-		VulkanTexture(uint32_t* data, uint32_t width, uint32_t height);
+		VulkanTexture(const TextureSpecification& spec, const std::string& path);
+		VulkanTexture(const TextureSpecification& spec, DataBuffer data);
 		~VulkanTexture();
 
 		VkDescriptorImageInfo GetImageDescriptorInfo();

@@ -5,7 +5,6 @@
 namespace House {
 	struct PipelineData {
 		MEM::Ref<Shader> Shader;
-		VkRenderPass RenderPass;
 		//MEM::Ref<Framebuffer> Framebuffer;
 	};
 	

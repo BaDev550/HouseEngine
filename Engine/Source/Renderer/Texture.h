@@ -43,6 +43,7 @@ namespace House {
 
 	class Texture2D : public Texture {
 	public:
+		static MEM::Ref<Texture2D> Create(const TextureSpecification& spec);
 		static MEM::Ref<Texture2D> Create(const TextureSpecification& spec, const std::string& path);
 		static MEM::Ref<Texture2D> Create(const TextureSpecification& spec, DataBuffer data);
 	};

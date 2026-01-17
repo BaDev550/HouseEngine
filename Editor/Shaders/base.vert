@@ -5,6 +5,7 @@ layout(location = 1) in vec2 aTexCoords;
 layout(location = 2) in vec3 aNormal;
 
 layout(location = 0) out vec2 fragTextureCoords;
+layout(location = 1) out float depth;
 
 layout(push_constant) uniform TransformUniformData {
 	mat4 model;
@@ -17,5 +18,7 @@ layout(set = 0, binding = 0) uniform CameraUniformData {
 
 void main() {
 	fragTextureCoords = aTexCoords;
-	gl_Position = camera.proj * camera.view * transform.model * vec4(aPos, 1.0);
+	vec4 worldPos = camera.proj * camera.view * transform.model * vec4(aPos, 1.0);
+	depth = worldPos.z;
+	gl_Position = worldPos;
 }

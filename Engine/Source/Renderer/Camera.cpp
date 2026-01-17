@@ -7,7 +7,7 @@ namespace House {
 		AddPitch(pitchOffset);
 		AddYaw(yawOffset);
 	}
-
+	
 	void Camera::CalculateCameraMatrixes() {
 		_Forward.x = cosf(_Direction.x) * sinf(_Direction.y);
 		_Forward.y = sinf(_Direction.x);

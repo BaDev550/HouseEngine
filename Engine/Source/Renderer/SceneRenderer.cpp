@@ -9,7 +9,19 @@ namespace House {
 	SceneRenderer::SceneRenderer(MEM::Ref<Scene>& scene)
 		: _Scene(scene)
 	{
-		_MainRenderPass = RenderPass::Create(Renderer::GetPipeline("MainShader"));
+		FramebufferSpecification spec{};
+		spec.Attachments = { TextureImageFormat::RGBA };
+		spec.ClearColor = { 1.0f, 1.0f, 1.0f, 1.0f };
+		spec.DepthClearValue = 1.0f;
+		MEM::Ref<Framebuffer> MainFrameBuffer = Framebuffer::Create(spec);
+
+		PipelineData data{};
+		data.Shader = Renderer::GetShaderLibrary()->GetShader("MainShader");
+		data.Framebuffer = MainFrameBuffer;
+		_MainPipeline = Pipeline::Create(data);
+
+		_MainRenderPass = RenderPass::Create(_MainPipeline);
+
 		VkDeviceSize camerabufferSize = sizeof(CameraUniformData);
 		_CameraUB = Buffer::Create(camerabufferSize, BufferType::UniformBuffer, MemoryProperties::HOST_VISIBLE | MemoryProperties::HOST_COHERENT);
 		_CameraUB->Map();

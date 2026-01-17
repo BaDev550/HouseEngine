@@ -1,11 +1,12 @@
 #pragma once
 #include "Utilities/Memory.h"
+#include "Framebuffer.h"
 #include "Shader.h"
 
 namespace House {
 	struct PipelineData {
 		MEM::Ref<Shader> Shader;
-		//MEM::Ref<Framebuffer> Framebuffer;
+		MEM::Ref<Framebuffer> Framebuffer;
 	};
 	
 	class Pipeline : public MEM::RefCounted

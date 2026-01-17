@@ -23,6 +23,8 @@ namespace House {
 		} _CameraUD;
 
 		MEM::Ref<Buffer> _CameraUB;
+
+		MEM::Ref<Pipeline> _MainPipeline;
 		MEM::Ref<RenderPass> _MainRenderPass;
 
 		MEM::Ref<Scene> _Scene;

@@ -65,7 +65,6 @@ namespace House {
 
 		CHECKF((vkResetCommandPool(Application::Get()->GetVulkanContext().GetDevice(), frame.CommandPool, 0) != VK_SUCCESS), "Failed to reset command pool");
 		CHECKF((vkBeginCommandBuffer(cmd, &beginInfo) != VK_SUCCESS), "Failed to begin recording to command buffer");
-
 	}
 
 	void VulkanRenderAPI::EndFrame()

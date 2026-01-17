@@ -4,6 +4,14 @@
 #include "Vulkan/VulkanTexture.h"
 
 namespace House {
+    MEM::Ref<Texture2D> Texture2D::Create(const TextureSpecification& spec)
+    {
+        switch (RenderAPI::CurrentAPI())
+        {
+        case GrapichsAPI::Vulkan: return MEM::Ref<VulkanTexture>::Create(spec);
+        case GrapichsAPI::OpenGL: return nullptr;
+        }
+    }
     MEM::Ref<Texture2D> Texture2D::Create(const TextureSpecification& spec, const std::string& path) {
         switch (RenderAPI::CurrentAPI())
         {

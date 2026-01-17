@@ -62,9 +62,9 @@ namespace House {
 		CHECKF(vkCreatePipelineLayout(_Context.GetDevice(), &pipelineLayoutInfo, nullptr, &_PipelineLayout) != VK_SUCCESS, "failed to create pipeline layout!");
 
 		VkPipelineRenderingCreateInfo pipelineRenderingCreateInfo{};
+		VkFormat colorFormat = Application::Get()->GetWindow().GetSwapchain().GetSwapChainFormat();
 		pipelineRenderingCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
 		pipelineRenderingCreateInfo.colorAttachmentCount = 1;
-		VkFormat colorFormat = Application::Get()->GetWindow().GetSwapchain().GetSwapChainFormat();
 		pipelineRenderingCreateInfo.pColorAttachmentFormats = &colorFormat;
 		pipelineRenderingCreateInfo.depthAttachmentFormat = VK_FORMAT_D32_SFLOAT;
 

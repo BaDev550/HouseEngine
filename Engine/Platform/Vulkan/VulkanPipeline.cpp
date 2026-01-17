@@ -2,12 +2,13 @@
 #include "VulkanPipeline.h"
 #include "ShaderCompiler.h"
 #include "VulkanTexture.h"
+#include "VulkanSwapchain.h"
 #include "Core/Application.h"
 #include "Renderer/Model.h"
 
 namespace House {
 	VulkanPipeline::VulkanPipeline(const PipelineData& data)
-		: _Context(Application::Get()->GetVulkanContext()), _Data(data)
+		: _Context(Application::Get()->GetRenderContext<VulkanContext>()), _Data(data)
 	{
 		Invalidate();
 	}
@@ -73,7 +74,7 @@ namespace House {
 			}
 		}
 		else {
-			colorFormats.push_back(Application::Get()->GetWindow().GetSwapchain().GetSwapChainFormat());
+			colorFormats.push_back(dynamic_cast<VulkanSwapchain*>(&Application::Get()->GetWindow().GetSwapchain())->GetSwapChainFormat());
 		}
 		pipelineRenderingCreateInfo.depthAttachmentFormat = VK_FORMAT_D32_SFLOAT;
 		pipelineRenderingCreateInfo.colorAttachmentCount = static_cast<uint32_t>(colorFormats.size());

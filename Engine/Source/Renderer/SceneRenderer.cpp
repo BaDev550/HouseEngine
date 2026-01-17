@@ -18,7 +18,7 @@ namespace House {
 				TextureImageFormat::RGBA,
 				TextureImageFormat::DEPTH32F 
 			};
-			spec.ClearColor = { 1.0f, 1.0f, 1.0f, 1.0f };
+			spec.ClearColor = { 0.1f, 0.1f, 0.1f, 1.0f };
 			spec.DepthClearValue = 1.0f;
 			MEM::Ref<Framebuffer> frameBuffer = Framebuffer::Create(spec);
 

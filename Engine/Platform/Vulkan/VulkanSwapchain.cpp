@@ -304,7 +304,7 @@ namespace House {
 			glfwWaitEvents();
 		}
 
-		_Context.WaitToDeviceIdle();
+		_Context.WaitDeviceIdle();
 		DestroySwapchain();
 		CreateSwapChain();
 		CreateDepthResources();
@@ -342,10 +342,10 @@ namespace House {
 		return result;
 	}
 
-	VkResult VulkanSwapchain::AcquireNextImage(uint32_t* imageIndex)
+	bool VulkanSwapchain::Swapbuffers(uint32_t* imageIndex)
 	{
 		vkWaitForFences(_Context.GetDevice(), 1, &_InFlightFences[_FrameIndex], VK_TRUE, UINT64_MAX);
 		VkResult result = vkAcquireNextImageKHR(_Context.GetDevice(), _SwapChain, UINT64_MAX, _ImageAvailableSemaphores[_FrameIndex], VK_NULL_HANDLE, imageIndex);
-		return result;
+		return (result != VK_SUCCESS || result == VK_SUBOPTIMAL_KHR);
 	}
 }

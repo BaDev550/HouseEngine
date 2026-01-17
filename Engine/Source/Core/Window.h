@@ -5,8 +5,8 @@
 #include <GLFW/glfw3native.h>
 #include <string>
 
-#include "Vulkan/VulkanSwapchain.h"
-#include "Vulkan/VulkanContext.h"
+#include "Renderer/RenderContext.h"
+#include "Renderer/Swapchain.h"
 #include "Utilities/Memory.h"
 
 namespace House {
@@ -26,8 +26,8 @@ namespace House {
 
 		uint32_t& GetImageIndex() { return _ImageIndex; }
 		GLFWwindow* GetHandle() const { return _Handle; }
-		VulkanSwapchain& GetSwapchain() { return *_Swapchain; }
-		void CreateSwapchain(VulkanContext* context);
+		Swapchain& GetSwapchain() { return *_Swapchain; }
+		RenderContext& GetRenderContext() { return *_RenderContext; }
 		bool ShouldClose() const;
 		bool HasResized() const;
 		void ResetResizeFlag();
@@ -41,6 +41,7 @@ namespace House {
 		GLFWwindow* _Handle;
 		WindowConfig _Config;
 		uint32_t _ImageIndex;
-		VulkanSwapchain* _Swapchain;
+		Swapchain* _Swapchain;
+		RenderContext* _RenderContext;
 	};
 }

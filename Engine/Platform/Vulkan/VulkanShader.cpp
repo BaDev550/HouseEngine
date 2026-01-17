@@ -3,7 +3,7 @@
 
 namespace House {
 	VulkanShader::VulkanShader(const std::string& vertexPath, const std::string& fragmentPath)
-		: _VulkanContext(Application::Get()->GetVulkanContext())
+		: _VulkanContext(Application::Get()->GetRenderContext<VulkanContext>())
 	{
 		std::vector<char> vertShaderCode = ShaderCompiler::CompileShaderFileToSpirv(vertexPath, _CompiledData);
 		std::vector<char> fragShaderCode = ShaderCompiler::CompileShaderFileToSpirv(fragmentPath, _CompiledData);

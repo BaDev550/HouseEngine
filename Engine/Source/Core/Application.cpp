@@ -22,7 +22,6 @@ namespace House {
 		config.Height = _ApplicationSpecs.WindowSettings.Height;
 
 		_Window = MEM::MakeScope<Window>(config);
-		_Context = MEM::MakeScope<VulkanContext>();
 		Input::Init();
 		Renderer::Init();
 
@@ -34,7 +33,7 @@ namespace House {
 	Application::~Application()
 	{
 		LOG_CORE_INFO("Exiting...");
-		_Context->WaitToDeviceIdle();
+		_Window->GetRenderContext().WaitDeviceIdle();
 
 		for (Layer* layer : _LayerRegistry) {
 			layer->OnDetach();
@@ -43,7 +42,6 @@ namespace House {
 
 		Renderer::Destroy();
 		_Window = nullptr;
-		_Context = nullptr;
 		Logger::Destroy();
 	}
 

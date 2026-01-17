@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include <optional>
+#include "Renderer/RenderContext.h"
 #include <vulkan/vulkan.h>
 
 namespace House {
@@ -39,11 +40,11 @@ namespace House {
 	constexpr int MAX_FRAMES_IN_FLIGHT = 2;
 
 	class Window;
-	class VulkanContext
+	class VulkanContext : public RenderContext
 	{
 	public:
 		static void DefaultPipelineConfigInfo(VulkanPipelineConfig& config);
-		VulkanContext();
+		VulkanContext(GLFWwindow* window);
 		VulkanContext(const VulkanContext&) = delete;
 		VulkanContext& operator=(const VulkanContext&) = delete;
 		~VulkanContext();
@@ -56,7 +57,7 @@ namespace House {
 		VkQueue GetPresentQueue() const { return _PresentQueue; }
 		VkCommandPool GetCommandPool() const { return _CommandPool; }
 		VkSurfaceKHR GetSurface() const { return _Surface; }
-		void WaitToDeviceIdle();
+		virtual void WaitDeviceIdle() override;
 		void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
 		void CreateImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags memoryflags, VkImage& image, VkDeviceMemory& memory);
 		void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
@@ -72,7 +73,7 @@ namespace House {
 		void SetupDebugMessenger();
 		void PickPhysicalDevice();
 		void CreateLogicalDevice();
-		void CreateSurface();
+		void CreateSurface(GLFWwindow* window);
 		void CreateContextCommandPool();
 		bool IsPhysicalDeviceSuitable(VkPhysicalDevice device);
 		bool HasRequiredDeviceExtensions(VkPhysicalDevice device);
@@ -94,7 +95,6 @@ namespace House {
 		VkDebugUtilsMessengerEXT _DebugMessenger;
 
 		VkSurfaceKHR _Surface;
-		Window& _Window;
 
 		const std::vector<const char*> _ValidationLayers = { "VK_LAYER_KHRONOS_validation" };
 		const std::vector<const char*> _DeviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };

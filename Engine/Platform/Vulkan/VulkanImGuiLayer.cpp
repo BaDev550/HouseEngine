@@ -8,6 +8,7 @@
 #include "Core/Application.h"
 #include "Renderer/Renderer.h"
 #include "VulkanRenderAPI.h"
+#include "VulkanSwapchain.h"
 
 namespace House {
 	VulkanImGuiLayer::VulkanImGuiLayer() : ImGuiLayer("VulkanImGuiLayer") { }
@@ -35,10 +36,10 @@ namespace House {
 			.SetPoolFlags(VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT)
 			.Build();
 
-		auto& context = Application::Get()->GetVulkanContext();
+		auto& context = Application::Get()->GetRenderContext<VulkanContext>();
 		auto& window = Application::Get()->GetWindow();
 
-		VkFormat swapchainImageFormat = window.GetSwapchain().GetSwapChainFormat();
+		VkFormat swapchainImageFormat = dynamic_cast<VulkanSwapchain*>(&window.GetSwapchain())->GetSwapChainFormat();
 
 		ImGui::CreateContext();
 		ImGui_ImplGlfw_InitForVulkan(window.GetHandle(), true);
@@ -81,7 +82,7 @@ namespace House {
 		auto cmd = dynamic_cast<VulkanRenderAPI*>(Renderer::GetAPI())->GetCurrentCommandBuffer();
 		ImGui::Render();
 
-		auto& swapchain = Application::Get()->GetWindow().GetSwapchain();
+		auto& swapchain = *dynamic_cast<VulkanSwapchain*>(&Application::Get()->GetWindow().GetSwapchain());
 		VkExtent2D extent = swapchain.GetSwapChainExtent();
 
 		VkRenderingAttachmentInfo colorAttachment{};

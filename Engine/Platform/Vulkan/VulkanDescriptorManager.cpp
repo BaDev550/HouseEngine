@@ -140,7 +140,7 @@ namespace House {
 		allocInfo.descriptorSetCount = 1;
 		allocInfo.pSetLayouts = &l;
 
-		CHECKF(vkAllocateDescriptorSets(Application::Get()->GetVulkanContext().GetDevice(), &allocInfo, &set) != VK_SUCCESS, "Failed to allocate descriptor set");
+		CHECKF(vkAllocateDescriptorSets(Application::Get()->GetRenderContext<VulkanContext>().GetDevice(), &allocInfo, &set) != VK_SUCCESS, "Failed to allocate descriptor set");
 		return set;
 	}
 

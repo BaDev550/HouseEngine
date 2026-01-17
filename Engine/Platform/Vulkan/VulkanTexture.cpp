@@ -23,13 +23,13 @@ namespace House {
 		}
 	}
 	VulkanTexture::VulkanTexture(const TextureSpecification& spec)
-		: _Context(Application::Get()->GetVulkanContext())
+		: _Context(Application::Get()->GetRenderContext<VulkanContext>())
 	{
 		_Specs = spec;
 		CreateTexture();
 	}
 	VulkanTexture::VulkanTexture(const TextureSpecification& spec, const std::string& path)
-		: _Context(Application::Get()->GetVulkanContext())
+		: _Context(Application::Get()->GetRenderContext<VulkanContext>())
 	{
 		_Specs = spec;
 		int width, height, channels;
@@ -45,7 +45,7 @@ namespace House {
 	}
 
 	VulkanTexture::VulkanTexture(const TextureSpecification& spec, DataBuffer data)
-		: _Context(Application::Get()->GetVulkanContext())
+		: _Context(Application::Get()->GetRenderContext<VulkanContext>())
 	{
 		_Specs = spec;
 		LoadTexture(data.Data, spec.Width, spec.Height, STBI_rgb_alpha);

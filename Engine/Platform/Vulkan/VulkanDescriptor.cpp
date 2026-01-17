@@ -19,7 +19,7 @@ namespace House {
     MEM::Ref<VulkanDescriptorPool> VulkanDescriptorPool::Builder::Build() const { return MEM::Ref<VulkanDescriptorPool>::Create(_MaxSets, _PoolFlags, _PoolSizes); }
 
     VulkanDescriptorSetLayout::VulkanDescriptorSetLayout(std::unordered_map<uint32_t, VkDescriptorSetLayoutBinding> bindings)
-        : _Context(Application::Get()->GetVulkanContext()), _Bindings(bindings)
+        : _Context(Application::Get()->GetRenderContext<VulkanContext>()), _Bindings(bindings)
     {
         std::vector<VkDescriptorSetLayoutBinding> setLayoutBindings{};
         for (auto kv : _Bindings) {
@@ -58,7 +58,7 @@ namespace House {
     }
 
     VulkanDescriptorPool::VulkanDescriptorPool(uint32_t maxSets, VkDescriptorPoolCreateFlags poolFlags, const std::vector<VkDescriptorPoolSize>& poolSizes)
-        : _Context(Application::Get()->GetVulkanContext())
+        : _Context(Application::Get()->GetRenderContext<VulkanContext>())
     {
         VkDescriptorPoolCreateInfo descriptorPoolInfo{};
         descriptorPoolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;

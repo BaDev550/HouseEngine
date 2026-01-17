@@ -1,8 +1,9 @@
 #pragma once
+#include "Renderer/Swapchain.h"
 #include "VulkanContext.h"
 
 namespace House {
-	class VulkanSwapchain
+	class VulkanSwapchain : public Swapchain
 	{
 	public:
 		size_t GetImageCount() const { return _SwapChainImages.size(); }
@@ -12,7 +13,7 @@ namespace House {
 		VulkanSwapchain(const VulkanSwapchain&) = delete;
 		VulkanSwapchain& operator=(VulkanSwapchain&) = delete;
 		VkResult Submit(VkCommandBuffer* cmd, uint32_t* imageIndex);
-		VkResult AcquireNextImage(uint32_t* imageIndex);
+		virtual bool Swapbuffers(uint32_t* imageIndex = nullptr) override;
 		void Recreate();
 
 		VkSwapchainKHR GetSwapChain() const { return _SwapChain; }

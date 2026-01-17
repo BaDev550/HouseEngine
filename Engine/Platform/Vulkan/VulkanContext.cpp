@@ -120,17 +120,16 @@ namespace House {
 		config.DynamicStateCreateInfo.flags = 0;
 	}
 
-	VulkanContext::VulkanContext()
-		: _Window(Application::Get()->GetWindow())
+	VulkanContext::VulkanContext(GLFWwindow* window)
 	{
+		LOG_RENDERER_INFO("Using Vulkan grapichs API");
 		try {
 			CreateInstance();
 			SetupDebugMessenger();
-			CreateSurface();
+			CreateSurface(window);
 			PickPhysicalDevice();
 			CreateLogicalDevice();
 			CreateContextCommandPool();
-			_Window.CreateSwapchain(this);
 		}
 		catch (const std::exception& e) {
 			LOG_RENDERER_ERROR("VulkanContext initialization failed: {}", e.what());
@@ -246,9 +245,9 @@ namespace House {
 		vkGetDeviceQueue(_Device, indices.presentFamily.value(), 0, &_PresentQueue);
 	}
 
-	void VulkanContext::CreateSurface()
+	void VulkanContext::CreateSurface(GLFWwindow* window)
 	{
-		CHECKF(glfwCreateWindowSurface(_Instance, _Window.GetHandle(), nullptr, &_Surface) != VK_SUCCESS, "Failed to create window surface!");
+		CHECKF(glfwCreateWindowSurface(_Instance, window, nullptr, &_Surface) != VK_SUCCESS, "Failed to create window surface!");
 	}
 
 	void VulkanContext::CreateContextCommandPool()
@@ -289,7 +288,7 @@ namespace House {
 		CHECKF(false, "Failed to find supported format");
 	}
 
-	void VulkanContext::WaitToDeviceIdle()
+	void VulkanContext::WaitDeviceIdle()
 	{
 		vkDeviceWaitIdle(_Device);
 	}

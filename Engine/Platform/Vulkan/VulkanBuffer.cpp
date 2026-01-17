@@ -38,7 +38,7 @@ namespace House {
         _InstanceCount(1), 
         _UsageFlags(Utils::BufferTypeToVulkanUsageFlag(typeFlags)),
         _MemoryPropertyFlags(Utils::MemoryPropertiesToVulkanMemoryProperites(memprops)),
-        _Context(Application::Get()->GetVulkanContext())
+        _Context(Application::Get()->GetRenderContext<VulkanContext>())
     {
         _AligmentSize = GetAlignment(size, 1);
         _BufferSize = _AligmentSize * _InstanceCount;

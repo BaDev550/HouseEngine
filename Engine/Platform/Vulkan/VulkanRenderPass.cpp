@@ -2,6 +2,7 @@
 #include "VulkanRenderPass.h"
 #include "VulkanRenderAPI.h"
 #include "VulkanBuffer.h"
+#include "VulkanSwapchain.h"
 
 namespace House {
 	namespace Utils {
@@ -279,7 +280,7 @@ namespace House {
 
 	void VulkanRenderPass::BeginDefaultSwapchainPass(VkCommandBuffer cmd, std::vector<VkRenderingAttachmentInfo>& colorAttachments, VkRenderingAttachmentInfo& depthAttachment, VkExtent2D& extent)
 	{
-		auto& swapchain = Application::Get()->GetWindow().GetSwapchain();
+		auto& swapchain = *dynamic_cast<VulkanSwapchain*>(&Application::Get()->GetWindow().GetSwapchain());
 		VkImage swapChainImage = swapchain.GetSwapchainImage(Application::Get()->GetWindow().GetImageIndex());
 		VkImage swapChainDepthImage = swapchain.GetDepthImage();
 		VkFormat swapchainFormat = swapchain.GetSwapChainFormat();
@@ -318,7 +319,7 @@ namespace House {
 
 	void VulkanRenderPass::EndDefaultSwapchainPass(VkCommandBuffer cmd)
 	{
-		auto& swapchain = Application::Get()->GetWindow().GetSwapchain();
+		auto& swapchain = *dynamic_cast<VulkanSwapchain*>(&Application::Get()->GetWindow().GetSwapchain());
 		VkImage swapChainImage = swapchain.GetSwapchainImage(Application::Get()->GetWindow().GetImageIndex());
 		VkFormat swapChainFormat = swapchain.GetSwapChainFormat();
 		Utils::ImageMemBarrier(cmd, swapChainImage, swapChainFormat, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, 1);

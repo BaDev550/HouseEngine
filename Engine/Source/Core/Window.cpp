@@ -15,6 +15,8 @@ namespace House {
 			glfwWindowHint(GLFW_VISIBLE, GLFW_TRUE);
 		}
 		_Handle = glfwCreateWindow(_Config.Width, _Config.Height, _Config.Title.c_str(), nullptr, nullptr);
+		_RenderContext = RenderContext::Create(_Handle);
+		_Swapchain = Swapchain::Create(_RenderContext);
 
 		glfwMakeContextCurrent(_Handle);
 		glfwSetWindowUserPointer(_Handle, &_Config);
@@ -25,11 +27,14 @@ namespace House {
 	{
 		delete _Swapchain;
 		_Swapchain = nullptr;
+
+		delete _RenderContext;
+		_RenderContext = nullptr;
+
 		glfwDestroyWindow(_Handle);
 		glfwTerminate();
 	}
 
-	void Window::CreateSwapchain(VulkanContext* context) { _Swapchain = new VulkanSwapchain(context); }
 	bool Window::ShouldClose() const { return glfwWindowShouldClose(_Handle); }
 	bool Window::HasResized() const { return _Config.Resized; }
 	void Window::ResetResizeFlag() { _Config.Resized = false; }
@@ -39,8 +44,8 @@ namespace House {
 	}
 	bool Window::SwapBuffers()
 	{
-		VkResult result = _Swapchain->AcquireNextImage(&_ImageIndex);
-		CHECKF((result != VK_SUCCESS || result == VK_SUBOPTIMAL_KHR), "Failed to acquire next image");
+		bool result = _Swapchain->Swapbuffers(&_ImageIndex);
+		CHECKF(result, "Failed to acquire next image");
 		return true;
 	}
 

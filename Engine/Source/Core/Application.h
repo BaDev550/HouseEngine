@@ -40,12 +40,14 @@ namespace House {
 		static Application* Get() { return _Instance; }
 		void Run();
 	public:
-		Window& GetWindow() { return *_Window; }
-		VulkanContext& GetVulkanContext() { return *_Context; }
 		ApplicationSpecs GetApplicationSpecs() const { return _ApplicationSpecs; }
+		Window& GetWindow() { return *_Window; }
 		float GetDeltaTime() const { return _DeltaTime; }
 		float GetFPS() const { return 1 / _DeltaTime; }
 		uint32_t GetFrameIndex() const { return _FrameIndex; }
+
+		template<typename T>
+		T& GetRenderContext() { return *dynamic_cast<T*>(&_Window->GetRenderContext()); }
 	private:
 		static Application* _Instance;
 
@@ -53,7 +55,6 @@ namespace House {
 		LayerRegistry _LayerRegistry;
 		ImGuiLayer* _ImGuiLayer;
 		MEM::Scope<Window> _Window;
-		MEM::Scope<VulkanContext> _Context; // Move this to window
 
 		float _DeltaTime;
 		uint32_t _FrameIndex = 0;

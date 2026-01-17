@@ -2,6 +2,7 @@
 #include "VulkanRenderAPI.h"
 #include "VulkanPipeline.h"
 #include "VulkanRenderPass.h"
+#include "VulkanSwapchain.h"
 
 namespace House {
 	struct FrameContext {
@@ -21,7 +22,7 @@ namespace House {
 
 	void VulkanRenderAPI::Init()
 	{
-		auto& context = Application::Get()->GetVulkanContext();
+		auto& context = Application::Get()->GetRenderContext<VulkanContext>();
 		for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
 			auto& frame = s_Frames[i];
 
@@ -42,7 +43,7 @@ namespace House {
 
 	void VulkanRenderAPI::Destroy()
 	{
-		const auto& device = Application::Get()->GetVulkanContext().GetDevice();
+		const auto& device = Application::Get()->GetRenderContext<VulkanContext>().GetDevice();
 		for (auto& frame : s_Frames) { vkDestroyCommandPool(device, frame.CommandPool, nullptr); }
 	}
 
@@ -52,7 +53,7 @@ namespace House {
 		s_FrameStarted = true;
 		auto& window = Application::Get()->GetWindow();
 		window.SwapBuffers();
-		auto& swapchain = window.GetSwapchain();
+		auto& swapchain = *dynamic_cast<VulkanSwapchain*>(&window.GetSwapchain());
 		auto& imageIndex = window.GetImageIndex();
 		auto frameIndex = Application::Get()->GetFrameIndex();
 		VkImage swapChainImage = swapchain.GetSwapchainImage(imageIndex);
@@ -64,7 +65,7 @@ namespace House {
 		beginInfo.flags = 0;
 		beginInfo.pInheritanceInfo = nullptr;
 
-		CHECKF((vkResetCommandPool(Application::Get()->GetVulkanContext().GetDevice(), frame.CommandPool, 0) != VK_SUCCESS), "Failed to reset command pool");
+		CHECKF((vkResetCommandPool(Application::Get()->GetRenderContext<VulkanContext>().GetDevice(), frame.CommandPool, 0) != VK_SUCCESS), "Failed to reset command pool");
 		CHECKF((vkBeginCommandBuffer(cmd, &beginInfo) != VK_SUCCESS), "Failed to begin recording to command buffer");
 	}
 
@@ -73,7 +74,7 @@ namespace House {
 		CHECKF(!s_FrameStarted, "Cant submit a not recorded frame");
 		VkCommandBuffer cmd = GetCurrentCommandBuffer();
 		auto& window = Application::Get()->GetWindow();
-		auto& swapchain = window.GetSwapchain();
+		auto& swapchain = *dynamic_cast<VulkanSwapchain*>(&window.GetSwapchain());
 		auto& imageIndex = window.GetImageIndex();
 		VkImage swapChainImage = swapchain.GetSwapchainImage(imageIndex);
 
@@ -90,7 +91,7 @@ namespace House {
 	 
 	void VulkanRenderAPI::CopyBuffer(MEM::Ref<Buffer>& srcBuffer, MEM::Ref<Buffer>& dstBuffer, uint64_t size)
 	{
-		auto& device = Application::Get()->GetVulkanContext();
+		auto& device = Application::Get()->GetRenderContext<VulkanContext>();
 		const auto& vulkanSrcBuffer = srcBuffer.As<VulkanBuffer>();
 		const auto& vulkanDstBuffer = dstBuffer.As<VulkanBuffer>();
 		device.CopyBuffer(vulkanSrcBuffer->GetBuffer(), vulkanDstBuffer->GetBuffer(), size);

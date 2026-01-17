@@ -21,6 +21,22 @@ namespace House {
 		MEM::Ref<VulkanPipeline>& GetPipeline() { return _Pipeline; }
 		DescriptorManager* GetDescriptorManager() { return _DescriptorManager; }
 	private:
+		void BeginCustomFramebufferPass(
+			VkCommandBuffer cmd, 
+			MEM::Ref<Framebuffer>& framebuffer, 
+			std::vector<VkRenderingAttachmentInfo>& colorAttachments, 
+			VkRenderingAttachmentInfo& depthAttachment,
+			VkExtent2D& extent
+		);
+		void BeginDefaultSwapchainPass(
+			VkCommandBuffer cmd, 
+			std::vector<VkRenderingAttachmentInfo>& colorAttachments, 
+			VkRenderingAttachmentInfo& depthAttachment,
+			VkExtent2D& extent
+		);
+		void EndCustomFramebufferPass(VkCommandBuffer cmd, MEM::Ref<Framebuffer>& framebuffer);
+		void EndDefaultSwapchainPass(VkCommandBuffer cmd);
+
 		MEM::Ref<VulkanPipeline> _Pipeline;
 		DescriptorManager* _DescriptorManager;
 	};

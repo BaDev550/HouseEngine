@@ -180,38 +180,13 @@ namespace House {
 	{
 		auto cmd = dynamic_cast<VulkanRenderAPI*>(Renderer::GetAPI())->GetCurrentCommandBuffer();
 		PipelineData pipelineData = _Pipeline->GetPipelineData();
-		auto& framebuffer = pipelineData.Framebuffer;
-		const FramebufferSpecification fbSpecs = framebuffer->GetSpecification();
 
-		const float DepthClearColor = fbSpecs.DepthClearValue;
-		const glm::vec4 clearColor = fbSpecs.ClearColor;
-		const MEM::Ref<VulkanTexture>& vulkanAttachmentDepth = framebuffer->GetDepthTextureAttachment().As<VulkanTexture>();
-		uint32_t attachmentCount = framebuffer->GetAttachmentCount();
-		VkExtent2D extent = { framebuffer->GetWidth(), framebuffer->GetHeight() };
-
-		std::vector<VkRenderingAttachmentInfo> colorAttachments(attachmentCount);
-		for (int i = 0; i < colorAttachments.size(); i++) {
-			const MEM::Ref<VulkanTexture>& vulkanAttachmentTexture = framebuffer->GetAttachmentTexture(i).As<VulkanTexture>();
-			VkImage fbImage = vulkanAttachmentTexture->GetImage();
-			VkImage fbDepthImage = vulkanAttachmentDepth->GetImage();
-			VkFormat fbformat = vulkanAttachmentTexture->GetFormat();
-
-			colorAttachments[i].sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
-			colorAttachments[i].imageView = vulkanAttachmentTexture->GetImageView();
-			colorAttachments[i].imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-			colorAttachments[i].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-			colorAttachments[i].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-			colorAttachments[i].clearValue = { {{clearColor.x, clearColor.y, clearColor.z, clearColor.a}}};
-			Utils::ImageMemBarrier(cmd, fbImage, fbformat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 1);
-		}
-
+		VkExtent2D extent{};
+		std::vector<VkRenderingAttachmentInfo> colorAttachments{};
 		VkRenderingAttachmentInfo depthAttachment{};
-		depthAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
-		depthAttachment.imageView = vulkanAttachmentDepth->GetImageView();
-		depthAttachment.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-		depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-		depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-		depthAttachment.clearValue = { DepthClearColor, 0 };
+
+		if (pipelineData.Framebuffer) { BeginCustomFramebufferPass(cmd, pipelineData.Framebuffer, colorAttachments, depthAttachment, extent); }
+		else { BeginDefaultSwapchainPass(cmd, colorAttachments, depthAttachment, extent); }
 
 		VkRenderingInfo renderingInfo{};
 		renderingInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
@@ -237,16 +212,11 @@ namespace House {
 	void VulkanRenderPass::End()
 	{
 		auto cmd = dynamic_cast<VulkanRenderAPI*>(Renderer::GetAPI())->GetCurrentCommandBuffer();
-		PipelineData pipelineData = _Pipeline->GetPipelineData();
-		auto& framebuffer = pipelineData.Framebuffer;
-		const FramebufferSpecification fbSpecs = framebuffer->GetSpecification();
-		const MEM::Ref<VulkanTexture>& vulkanAttachmentTexture = framebuffer->GetAttachmentTexture(0).As<VulkanTexture>();
-		const MEM::Ref<VulkanTexture>& vulkanAttachmentDepth = framebuffer->GetDepthTextureAttachment().As<VulkanTexture>();
-		VkImage fbImage = vulkanAttachmentTexture->GetImage();
-		VkFormat fbformat = vulkanAttachmentTexture->GetFormat();
 		vkCmdEndRendering(cmd);
 
-		Utils::ImageMemBarrier(cmd, fbImage, fbformat, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, 1);
+		PipelineData pipelineData = _Pipeline->GetPipelineData();
+		if (pipelineData.Framebuffer) { EndCustomFramebufferPass(cmd, pipelineData.Framebuffer); }
+		else { EndDefaultSwapchainPass(cmd); }
 	}
 
 	void VulkanRenderPass::SetInput(std::string_view name, MEM::Ref<Buffer>& buffer)
@@ -258,5 +228,93 @@ namespace House {
 	{
 		auto vulkanTexture = texture.As<VulkanTexture>();
 		_DescriptorManager->WriteInput(name, vulkanTexture);
+	}
+
+	void VulkanRenderPass::BeginCustomFramebufferPass(
+		VkCommandBuffer cmd, 
+		MEM::Ref<Framebuffer>& framebuffer, 
+		std::vector<VkRenderingAttachmentInfo>& colorAttachments, 
+		VkRenderingAttachmentInfo& depthAttachment, 
+		VkExtent2D& extent
+	)
+	{
+		const FramebufferSpecification fbSpecs = framebuffer->GetSpecification();
+
+		const float DepthClearColor = fbSpecs.DepthClearValue;
+		const glm::vec4 clearColor = fbSpecs.ClearColor;
+		const MEM::Ref<VulkanTexture>& vulkanAttachmentDepth = framebuffer->GetDepthTextureAttachment().As<VulkanTexture>();
+		extent = { framebuffer->GetWidth(), framebuffer->GetHeight() };
+		uint32_t attachmentCount = framebuffer->GetAttachmentCount();
+
+		framebuffer->Bind();
+		colorAttachments.resize(attachmentCount);
+		for (int i = 0; i < colorAttachments.size(); i++) {
+			const MEM::Ref<VulkanTexture>& vulkanAttachmentTexture = framebuffer->GetAttachmentTexture(i).As<VulkanTexture>();
+			VkImage fbImage = vulkanAttachmentTexture->GetImage();
+			VkImage fbDepthImage = vulkanAttachmentDepth->GetImage();
+			VkFormat fbformat = vulkanAttachmentTexture->GetFormat();
+
+			colorAttachments[i].sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+			colorAttachments[i].imageView = vulkanAttachmentTexture->GetImageView();
+			colorAttachments[i].imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+			colorAttachments[i].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+			colorAttachments[i].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+			colorAttachments[i].clearValue = { {{clearColor.x, clearColor.y, clearColor.z, clearColor.a}} };
+			Utils::ImageMemBarrier(cmd, fbImage, fbformat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 1);
+		}
+
+		depthAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+		depthAttachment.imageView = vulkanAttachmentDepth->GetImageView();
+		depthAttachment.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+		depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+		depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+		depthAttachment.clearValue = { DepthClearColor, 0 };
+	}
+
+	void VulkanRenderPass::BeginDefaultSwapchainPass(VkCommandBuffer cmd, std::vector<VkRenderingAttachmentInfo>& colorAttachments, VkRenderingAttachmentInfo& depthAttachment, VkExtent2D& extent)
+	{
+		auto& swapchain = Application::Get()->GetWindow().GetSwapchain();
+		VkImage swapChainImage = swapchain.GetSwapchainImage(Application::Get()->GetWindow().GetImageIndex());
+		VkImage swapChainDepthImage = swapchain.GetDepthImage();
+		VkFormat swapchainFormat = swapchain.GetSwapChainFormat();
+		extent = swapchain.GetSwapChainExtent();
+
+		colorAttachments.resize(1);
+		colorAttachments[0].sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+		colorAttachments[0].imageView = swapchain.GetSwapchainImageView(Application::Get()->GetWindow().GetImageIndex());
+		colorAttachments[0].imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+		colorAttachments[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+		colorAttachments[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+		colorAttachments[0].clearValue = { {{0.1f, 0.1f, 0.1f, 1.0f}} };
+
+		depthAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+		depthAttachment.imageView = swapchain.GetDepthImageView();
+		depthAttachment.imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
+		depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+		depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+		depthAttachment.clearValue = { 1.0f, 0 };
+
+		Utils::ImageMemBarrier(cmd, swapChainImage, swapchainFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 1);
+	}
+
+	void VulkanRenderPass::EndCustomFramebufferPass(VkCommandBuffer cmd, MEM::Ref<Framebuffer>& framebuffer)
+	{
+		uint32_t attachmentCount = framebuffer->GetAttachmentCount();
+		const FramebufferSpecification fbSpecs = framebuffer->GetSpecification();
+		for (int i = 0; i < attachmentCount; i++) {
+			const MEM::Ref<VulkanTexture>& vulkanAttachmentTexture = framebuffer->GetAttachmentTexture(i).As<VulkanTexture>();
+			VkImage fbImage = vulkanAttachmentTexture->GetImage();
+			VkFormat fbformat = vulkanAttachmentTexture->GetFormat();
+			Utils::ImageMemBarrier(cmd, fbImage, fbformat, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, 1);
+		}
+		framebuffer->Unbind();
+	}
+
+	void VulkanRenderPass::EndDefaultSwapchainPass(VkCommandBuffer cmd)
+	{
+		auto& swapchain = Application::Get()->GetWindow().GetSwapchain();
+		VkImage swapChainImage = swapchain.GetSwapchainImage(Application::Get()->GetWindow().GetImageIndex());
+		VkFormat swapChainFormat = swapchain.GetSwapChainFormat();
+		Utils::ImageMemBarrier(cmd, swapChainImage, swapChainFormat, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, 1);
 	}
 }

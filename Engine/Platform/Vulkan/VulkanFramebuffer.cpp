@@ -1,5 +1,6 @@
 #include "hepch.h"
 #include "VulkanFramebuffer.h"
+#include "VulkanTexture.h"
 
 namespace House {
 	namespace Utils {
@@ -34,6 +35,7 @@ namespace House {
 				spec.Format = attachment.Format;
 				spec.Width = _Width;
 				spec.Height = _Height;
+				spec.Attachment = true;
 				_AttachmentImages.emplace_back(Texture2D::Create(spec));
 			}
 		}

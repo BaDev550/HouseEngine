@@ -15,8 +15,12 @@ namespace House {
 		VkFormat GetFormat() const { return _TextureFormat; }
 		VkImage GetImage() const { return _TextureImage; }
 		VkImageView GetImageView() const { return _TextureImageView; }
+
+		void SetImage(VkImage image) { _TextureImage = image; }
+		void SetImageView(VkImageView image) { _TextureImageView = image; }
 	private:
 		void LoadTexture(void* data, uint32_t width, uint32_t height, uint32_t channels);
+		void CreateTexture();
 		void CreateTextureImageView();
 		void CreateTextureSampler();
 

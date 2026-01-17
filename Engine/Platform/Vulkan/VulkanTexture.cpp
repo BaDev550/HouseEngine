@@ -5,10 +5,46 @@
 #include <stb_image.h>
 
 namespace House {
+	namespace Utils {
+		VkFormat TextureImageFormatToVulkanFormat(TextureImageFormat format) {
+			switch (format)
+			{
+			//case House::TextureImageFormat::None:
+			//	break;
+			//case House::TextureImageFormat::RG16F:
+			//	break;
+			//case House::TextureImageFormat::RG32F:
+			//	break;
+			//case House::TextureImageFormat::RGB:
+			//	break;
+			case House::TextureImageFormat::RGBA: return VK_FORMAT_R8G8B8A8_SRGB;
+			case House::TextureImageFormat::RGBA16F: return VK_FORMAT_R16G16B16A16_SFLOAT;
+			case House::TextureImageFormat::RGBA32F: return VK_FORMAT_R32G32B32A32_SFLOAT;
+			case House::TextureImageFormat::DEPTH32F: return VK_FORMAT_D32_SFLOAT;
+			case House::TextureImageFormat::DEPTH24STENCIL8: return VK_FORMAT_D24_UNORM_S8_UINT;
+			}
+		}
+		VkImageAspectFlags TextureImageFormatToVulkanAspectFormat(TextureImageFormat format) {
+			switch (format)
+			{
+			case House::TextureImageFormat::None:
+				break;
+			case House::TextureImageFormat::RG16F:	 return VK_IMAGE_ASPECT_COLOR_BIT;
+			case House::TextureImageFormat::RG32F:	 return VK_IMAGE_ASPECT_COLOR_BIT;
+			case House::TextureImageFormat::RGB:	 return VK_IMAGE_ASPECT_COLOR_BIT;
+			case House::TextureImageFormat::RGBA:	 return VK_IMAGE_ASPECT_COLOR_BIT;
+			case House::TextureImageFormat::RGBA16F: return VK_IMAGE_ASPECT_COLOR_BIT;
+			case House::TextureImageFormat::RGBA32F: return VK_IMAGE_ASPECT_COLOR_BIT;
+			case House::TextureImageFormat::DEPTH32F:return VK_IMAGE_ASPECT_DEPTH_BIT;
+			case House::TextureImageFormat::DEPTH24STENCIL8: return VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
+			}
+		}
+	}
 	VulkanTexture::VulkanTexture(const TextureSpecification& spec)
 		: _Context(Application::Get()->GetVulkanContext())
 	{
 		_Specs = spec;
+		CreateTexture();
 	}
 	VulkanTexture::VulkanTexture(const TextureSpecification& spec, const std::string& path)
 		: _Context(Application::Get()->GetVulkanContext())
@@ -20,6 +56,8 @@ namespace House {
 			LOG_CORE_WARN("Failed to load {} using fallback white texture", path);
 			return;
 		}
+		_Specs.Width = width;
+		_Specs.Height = height;
 		LoadTexture(pixels, width, height, STBI_rgb_alpha);
 		stbi_image_free(pixels);
 	}
@@ -51,27 +89,47 @@ namespace House {
 	void VulkanTexture::LoadTexture(void* data, uint32_t width, uint32_t height, uint32_t channels)
 	{
 		uint64_t imageSize = width * height * STBI_rgb_alpha;
+		if (data) {
+			MEM::Scope<VulkanBuffer> stagingBuffer;
+			stagingBuffer = MEM::MakeScope<VulkanBuffer>(
+				imageSize,
+				BufferType::TransferSrc,
+				MemoryProperties::HOST_VISIBLE | MemoryProperties::HOST_COHERENT
+			);
+			stagingBuffer->Map();
+			stagingBuffer->WriteToBuffer(data);
+			stagingBuffer->Unmap();
+			CreateTexture();
+			_Context.TransitionImageLayout(_TextureImage, _TextureFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+			_Context.CopyBufferToImage(stagingBuffer->GetBuffer(), _TextureImage, static_cast<uint32_t>(width), static_cast<uint32_t>(height));
+			_Context.TransitionImageLayout(_TextureImage, _TextureFormat, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		}
+		else {
+			LOG_RENDERER_ERROR("Failed to laod texture");
+		}
+	}
 
-		MEM::Scope<VulkanBuffer> stagingBuffer;
-		stagingBuffer = MEM::MakeScope<VulkanBuffer>(
-			imageSize,
-			BufferType::TransferSrc,
-			MemoryProperties::HOST_VISIBLE | MemoryProperties::HOST_COHERENT
-		);
-		stagingBuffer->Map();
-		stagingBuffer->WriteToBuffer(data);
-		stagingBuffer->Unmap();
-		_TextureFormat = VK_FORMAT_R8G8B8A8_SRGB;
+	void VulkanTexture::CreateTexture()
+	{
+		VkImageUsageFlags usage;
+		if (_Specs.Attachment) {
+			usage = 
+				VK_IMAGE_USAGE_TRANSFER_DST_BIT | 
+				VK_IMAGE_USAGE_SAMPLED_BIT | 
+				VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | 
+				VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+		}
+		else {
+			usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+		}
+		_TextureFormat = Utils::TextureImageFormatToVulkanFormat(_Specs.Format);
 		_Context.CreateImage(
-			width,
-			height,
+			_Specs.Width,
+			_Specs.Height,
 			_TextureFormat,
 			VK_IMAGE_TILING_OPTIMAL,
-			VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+			usage,
 			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, _TextureImage, _TextureImageMemory);
-		_Context.TransitionImageLayout(_TextureImage, _TextureFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-		_Context.CopyBufferToImage(stagingBuffer->GetBuffer(), _TextureImage, static_cast<uint32_t>(width), static_cast<uint32_t>(height));
-		_Context.TransitionImageLayout(_TextureImage, _TextureFormat, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 		CreateTextureImageView();
 		CreateTextureSampler();
 	}
@@ -83,7 +141,7 @@ namespace House {
 		viewCreateInfo.image = _TextureImage;
 		viewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
 		viewCreateInfo.format = _TextureFormat;
-		viewCreateInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		viewCreateInfo.subresourceRange.aspectMask = Utils::TextureImageFormatToVulkanAspectFormat(_Specs.Format);
 		viewCreateInfo.subresourceRange.baseMipLevel = 0;
 		viewCreateInfo.subresourceRange.levelCount = 1;
 		viewCreateInfo.subresourceRange.baseArrayLayer = 0;

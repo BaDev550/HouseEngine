@@ -35,6 +35,7 @@ namespace House {
 		TextureFilter Filter = TextureFilter::Linear;
 		uint32_t Width = 1;
 		uint32_t Height = 1;
+		bool Attachment = false;
 	};
 
 	class Texture : public MEM::RefCounted {

@@ -12,9 +12,11 @@ namespace House {
 
 		for (auto const& [set, bindings] : _CompiledData.ReflectData)
 		{
+			LOG_RENDERER_INFO("Set {0} Layout Creation: Found {1} bindings", set, bindings.size());
 			auto builder = VulkanDescriptorSetLayout::Builder();
 			for (auto const& [binding, info] : bindings)
 			{
+				LOG_RENDERER_INFO("  - Binding {0}: {1}", binding, info.Name);
 				VkDescriptorType vkType = ShaderCompiler::ShaderReflectionTypeToVulkanType(info.Type);
 				builder.AddBinding(binding, vkType, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT);
 			}

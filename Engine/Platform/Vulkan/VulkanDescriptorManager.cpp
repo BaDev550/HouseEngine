@@ -32,7 +32,7 @@ namespace House {
 		}
 	}
 
-	void DescriptorManager::UpdateSets(uint32_t frameIndex)
+	void DescriptorManager::UpdateSets(VkCommandBuffer cmd, uint32_t frameIndex, VkPipelineLayout layout)
 	{
 		for (auto& [setIndex, bindings] : _StoredResources) {
 			_Writers[setIndex]->Clear();
@@ -63,6 +63,16 @@ namespace House {
 				_Writers[setIndex]->Overwrite(_DescriptorSets[frameIndex][setIndex]);
 				_Writers[setIndex]->Clear();
 			}
+
+			vkCmdBindDescriptorSets(
+				cmd,
+				VK_PIPELINE_BIND_POINT_GRAPHICS,
+				layout,
+				setIndex,
+				1,
+				&_DescriptorSets[frameIndex][setIndex],
+				0, nullptr
+			);
 		}
 	}
 
@@ -137,6 +147,11 @@ namespace House {
 	VkDescriptorSet DescriptorManager::GetDescriptorSet(uint32_t frameIndex, uint32_t setIndex)
 	{
 		return _DescriptorSets[frameIndex][setIndex];
+	}
+
+	std::vector<VkDescriptorSet> DescriptorManager::GetDescriptorSets(uint32_t frameIndex)
+	{
+		return _DescriptorSets[frameIndex];
 	}
 
 	const std::map<std::string, RenderPassInputDeclaration>& DescriptorManager::GetInputDeclarations() const { return _InputDeclarations; }

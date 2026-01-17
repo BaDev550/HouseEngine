@@ -1,6 +1,7 @@
 #include "hepch.h"
 #include "VulkanPipeline.h"
 #include "ShaderCompiler.h"
+#include "VulkanTexture.h"
 #include "Core/Application.h"
 #include "Renderer/Model.h"
 
@@ -26,9 +27,9 @@ namespace House {
 		
 		VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
 		vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-		vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(compiledData.ArrtibDescriptions.size());
+		vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(compiledData.AttribDescriptions.size());
 		vertexInputInfo.vertexBindingDescriptionCount = 1;
-		vertexInputInfo.pVertexAttributeDescriptions = compiledData.ArrtibDescriptions.data();
+		vertexInputInfo.pVertexAttributeDescriptions = compiledData.AttribDescriptions.data();
 		vertexInputInfo.pVertexBindingDescriptions = &compiledData.BindingDescription;
 
 		VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
@@ -62,12 +63,32 @@ namespace House {
 		CHECKF(vkCreatePipelineLayout(_Context.GetDevice(), &pipelineLayoutInfo, nullptr, &_PipelineLayout) != VK_SUCCESS, "failed to create pipeline layout!");
 
 		VkPipelineRenderingCreateInfo pipelineRenderingCreateInfo{};
-		VkFormat colorFormat = Application::Get()->GetWindow().GetSwapchain().GetSwapChainFormat();
 		pipelineRenderingCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
-		pipelineRenderingCreateInfo.colorAttachmentCount = 1;
-		pipelineRenderingCreateInfo.pColorAttachmentFormats = &colorFormat;
+		std::vector<VkFormat> colorFormats;
+		if (_Data.Framebuffer) {
+			for (const auto& attachment : _Data.Framebuffer->GetSpecification().Attachments.Attachments) {
+				if (!IsDepthFormat(attachment.Format)) {
+					colorFormats.push_back(TextureImageFormatToVulkanFormat(attachment.Format));
+				}
+			}
+		}
+		else {
+			colorFormats.push_back(Application::Get()->GetWindow().GetSwapchain().GetSwapChainFormat());
+		}
 		pipelineRenderingCreateInfo.depthAttachmentFormat = VK_FORMAT_D32_SFLOAT;
+		pipelineRenderingCreateInfo.colorAttachmentCount = static_cast<uint32_t>(colorFormats.size());
+		pipelineRenderingCreateInfo.pColorAttachmentFormats = colorFormats.data();
 
+		uint32_t colorAttachmentCount = static_cast<uint32_t>(colorFormats.size());
+		std::vector<VkPipelineColorBlendAttachmentState> blendAttachments(colorAttachmentCount);
+		for (uint32_t i = 0; i < colorAttachmentCount; i++) {
+			blendAttachments[i].colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+			blendAttachments[i].blendEnable = VK_FALSE;
+		}
+		config.ColorBlendStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+		config.ColorBlendStateCreateInfo.attachmentCount = colorAttachmentCount;
+		config.ColorBlendStateCreateInfo.pAttachments = blendAttachments.data();
+		
 		VkGraphicsPipelineCreateInfo createInfo{};
 		createInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
 		createInfo.pNext = &pipelineRenderingCreateInfo;

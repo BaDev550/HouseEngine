@@ -25,6 +25,7 @@ namespace House {
 		static void CopyBuffer(MEM::Ref<Buffer>& srcBuffer, MEM::Ref<Buffer>& dstBuffer, uint64_t size);
 
 		static void DrawMesh(MEM::Ref<RenderPass>& renderPass, MEM::Ref<Model>& model, glm::mat4& transform);
+		static void DrawFullscreenQuad(MEM::Ref<RenderPass>& renderPass);
 
 		static RenderAPI* GetAPI();
 		static uint32_t GetDrawCall();

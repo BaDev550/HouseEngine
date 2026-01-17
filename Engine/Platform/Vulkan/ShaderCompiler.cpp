@@ -51,7 +51,11 @@ namespace House {
             switch (binding->descriptor_type)
             {
             case SPV_REFLECT_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER: return ShaderReflectionDataType::Sampler2D;
+            case SPV_REFLECT_DESCRIPTOR_TYPE_SAMPLED_IMAGE:  return ShaderReflectionDataType::Sampler2D;
             case SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_BUFFER: return ShaderReflectionDataType::UniformBuffer;
+            case SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC: return ShaderReflectionDataType::UniformBuffer;
+            default:
+                return ShaderReflectionDataType::UniformBuffer;
             }
         }
         constexpr uint32_t GetFormatSize(VkFormat format) {
@@ -141,42 +145,50 @@ namespace House {
 
         assert(result == SPV_REFLECT_RESULT_SUCCESS);
 
-        {
-            uint32_t count;
-            {
-                spvReflectEnumerateDescriptorBindings(&module, &count, nullptr);
-                std::vector<SpvReflectDescriptorBinding*> bindings(count);
-                spvReflectEnumerateDescriptorBindings(&module, &count, bindings.data());
+        uint32_t count;
+        spvReflectEnumerateDescriptorBindings(&module, &count, nullptr);
+        std::vector<SpvReflectDescriptorBinding*> bindings(count);
+        spvReflectEnumerateDescriptorBindings(&module, &count, bindings.data());
 
-                for (const auto& ds : bindings) {
-                    shaderInfo.ReflectData[ds->set][ds->binding] = { ds->name, helpers::GetResourceType(ds) };
-                }
-            }
-            {
-                if (module.shader_stage & SPV_REFLECT_SHADER_STAGE_VERTEX_BIT) {
-                    spvReflectEnumerateInputVariables(&module, &count, nullptr);
-                    std::vector<SpvReflectInterfaceVariable*> inputs(count);
-                    spvReflectEnumerateInputVariables(&module, &count, inputs.data());
-                    std::sort(inputs.begin(), inputs.end(), [](SpvReflectInterfaceVariable* a, SpvReflectInterfaceVariable* b) { return a->location < b->location; });
+        for (const auto& ds : bindings) {
+            shaderInfo.ReflectData[ds->set][ds->binding] = { ds->name, helpers::GetResourceType(ds) };
+        }
 
-                    uint32_t stride = 0;
-                    for (const auto& input : inputs) {
-                        VkFormat format = static_cast<VkFormat>(input->format);
-                        uint32_t size = helpers::GetFormatSize(format);
+        if (module.shader_stage & SPV_REFLECT_SHADER_STAGE_VERTEX_BIT) {
+            shaderInfo.AttribDescriptions.clear();
 
-                        VkVertexInputAttributeDescription attrib{};
-                        attrib.location = input->location;
-                        attrib.format = format;
-                        attrib.offset = stride;
-                        stride += size;
-                        shaderInfo.ArrtibDescriptions.emplace_back(attrib);
+            spvReflectEnumerateInputVariables(&module, &count, nullptr);
+            if (count > 0) {
+                std::vector<SpvReflectInterfaceVariable*> inputs(count);
+                spvReflectEnumerateInputVariables(&module, &count, inputs.data());
+                std::vector<SpvReflectInterfaceVariable*> filteredInputs;
+                for (auto* input : inputs) {
+                    if (input->location != 0xFFFFFFFF) {
+                        filteredInputs.push_back(input);
                     }
-                    shaderInfo.BindingDescription.binding = 0;
-                    shaderInfo.BindingDescription.stride = stride;
-                    shaderInfo.BindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
                 }
+                std::sort(filteredInputs.begin(), filteredInputs.end(), [](SpvReflectInterfaceVariable* a, SpvReflectInterfaceVariable* b) { return a->location < b->location; });
+
+                uint32_t stride = 0;
+                for (const auto& input : filteredInputs) {
+                    VkFormat format = static_cast<VkFormat>(input->format);
+                    uint32_t size = helpers::GetFormatSize(format);
+
+                    VkVertexInputAttributeDescription attrib{};
+                    attrib.location = input->location;
+                    attrib.format = format;
+                    attrib.offset = stride;
+
+                    shaderInfo.AttribDescriptions.emplace_back(attrib);
+                    stride += size;
+                    LOG_RENDERER_INFO("Found input n:{}, l:{}", input->name, attrib.location);
+                }
+                shaderInfo.BindingDescription.binding = 0;
+                shaderInfo.BindingDescription.stride = stride;
+                shaderInfo.BindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
             }
         }
+
         spvReflectDestroyShaderModule(&module);
     }
 }

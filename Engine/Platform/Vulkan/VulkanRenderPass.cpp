@@ -184,6 +184,9 @@ namespace House {
 		VkExtent2D extent{};
 		std::vector<VkRenderingAttachmentInfo> colorAttachments{};
 		VkRenderingAttachmentInfo depthAttachment{};
+		uint32_t frameIndex = Renderer::GetFrameIndex();
+		auto set = _DescriptorManager->GetDescriptorSet(frameIndex, 0);
+		auto set2 = _DescriptorManager->GetDescriptorSet(frameIndex, 1);
 
 		if (pipelineData.Framebuffer) { BeginCustomFramebufferPass(cmd, pipelineData.Framebuffer, colorAttachments, depthAttachment, extent); }
 		else { BeginDefaultSwapchainPass(cmd, colorAttachments, depthAttachment, extent); }
@@ -198,6 +201,7 @@ namespace House {
 
 		vkCmdBeginRendering(cmd, &renderingInfo);
 		vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, _Pipeline->GetVulkanPipeline());
+		_DescriptorManager->UpdateSets(cmd, Renderer::GetFrameIndex(), _Pipeline->GetPipelineLayout());
 
 		VkViewport viewport{ 0, 0, (float)extent.width, (float)extent.height };
 		viewport.minDepth = 0;
@@ -205,8 +209,6 @@ namespace House {
 		vkCmdSetViewport(cmd, 0, 1, &viewport);
 		VkRect2D scissor{ {0, 0}, extent };
 		vkCmdSetScissor(cmd, 0, 1, &scissor);
-
-		_DescriptorManager->UpdateSets(Renderer::GetFrameIndex());
 	}
 
 	void VulkanRenderPass::End()
@@ -219,12 +221,12 @@ namespace House {
 		else { EndDefaultSwapchainPass(cmd); }
 	}
 
-	void VulkanRenderPass::SetInput(std::string_view name, MEM::Ref<Buffer>& buffer)
+	void VulkanRenderPass::SetInput(std::string_view name, const MEM::Ref<Buffer>& buffer)
 	{
 		auto vulkanBuffer = buffer.As<VulkanBuffer>();
 		_DescriptorManager->WriteInput(name, vulkanBuffer);
 	}
-	void VulkanRenderPass::SetInput(std::string_view name, MEM::Ref<Texture2D>& texture)
+	void VulkanRenderPass::SetInput(std::string_view name, const MEM::Ref<Texture2D>& texture)
 	{
 		auto vulkanTexture = texture.As<VulkanTexture>();
 		_DescriptorManager->WriteInput(name, vulkanTexture);
@@ -245,13 +247,16 @@ namespace House {
 		const MEM::Ref<VulkanTexture>& vulkanAttachmentDepth = framebuffer->GetDepthTextureAttachment().As<VulkanTexture>();
 		extent = { framebuffer->GetWidth(), framebuffer->GetHeight() };
 		uint32_t attachmentCount = framebuffer->GetAttachmentCount();
+		VkImage fbDepthImage = vulkanAttachmentDepth->GetImage();
+		VkFormat fbDepthFormat = vulkanAttachmentDepth->GetFormat();
+
+		Utils::ImageMemBarrier(cmd, fbDepthImage, fbDepthFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, 1);
 
 		framebuffer->Bind();
 		colorAttachments.resize(attachmentCount);
 		for (int i = 0; i < colorAttachments.size(); i++) {
 			const MEM::Ref<VulkanTexture>& vulkanAttachmentTexture = framebuffer->GetAttachmentTexture(i).As<VulkanTexture>();
 			VkImage fbImage = vulkanAttachmentTexture->GetImage();
-			VkImage fbDepthImage = vulkanAttachmentDepth->GetImage();
 			VkFormat fbformat = vulkanAttachmentTexture->GetFormat();
 
 			colorAttachments[i].sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
@@ -260,6 +265,7 @@ namespace House {
 			colorAttachments[i].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 			colorAttachments[i].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
 			colorAttachments[i].clearValue = { {{clearColor.x, clearColor.y, clearColor.z, clearColor.a}} };
+
 			Utils::ImageMemBarrier(cmd, fbImage, fbformat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 1);
 		}
 

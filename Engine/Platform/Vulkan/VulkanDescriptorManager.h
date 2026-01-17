@@ -49,11 +49,12 @@ namespace House {
 		void WriteInput(std::string_view name, MEM::Ref<VulkanBuffer>  buffer);
 		void WriteInput(std::string_view name, MEM::Ref<VulkanTexture> texture, uint32_t index = 0);
 
-		void UpdateSets(uint32_t frameIndex);
+		void UpdateSets(VkCommandBuffer cmd, uint32_t frameIndex, VkPipelineLayout layout);
 		void Invalidate(DescriptorManagerSpecification& spec);
 
 		VkDescriptorSet Allocate(MEM::Ref<VulkanDescriptorSetLayout>& layout);
 		VkDescriptorSet GetDescriptorSet(uint32_t frameIndex, uint32_t setIndex);
+		std::vector<VkDescriptorSet> GetDescriptorSets(uint32_t frameIndex);
 		MEM::Ref<VulkanDescriptorPool>& GetPool() { return _Pool; }
 		const std::map<std::string, RenderPassInputDeclaration>& GetInputDeclarations() const;
 	private:

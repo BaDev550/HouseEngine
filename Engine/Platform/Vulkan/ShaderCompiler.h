@@ -9,7 +9,7 @@
 namespace House {
     struct CompiledShaderInfo {
         std::map<uint32_t, std::map<uint32_t, DescriptorInfo>> ReflectData;
-        std::vector<VkVertexInputAttributeDescription> ArrtibDescriptions;
+        std::vector<VkVertexInputAttributeDescription> AttribDescriptions;
         VkVertexInputBindingDescription BindingDescription{};
     };
     class ShaderCompiler {

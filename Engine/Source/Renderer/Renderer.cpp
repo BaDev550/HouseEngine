@@ -42,7 +42,8 @@ namespace House {
 		s_Data.WhiteTexture = Texture2D::Create(whiteTextureSpec, DataBuffer(&whiteTextureData, sizeof(uint32_t)));
 		s_Data.ShaderLibrary = MEM::Ref<ShaderLibrary>::Create();
 
-		Renderer::GetShaderLibrary()->Load("MainShader", "Shaders/base.vert", "Shaders/base.frag");
+		Renderer::GetShaderLibrary()->Load("PBRStatic", "Shaders/pbrstatic.vert", "Shaders/pbrstatic.frag");
+		Renderer::GetShaderLibrary()->Load("DeferredLighting", "Shaders/deferredLighting.vert", "Shaders/deferredLighting.frag");
 		Renderer::CompileShaders();
 	}
 
@@ -80,5 +81,9 @@ namespace House {
 
 	void Renderer::DrawMesh(MEM::Ref<RenderPass>& renderPass, MEM::Ref<Model>& model, glm::mat4& transform) {
 		s_RenderAPI->DrawMesh(renderPass, model, transform);
+	}
+	void Renderer::DrawFullscreenQuad(MEM::Ref<RenderPass>& renderPass)
+	{
+		s_RenderAPI->DrawFullscreenQuad(renderPass);
 	}
 }

@@ -15,9 +15,10 @@ namespace House {
 		virtual void Begin() override;
 		virtual void End() override;
 
-		virtual void SetInput(std::string_view name, MEM::Ref<Buffer>& buffer) override;
-		virtual void SetInput(std::string_view name, MEM::Ref<Texture2D>& texture) override;
-
+		virtual void SetInput(std::string_view name, const MEM::Ref<Buffer>& buffer) override;
+		virtual void SetInput(std::string_view name, const MEM::Ref<Texture2D>& texture) override;
+		
+		virtual MEM::Ref<Framebuffer> GetFramebuffer() const override { return _Pipeline->GetPipelineData().Framebuffer; }
 		MEM::Ref<VulkanPipeline>& GetPipeline() { return _Pipeline; }
 		DescriptorManager* GetDescriptorManager() { return _DescriptorManager; }
 	private:

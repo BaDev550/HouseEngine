@@ -12,8 +12,10 @@ namespace House {
 		virtual void Begin() = 0;
 		virtual void End() = 0;
 
-		virtual void SetInput(std::string_view name, MEM::Ref<Buffer>& buffer) = 0;
-		virtual void SetInput(std::string_view name, MEM::Ref<Texture2D>& texture) = 0;
+		virtual void SetInput(std::string_view name, const MEM::Ref<Buffer>& buffer) = 0;
+		virtual void SetInput(std::string_view name, const MEM::Ref<Texture2D>& texture) = 0;
+
+		virtual MEM::Ref<Framebuffer> GetFramebuffer() const = 0;
 
 		static MEM::Ref<RenderPass> Create(MEM::Ref<Pipeline>& pipeline);
 	};

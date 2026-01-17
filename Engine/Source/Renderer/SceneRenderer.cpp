@@ -3,6 +3,7 @@
 #include "Core/Application.h"
 #include <iostream>
 #include <assert.h>
+#include "Texture.h"
 #include <glm/gtc/type_ptr.hpp>
 
 namespace House {
@@ -11,30 +12,38 @@ namespace House {
 	{
 		{
 			FramebufferSpecification spec{};
-			spec.Attachments = { TextureImageFormat::RGBA, TextureImageFormat::DEPTH32F };
+			spec.Attachments = { 
+				TextureImageFormat::RGBA16F, 
+				TextureImageFormat::RGBA16F,
+				TextureImageFormat::RGBA,
+				TextureImageFormat::DEPTH32F 
+			};
 			spec.ClearColor = { 1.0f, 1.0f, 1.0f, 1.0f };
 			spec.DepthClearValue = 1.0f;
 			MEM::Ref<Framebuffer> frameBuffer = Framebuffer::Create(spec);
 
 			PipelineData data{};
-			data.Shader = Renderer::GetShaderLibrary()->GetShader("MainShader");
 			data.Framebuffer = frameBuffer;
-			_MainPipeline = Pipeline::Create(data);
-			_MainRenderPass = RenderPass::Create(_MainPipeline);
-		}
+			data.Shader = Renderer::GetShaderLibrary()->GetShader("PBRStatic");
+			_GPipeline = Pipeline::Create(data);
+			_GRenderPass = RenderPass::Create(_GPipeline);
 
-		{
-			PipelineData data{};
-			data.Shader = Renderer::GetShaderLibrary()->GetShader("MainShader");
-			data.Framebuffer = nullptr;
-			_FinalImagePipeline = Pipeline::Create(data);
-			_SwapchainRenderPass = RenderPass::Create(_FinalImagePipeline);
+			PipelineData lightingData{};
+			lightingData.Framebuffer = nullptr; // Use swapchain default framebuffer
+			lightingData.Shader = Renderer::GetShaderLibrary()->GetShader("DeferredLighting");
+			_FinalImagePipeline = Pipeline::Create(lightingData);
+			_FinalImageRenderPass = RenderPass::Create(_FinalImagePipeline);
+
+			_FinalImageRenderPass->SetInput("uPosition", frameBuffer->GetAttachmentTexture(0));
+			_FinalImageRenderPass->SetInput("uNormal",   frameBuffer->GetAttachmentTexture(1));
+			_FinalImageRenderPass->SetInput("uAlbedo",   frameBuffer->GetAttachmentTexture(2));
 		}
 
 		VkDeviceSize camerabufferSize = sizeof(CameraUniformData);
 		_CameraUB = Buffer::Create(camerabufferSize, BufferType::UniformBuffer, MemoryProperties::HOST_VISIBLE | MemoryProperties::HOST_COHERENT);
 		_CameraUB->Map();
-		_MainRenderPass->SetInput("camera", _CameraUB);
+		_GRenderPass->SetInput("camera", _CameraUB);
+		_FinalImageRenderPass->SetInput("camera", _CameraUB);
 	}
 
 	SceneRenderer::~SceneRenderer()
@@ -43,7 +52,7 @@ namespace House {
 
 	void SceneRenderer::DrawScene(const MEM::Ref<Camera>& cam)
 	{
-		_MainRenderPass->Begin();
+		_GRenderPass->Begin();
 		
 		_CameraUD.View = cam->GetView();
 		_CameraUD.Proj = cam->GetProjection();
@@ -54,8 +63,12 @@ namespace House {
 			auto& transform = view.get<TransformComponent>(entity);
 			auto& model = view.get<StaticMeshComponent>(entity);
 			glm::mat4 transformMatrix = transform.ModelMatrix();
-			Renderer::DrawMesh(_MainRenderPass, model.Handle, transformMatrix);
+			Renderer::DrawMesh(_GRenderPass, model.Handle, transformMatrix);
 		}
-		_MainRenderPass->End();
+		_GRenderPass->End();
+
+		_FinalImageRenderPass->Begin();
+		Renderer::DrawFullscreenQuad(_FinalImageRenderPass);
+		_FinalImageRenderPass->End();
 	}
 }

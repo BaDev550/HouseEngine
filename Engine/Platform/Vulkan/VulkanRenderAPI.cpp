@@ -54,6 +54,7 @@ namespace House {
 		window.SwapBuffers();
 		auto& swapchain = window.GetSwapchain();
 		auto& imageIndex = window.GetImageIndex();
+		auto frameIndex = Application::Get()->GetFrameIndex();
 		VkImage swapChainImage = swapchain.GetSwapchainImage(imageIndex);
 		VkImage swapChainDepthImage = swapchain.GetDepthImage();
 		VkCommandBuffer cmd = GetCurrentCommandBuffer();
@@ -117,6 +118,20 @@ namespace House {
 			vkCmdDrawIndexed(cmd, mesh.GetIndexCount(), 1, 0, 0, 0);
 			s_DrawData.DrawCall++;
 		}
+	}
+
+	void VulkanRenderAPI::DrawFullscreenQuad(MEM::Ref<RenderPass>& renderPass)
+	{
+		auto cmd = GetCurrentCommandBuffer();
+		auto vulkanRenderPass = renderPass.As<VulkanRenderPass>();
+		const auto& vulkanPipeline = vulkanRenderPass->GetPipeline();
+
+		vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, vulkanPipeline->GetVulkanPipeline());
+
+		VkDescriptorSet globalSet = vulkanRenderPass->GetDescriptorManager()->GetDescriptorSet(Renderer::GetFrameIndex(), 0);
+		vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, vulkanPipeline->GetPipelineLayout(), 0, 1, &globalSet, 0, nullptr);
+		vkCmdDraw(cmd, 3, 1, 0, 0);
+		s_DrawData.DrawCall++;
 	}
 
 	uint32_t VulkanRenderAPI::GetDrawCall() { return s_DrawData.DrawCall; }

@@ -6,24 +6,6 @@
 
 namespace House {
 	namespace Utils {
-		VkFormat TextureImageFormatToVulkanFormat(TextureImageFormat format) {
-			switch (format)
-			{
-			//case House::TextureImageFormat::None:
-			//	break;
-			//case House::TextureImageFormat::RG16F:
-			//	break;
-			//case House::TextureImageFormat::RG32F:
-			//	break;
-			//case House::TextureImageFormat::RGB:
-			//	break;
-			case House::TextureImageFormat::RGBA: return VK_FORMAT_R8G8B8A8_SRGB;
-			case House::TextureImageFormat::RGBA16F: return VK_FORMAT_R16G16B16A16_SFLOAT;
-			case House::TextureImageFormat::RGBA32F: return VK_FORMAT_R32G32B32A32_SFLOAT;
-			case House::TextureImageFormat::DEPTH32F: return VK_FORMAT_D32_SFLOAT;
-			case House::TextureImageFormat::DEPTH24STENCIL8: return VK_FORMAT_D24_UNORM_S8_UINT;
-			}
-		}
 		VkImageAspectFlags TextureImageFormatToVulkanAspectFormat(TextureImageFormat format) {
 			switch (format)
 			{
@@ -111,18 +93,19 @@ namespace House {
 
 	void VulkanTexture::CreateTexture()
 	{
-		VkImageUsageFlags usage;
+		VkImageUsageFlags usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 		if (_Specs.Attachment) {
-			usage = 
-				VK_IMAGE_USAGE_TRANSFER_DST_BIT | 
-				VK_IMAGE_USAGE_SAMPLED_BIT | 
-				VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | 
-				VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+			if (IsDepthFormat(_Specs.Format)) {
+				usage |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+			}
+			else {
+				usage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+			}
 		}
 		else {
 			usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 		}
-		_TextureFormat = Utils::TextureImageFormatToVulkanFormat(_Specs.Format);
+		_TextureFormat = TextureImageFormatToVulkanFormat(_Specs.Format);
 		_Context.CreateImage(
 			_Specs.Width,
 			_Specs.Height,

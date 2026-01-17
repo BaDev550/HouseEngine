@@ -74,7 +74,7 @@ namespace House {
 		for (uint32_t i = 0; i < scene->mNumMaterials; i++) {
 			aiMaterial* aiMat = scene->mMaterials[i];
 
-			auto material = Material::Create(Renderer::GetPipeline("MainShader"));
+			auto material = Material::Create(Renderer::GetPipeline("PBRStatic"));
 			aiString path;
 
 			TextureSpecification textureSpec{};

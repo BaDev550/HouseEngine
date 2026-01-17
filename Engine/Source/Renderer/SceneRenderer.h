@@ -24,10 +24,11 @@ namespace House {
 
 		MEM::Ref<Buffer> _CameraUB;
 
-		MEM::Ref<Pipeline> _MainPipeline;
+		MEM::Ref<Pipeline> _GPipeline;
+		MEM::Ref<RenderPass> _GRenderPass;
+
 		MEM::Ref<Pipeline> _FinalImagePipeline;
-		MEM::Ref<RenderPass> _MainRenderPass;
-		MEM::Ref<RenderPass> _SwapchainRenderPass;
+		MEM::Ref<RenderPass> _FinalImageRenderPass;
 
 		MEM::Ref<Scene> _Scene;
 	};

@@ -3,14 +3,6 @@
 #include "VulkanTexture.h"
 
 namespace House {
-	namespace Utils {
-		bool IsDepthFormat(TextureImageFormat format) {
-			if (format == TextureImageFormat::DEPTH24STENCIL8 || format == TextureImageFormat::DEPTH32F)
-				return true;
-			return false;
-		}
-
-	}
 	VulkanFramebuffer::VulkanFramebuffer(const FramebufferSpecification& spec)
 		: _Specification(spec)
 	{
@@ -23,11 +15,12 @@ namespace House {
 			_Height = _Specification.Height;
 		}
 		for (auto& attachment : _Specification.Attachments.Attachments) {
-			if (Utils::IsDepthFormat(attachment.Format)) {
+			if (IsDepthFormat(attachment.Format)) {
 				TextureSpecification spec;
 				spec.Format = attachment.Format;
 				spec.Width = _Width;
 				spec.Height = _Height;
+				spec.Attachment = true;
 				_DepthAttachmentImage = Texture2D::Create(spec);
 			}
 			else {

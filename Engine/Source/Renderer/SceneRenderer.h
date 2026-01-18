@@ -15,6 +15,8 @@ namespace House {
 		SceneRenderer(MEM::Ref<Scene>& scene);
 		~SceneRenderer();
 
+		MEM::Ref<RenderPass> GetGBufferRenderPass() const { return _GRenderPass; }
+
 		void DrawScene(const MEM::Ref<Camera>& cam);
 	private:
 		struct CameraUniformData {

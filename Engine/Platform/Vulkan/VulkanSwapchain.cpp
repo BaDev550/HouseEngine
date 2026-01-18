@@ -134,6 +134,7 @@ namespace House {
 		_Context.CreateImage(
 			_SwapChainExtent.width,
 			_SwapChainExtent.height,
+			1,
 			depthFormat,
 			VK_IMAGE_TILING_OPTIMAL,
 			VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
@@ -315,10 +316,12 @@ namespace House {
 	VkResult VulkanSwapchain::Submit(VkCommandBuffer* cmd, uint32_t* imageIndex)
 	{
 		VkSubmitInfo submitInfo{};
+		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 		VkSemaphore waitSemaphores[] = { _ImageAvailableSemaphores[_FrameIndex] };
 		VkSemaphore signalSemaphores[] = { _RenderFinishedSemaphores[*imageIndex] };
-		VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT };
-		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+
+		VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+
 		submitInfo.waitSemaphoreCount = 1;
 		submitInfo.pWaitSemaphores = waitSemaphores;
 		submitInfo.pWaitDstStageMask = waitStages;
@@ -327,8 +330,9 @@ namespace House {
 		submitInfo.signalSemaphoreCount = 1;
 		submitInfo.pSignalSemaphores = signalSemaphores;
 
-		vkResetFences(_Context.GetDevice(), 1, &_InFlightFences[_FrameIndex]);
-		CHECKF(vkQueueSubmit(_Context.GetGraphicsQueue(), 1, &submitInfo, _InFlightFences[_FrameIndex]) != VK_SUCCESS, "Failed to swap buffers");
+		if (vkQueueSubmit(_Context.GetGraphicsQueue(), 1, &submitInfo, _InFlightFences[_FrameIndex]) != VK_SUCCESS) {
+			return VK_ERROR_UNKNOWN;
+		}
 
 		VkPresentInfoKHR presentInfo{};
 		presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -339,6 +343,8 @@ namespace House {
 		presentInfo.pImageIndices = imageIndex;
 
 		VkResult result = vkQueuePresentKHR(_Context.GetPresentQueue(), &presentInfo);
+
+		_FrameIndex = (_FrameIndex + 1) % MAX_FRAMES_IN_FLIGHT;
 		return result;
 	}
 
@@ -346,6 +352,11 @@ namespace House {
 	{
 		vkWaitForFences(_Context.GetDevice(), 1, &_InFlightFences[_FrameIndex], VK_TRUE, UINT64_MAX);
 		VkResult result = vkAcquireNextImageKHR(_Context.GetDevice(), _SwapChain, UINT64_MAX, _ImageAvailableSemaphores[_FrameIndex], VK_NULL_HANDLE, imageIndex);
-		return (result != VK_SUCCESS || result == VK_SUBOPTIMAL_KHR);
+		if (result == VK_ERROR_OUT_OF_DATE_KHR) {
+			Recreate();
+			return false;
+		}
+		vkResetFences(_Context.GetDevice(), 1, &_InFlightFences[_FrameIndex]);
+		return (result == VK_SUCCESS || result == VK_SUBOPTIMAL_KHR);
 	}
 }

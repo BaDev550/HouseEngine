@@ -15,7 +15,7 @@ namespace House::Editor {
 		_SceneRenderer = MEM::Ref<SceneRenderer>::Create(_ActiveScene);
 		_EditorCamera = MEM::Ref<EditorCamera>::Create();
 
-		for (int i = 0; i < 100; i++) {
+		for (int i = 0; i < 1; i++) {
 			auto entity = _ActiveScene->CreateEntity("NEW_ENTITY");
 			entity.GetComponent<TransformComponent>().Position = glm::vec3(i * 3.0f, 0.0f, 0.0f);
 			entity.AddComponent<StaticMeshComponent>();
@@ -67,7 +67,16 @@ namespace House::Editor {
 		}
 		if (ImGui::CollapsingHeader("Render Data")) {
 			ImGui::Text("FPS: %d", (int)Application::Get()->GetFPS());
-			ImGui::Text("Draw Calls: %d", Renderer::GetDrawCall());
+			ImGui::Text("Draw Calls: %d", Renderer::GetRenderStats().DrawCall);
+			ImGui::Text("Frame Time: %f/ms", Renderer::GetRenderStats().FrameTime);
+			ImGui::Text("Trianlge Count: %d", Renderer::GetRenderStats().TriangleCount);
+		}
+		if (ImGui::CollapsingHeader("Deferred Rendering Debug")) {
+			auto gbufferPass = _SceneRenderer->GetGBufferRenderPass();
+			auto gbuffer = gbufferPass->GetFramebuffer();
+			ImGui::Image((ImTextureID)(void*)gbuffer->GetAttachmentTexture(0)->GetImGuiTextureID(), ImVec2(128, 128), ImVec2(0, 1), ImVec2(1, 0), ImVec4(1,1,1,1), ImVec4(1,0,0,1));
+			ImGui::Image((ImTextureID)(void*)gbuffer->GetAttachmentTexture(1)->GetImGuiTextureID(), ImVec2(128, 128), ImVec2(0, 1), ImVec2(1, 0), ImVec4(1,1,1,1), ImVec4(1,0,0,1));
+			ImGui::Image((ImTextureID)(void*)gbuffer->GetAttachmentTexture(2)->GetImGuiTextureID(), ImVec2(128, 128), ImVec2(0, 1), ImVec2(1, 0), ImVec4(1,1,1,1), ImVec4(1,0,0,1));
 		}
 		ImGui::End();
 	}

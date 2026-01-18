@@ -35,7 +35,9 @@ namespace House {
 		TextureFilter Filter = TextureFilter::Linear;
 		uint32_t Width = 1;
 		uint32_t Height = 1;
+		uint32_t MipLevels = 1;
 		bool Attachment = false;
+		bool GenerateMipMap = true;
 	};
 
 	class Texture : public MEM::RefCounted {
@@ -44,6 +46,7 @@ namespace House {
 
 	class Texture2D : public Texture {
 	public:
+		virtual uint64_t GetImGuiTextureID() = 0;
 		static MEM::Ref<Texture2D> Create(const TextureSpecification& spec);
 		static MEM::Ref<Texture2D> Create(const TextureSpecification& spec, const std::string& path);
 		static MEM::Ref<Texture2D> Create(const TextureSpecification& spec, DataBuffer data);

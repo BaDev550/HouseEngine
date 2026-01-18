@@ -10,10 +10,9 @@ namespace House {
 		VkCommandBuffer CommandBuffer;
 	} static s_Frames[MAX_FRAMES_IN_FLIGHT];
 	static bool s_FrameStarted = false;
+	static RenderStats s_RenderStats;
 
-	struct DrawData {
-		uint32_t DrawCall;
-	} s_DrawData;
+	static std::chrono::system_clock::time_point s_FrameStartTime;
 
 	VkCommandBuffer VulkanRenderAPI::GetCurrentCommandBuffer() {
 		CHECKF(!s_FrameStarted, "Cannot get a command buffer while frame is not in progress");
@@ -50,6 +49,7 @@ namespace House {
 	void VulkanRenderAPI::BeginFrame()
 	{
 		CHECKF(s_FrameStarted, "Cant call beginframe while still processing a frame");
+		s_FrameStartTime = std::chrono::system_clock::now();
 		s_FrameStarted = true;
 		auto& window = Application::Get()->GetWindow();
 		window.SwapBuffers();
@@ -84,8 +84,12 @@ namespace House {
 			window.ResetResizeFlag();
 			swapchain.Recreate();
 		}
+		auto end = std::chrono::system_clock::now();
+		auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - s_FrameStartTime);
 
-		s_DrawData.DrawCall = 0;
+		s_RenderStats.FrameTime = elapsed.count() / 1000.0f;
+		s_RenderStats.DrawCall = 0;
+		s_RenderStats.TriangleCount = 0;
 		s_FrameStarted = false;
 	}
 	 
@@ -117,7 +121,8 @@ namespace House {
 			vkCmdBindVertexBuffers(cmd, 0, 1, buffers, offsets);
 			vkCmdBindIndexBuffer(cmd, vulkanIndexBuffer->GetBuffer(), offsets[0], VK_INDEX_TYPE_UINT32);
 			vkCmdDrawIndexed(cmd, mesh.GetIndexCount(), 1, 0, 0, 0);
-			s_DrawData.DrawCall++;
+			s_RenderStats.DrawCall++;
+			s_RenderStats.TriangleCount += mesh.GetIndexCount() / 3;
 		}
 	}
 
@@ -132,8 +137,8 @@ namespace House {
 		VkDescriptorSet globalSet = vulkanRenderPass->GetDescriptorManager()->GetDescriptorSet(Renderer::GetFrameIndex(), 0);
 		vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, vulkanPipeline->GetPipelineLayout(), 0, 1, &globalSet, 0, nullptr);
 		vkCmdDraw(cmd, 3, 1, 0, 0);
-		s_DrawData.DrawCall++;
+		s_RenderStats.DrawCall++;
 	}
 
-	uint32_t VulkanRenderAPI::GetDrawCall() { return s_DrawData.DrawCall; }
+	RenderStats VulkanRenderAPI::GetRenderStats() { return s_RenderStats; }
 }

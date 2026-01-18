@@ -45,7 +45,6 @@ namespace House {
 	bool Window::SwapBuffers()
 	{
 		bool result = _Swapchain->Swapbuffers(&_ImageIndex);
-		CHECKF(result, "Failed to acquire next image");
 		return true;
 	}
 

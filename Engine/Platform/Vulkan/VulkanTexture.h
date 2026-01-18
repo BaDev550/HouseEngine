@@ -26,6 +26,8 @@ namespace House {
 		VkFormat GetFormat() const { return _TextureFormat; }
 		VkImage GetImage() const { return _TextureImage; }
 		VkImageView GetImageView() const { return _TextureImageView; }
+		uint32_t GetMipLevels() const { return _Specs.MipLevels; }
+		virtual uint64_t GetImGuiTextureID() override;
 
 		void SetImage(VkImage image) { _TextureImage = image; }
 		void SetImageView(VkImageView image) { _TextureImageView = image; }
@@ -40,6 +42,7 @@ namespace House {
 		VkSampler _TextureImageSampler;
 		VkFormat _TextureFormat;
 		VkDeviceMemory _TextureImageMemory;
+		VkDescriptorSet _ImGuiDescriptorSet = VK_NULL_HANDLE;
 		TextureSpecification _Specs;
 		VulkanContext& _Context;
 	};

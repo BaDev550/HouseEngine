@@ -20,6 +20,7 @@ namespace House {
 				spec.Format = attachment.Format;
 				spec.Width = _Width;
 				spec.Height = _Height;
+				spec.MipLevels = false;
 				spec.Attachment = true;
 				_DepthAttachmentImage = Texture2D::Create(spec);
 			}
@@ -28,6 +29,7 @@ namespace House {
 				spec.Format = attachment.Format;
 				spec.Width = _Width;
 				spec.Height = _Height;
+				spec.MipLevels = false;
 				spec.Attachment = true;
 				_AttachmentImages.emplace_back(Texture2D::Create(spec));
 			}

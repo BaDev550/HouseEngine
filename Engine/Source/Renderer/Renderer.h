@@ -28,8 +28,8 @@ namespace House {
 		static void DrawFullscreenQuad(MEM::Ref<RenderPass>& renderPass);
 
 		static RenderAPI* GetAPI();
-		static uint32_t GetDrawCall();
 		static uint32_t GetFrameIndex();
+		static RenderStats GetRenderStats();
 		static MEM::Ref<Pipeline>& GetPipeline(const std::string& pipeline);
 		static MEM::Ref<ShaderLibrary>& GetShaderLibrary();
 		static MEM::Ref<Texture2D>& GetWhiteTexture();

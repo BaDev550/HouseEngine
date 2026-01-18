@@ -13,7 +13,7 @@ namespace House {
 		}
 
 		// Copied from the "3D Graphics Rendering Cookbook"
-		void ImageMemBarrier(VkCommandBuffer CmdBuf, VkImage Image, VkFormat Format,
+		void ImageMemBarrier(VkCommandBuffer CmdBuf, VkImage Image, VkFormat Format, uint32_t mipLevels,
 			VkImageLayout OldLayout, VkImageLayout NewLayout, int LayerCount)
 		{
 			VkImageMemoryBarrier barrier = {
@@ -29,7 +29,7 @@ namespace House {
 				.subresourceRange = VkImageSubresourceRange {
 					.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
 					.baseMipLevel = 0,
-					.levelCount = 1,
+					.levelCount = mipLevels,
 					.baseArrayLayer = 0,
 					.layerCount = (uint32_t)LayerCount
 				}
@@ -121,10 +121,10 @@ namespace House {
 			} /* Convert from updateable texture to shader read-only */
 			else if (OldLayout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL && NewLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
 				barrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-				barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+				barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_INPUT_ATTACHMENT_READ_BIT;
 
 				sourceStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-				destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+				destinationStage = VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT;
 			} /* Convert back from read-only to depth attachment */
 			else if (OldLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL && NewLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL) {
 				barrier.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
@@ -247,11 +247,11 @@ namespace House {
 		const glm::vec4 clearColor = fbSpecs.ClearColor;
 		const MEM::Ref<VulkanTexture>& vulkanAttachmentDepth = framebuffer->GetDepthTextureAttachment().As<VulkanTexture>();
 		extent = { framebuffer->GetWidth(), framebuffer->GetHeight() };
-		uint32_t attachmentCount = framebuffer->GetAttachmentCount();
 		VkImage fbDepthImage = vulkanAttachmentDepth->GetImage();
 		VkFormat fbDepthFormat = vulkanAttachmentDepth->GetFormat();
+		uint32_t attachmentCount = framebuffer->GetAttachmentCount();
 
-		Utils::ImageMemBarrier(cmd, fbDepthImage, fbDepthFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, 1);
+		Utils::ImageMemBarrier(cmd, fbDepthImage, fbDepthFormat, 1, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, 1);
 
 		framebuffer->Bind();
 		colorAttachments.resize(attachmentCount);
@@ -259,6 +259,7 @@ namespace House {
 			const MEM::Ref<VulkanTexture>& vulkanAttachmentTexture = framebuffer->GetAttachmentTexture(i).As<VulkanTexture>();
 			VkImage fbImage = vulkanAttachmentTexture->GetImage();
 			VkFormat fbformat = vulkanAttachmentTexture->GetFormat();
+			uint32_t fbMipLevelCount = vulkanAttachmentTexture->GetMipLevels();
 
 			colorAttachments[i].sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
 			colorAttachments[i].imageView = vulkanAttachmentTexture->GetImageView();
@@ -267,7 +268,7 @@ namespace House {
 			colorAttachments[i].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
 			colorAttachments[i].clearValue = { {{clearColor.x, clearColor.y, clearColor.z, clearColor.a}} };
 
-			Utils::ImageMemBarrier(cmd, fbImage, fbformat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 1);
+			Utils::ImageMemBarrier(cmd, fbImage, fbformat, fbMipLevelCount, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 1);
 		}
 
 		depthAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
@@ -301,7 +302,7 @@ namespace House {
 		depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
 		depthAttachment.clearValue = { 1.0f, 0 };
 
-		Utils::ImageMemBarrier(cmd, swapChainImage, swapchainFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 1);
+		Utils::ImageMemBarrier(cmd, swapChainImage, swapchainFormat, 1, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 1);
 	}
 
 	void VulkanRenderPass::EndCustomFramebufferPass(VkCommandBuffer cmd, MEM::Ref<Framebuffer>& framebuffer)
@@ -312,7 +313,8 @@ namespace House {
 			const MEM::Ref<VulkanTexture>& vulkanAttachmentTexture = framebuffer->GetAttachmentTexture(i).As<VulkanTexture>();
 			VkImage fbImage = vulkanAttachmentTexture->GetImage();
 			VkFormat fbformat = vulkanAttachmentTexture->GetFormat();
-			Utils::ImageMemBarrier(cmd, fbImage, fbformat, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, 1);
+			uint32_t fbMipLevelCount = vulkanAttachmentTexture->GetMipLevels();
+			Utils::ImageMemBarrier(cmd, fbImage, fbformat, fbMipLevelCount, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, 1);
 		}
 		framebuffer->Unbind();
 	}
@@ -322,6 +324,6 @@ namespace House {
 		auto& swapchain = *dynamic_cast<VulkanSwapchain*>(&Application::Get()->GetWindow().GetSwapchain());
 		VkImage swapChainImage = swapchain.GetSwapchainImage(Application::Get()->GetWindow().GetImageIndex());
 		VkFormat swapChainFormat = swapchain.GetSwapChainFormat();
-		Utils::ImageMemBarrier(cmd, swapChainImage, swapChainFormat, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, 1);
+		Utils::ImageMemBarrier(cmd, swapChainImage, swapChainFormat, 1, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, 1);
 	}
 }

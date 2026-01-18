@@ -3,6 +3,7 @@
 #include "Core/Application.h"
 
 #include <stb_image.h>
+#include <backends/imgui_impl_vulkan.h>
 
 namespace House {
 	namespace Utils {
@@ -19,6 +20,22 @@ namespace House {
 			case House::TextureImageFormat::RGBA32F: return VK_IMAGE_ASPECT_COLOR_BIT;
 			case House::TextureImageFormat::DEPTH32F:return VK_IMAGE_ASPECT_DEPTH_BIT;
 			case House::TextureImageFormat::DEPTH24STENCIL8: return VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
+			}
+		}
+		VkFilter TextureImageFilterToVulkanFilter(TextureFilter filter) {
+			switch (filter)
+			{
+			case House::TextureFilter::None:    return VK_FILTER_CUBIC_IMG;
+			case House::TextureFilter::Linear:  return VK_FILTER_LINEAR;
+			case House::TextureFilter::Nearest: return VK_FILTER_NEAREST;
+			}
+		}
+		VkSamplerAddressMode TextureWrapModeToVulkan(TextureWrap wrap) {
+			switch (wrap)
+			{
+			case House::TextureWrap::None: return VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
+			case House::TextureWrap::Clamp: return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+			case House::TextureWrap::Repeat: return VK_SAMPLER_ADDRESS_MODE_REPEAT;
 			}
 		}
 	}
@@ -57,6 +74,7 @@ namespace House {
 		vkDestroyImageView(_Context.GetDevice(), _TextureImageView, nullptr);
 		vkDestroyImage(_Context.GetDevice(), _TextureImage, nullptr);
 		vkFreeMemory(_Context.GetDevice(), _TextureImageMemory, nullptr);
+		_ImGuiDescriptorSet = VK_NULL_HANDLE;
 	}
 
 	VkDescriptorImageInfo VulkanTexture::GetImageDescriptorInfo()
@@ -66,6 +84,14 @@ namespace House {
 		imageInfo.imageView = _TextureImageView;
 		imageInfo.sampler = _TextureImageSampler;
 		return imageInfo;
+	}
+
+	uint64_t VulkanTexture::GetImGuiTextureID()
+	{
+		if (_ImGuiDescriptorSet == VK_NULL_HANDLE) {
+			_ImGuiDescriptorSet = ImGui_ImplVulkan_AddTexture(_TextureImageSampler, _TextureImageView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		}
+		return (uint64_t)_ImGuiDescriptorSet;
 	}
 
 	void VulkanTexture::LoadTexture(void* data, uint32_t width, uint32_t height, uint32_t channels)
@@ -82,9 +108,15 @@ namespace House {
 			stagingBuffer->WriteToBuffer(data);
 			stagingBuffer->Unmap();
 			CreateTexture();
-			_Context.TransitionImageLayout(_TextureImage, _TextureFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-			_Context.CopyBufferToImage(stagingBuffer->GetBuffer(), _TextureImage, static_cast<uint32_t>(width), static_cast<uint32_t>(height));
-			_Context.TransitionImageLayout(_TextureImage, _TextureFormat, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			_Context.TransitionImageLayout(_TextureImage, _Specs.MipLevels, _TextureFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+			_Context.CopyBufferToImage(stagingBuffer->GetBuffer(), _TextureImage, width, height);
+
+			if (_Specs.GenerateMipMap) {
+				_Context.GenerateMipmaps(_TextureImage, _TextureFormat, width, height, _Specs.MipLevels);
+			}
+			else {
+				_Context.TransitionImageLayout(_TextureImage, _Specs.MipLevels, _TextureFormat, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			}
 		}
 		else {
 			LOG_RENDERER_ERROR("Failed to laod texture");
@@ -102,13 +134,18 @@ namespace House {
 				usage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 			}
 		}
-		else {
-			usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+		_Specs.MipLevels = 1;
+
+		if (_Specs.GenerateMipMap) {
+			usage |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+			_Specs.MipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(_Specs.Width, _Specs.Height)))) + 1;
 		}
+
 		_TextureFormat = TextureImageFormatToVulkanFormat(_Specs.Format);
 		_Context.CreateImage(
 			_Specs.Width,
 			_Specs.Height,
+			_Specs.MipLevels,
 			_TextureFormat,
 			VK_IMAGE_TILING_OPTIMAL,
 			usage,
@@ -126,7 +163,7 @@ namespace House {
 		viewCreateInfo.format = _TextureFormat;
 		viewCreateInfo.subresourceRange.aspectMask = Utils::TextureImageFormatToVulkanAspectFormat(_Specs.Format);
 		viewCreateInfo.subresourceRange.baseMipLevel = 0;
-		viewCreateInfo.subresourceRange.levelCount = 1;
+		viewCreateInfo.subresourceRange.levelCount = _Specs.MipLevels;
 		viewCreateInfo.subresourceRange.baseArrayLayer = 0;
 		viewCreateInfo.subresourceRange.layerCount = 1;
 		CHECKF((vkCreateImageView(_Context.GetDevice(), &viewCreateInfo, nullptr, &_TextureImageView) != VK_SUCCESS), "Failed to create Image view");
@@ -136,12 +173,12 @@ namespace House {
 	{
 		VkSamplerCreateInfo samplerCreateInfo{};
 		samplerCreateInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-		samplerCreateInfo.magFilter = VK_FILTER_LINEAR;
-		samplerCreateInfo.minFilter = VK_FILTER_LINEAR;
-		samplerCreateInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-		samplerCreateInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-		samplerCreateInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-		samplerCreateInfo.anisotropyEnable = VK_TRUE;
+		samplerCreateInfo.magFilter = Utils::TextureImageFilterToVulkanFilter(_Specs.Filter);
+		samplerCreateInfo.minFilter = Utils::TextureImageFilterToVulkanFilter(_Specs.Filter);
+		samplerCreateInfo.addressModeU = Utils::TextureWrapModeToVulkan(_Specs.Wrap);
+		samplerCreateInfo.addressModeV = Utils::TextureWrapModeToVulkan(_Specs.Wrap);
+		samplerCreateInfo.addressModeW = Utils::TextureWrapModeToVulkan(_Specs.Wrap);
+		samplerCreateInfo.anisotropyEnable = VK_FALSE;
 		samplerCreateInfo.maxAnisotropy = _Context.GetPhysicalDeviceProperties().limits.maxSamplerAnisotropy;
 		samplerCreateInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
 		samplerCreateInfo.unnormalizedCoordinates = VK_FALSE;
@@ -150,7 +187,7 @@ namespace House {
 		samplerCreateInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
 		samplerCreateInfo.mipLodBias = 0.0f;
 		samplerCreateInfo.minLod = 0.0f;
-		samplerCreateInfo.maxLod = 0.0f;
+		samplerCreateInfo.maxLod = static_cast<float>(_Specs.MipLevels);
 		CHECKF((vkCreateSampler(_Context.GetDevice(), &samplerCreateInfo, nullptr, &_TextureImageSampler) != VK_SUCCESS), "Failed to create texture sampler");
 	}
 }

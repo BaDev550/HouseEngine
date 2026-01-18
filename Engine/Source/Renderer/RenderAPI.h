@@ -12,6 +12,12 @@ namespace House {
 		OpenGL
 	};
 
+	struct RenderStats {
+		float FrameTime;
+		uint32_t DrawCall;
+		uint32_t TriangleCount;
+	};
+
 	class RenderAPI {
 	public:
 		virtual ~RenderAPI() = default;
@@ -24,7 +30,7 @@ namespace House {
 		virtual void CopyBuffer(MEM::Ref<Buffer>& srcBuffer, MEM::Ref<Buffer>& dstBuffer, uint64_t size) = 0;
 		virtual void DrawMesh(MEM::Ref<RenderPass>& renderPass, MEM::Ref<Model>& model, glm::mat4& transform) = 0;
 		virtual void DrawFullscreenQuad(MEM::Ref<RenderPass>& renderPass) = 0;
-		virtual uint32_t GetDrawCall() = 0;
+		virtual RenderStats GetRenderStats() = 0;
 
 		static GrapichsAPI CurrentAPI() { return s_GrapichsAPI; }
 		static void SetAPI(GrapichsAPI api) { s_GrapichsAPI = api; }

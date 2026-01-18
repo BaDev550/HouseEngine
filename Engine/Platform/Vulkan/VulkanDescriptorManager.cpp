@@ -38,6 +38,12 @@ namespace House {
 			_Writers[setIndex]->Clear();
 			bool hasData = false;
 
+			std::vector<VkDescriptorImageInfo> imageInfos;
+			imageInfos.reserve(bindings.size());
+
+			std::vector<VkDescriptorBufferInfo> bufferInfos;
+			bufferInfos.reserve(bindings.size());
+
 			for (auto& [bindingIndex, resource] : bindings) {
 				uint32_t dataIndex = (resource.Data.size() > 1) ? frameIndex : 0;
 				auto& currentData = resource.Data[dataIndex];
@@ -46,24 +52,23 @@ namespace House {
 				switch (resource.Type)
 				{
 				case ShaderReflectionDataType::UniformBuffer: {
-					VkDescriptorBufferInfo info = currentData.As<VulkanBuffer>()->DescriptorInfo();
-					_Writers[setIndex]->WriteBuffer(bindingIndex, &info);
+					bufferInfos.push_back(currentData.As<VulkanBuffer>()->DescriptorInfo());
+					_Writers[setIndex]->WriteBuffer(bindingIndex, &bufferInfos.back());
 					hasData = true;
 					break;
 				}
 				case ShaderReflectionDataType::Sampler2D: {
-					VkDescriptorImageInfo info = currentData.As<VulkanTexture>()->GetImageDescriptorInfo();
-					_Writers[setIndex]->WriteImage(bindingIndex, &info);
+					imageInfos.push_back(currentData.As<VulkanTexture>()->GetImageDescriptorInfo());
+					_Writers[setIndex]->WriteImage(bindingIndex, &imageInfos.back());
 					hasData = true;
 					break;
 				}
 				}
 			}
+
 			if (hasData) {
 				_Writers[setIndex]->Overwrite(_DescriptorSets[frameIndex][setIndex]);
-				_Writers[setIndex]->Clear();
 			}
-
 			vkCmdBindDescriptorSets(
 				cmd,
 				VK_PIPELINE_BIND_POINT_GRAPHICS,

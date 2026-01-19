@@ -1,5 +1,6 @@
 #pragma once
 #include "Renderer/RenderAPI.h"
+#include "VulkanDescriptor.h"
 
 namespace House {
 	class VulkanRenderAPI : public RenderAPI {

@@ -15,19 +15,45 @@ namespace House {
         return *this;
     }
 
-    MEM::Ref<VulkanDescriptorSetLayout> VulkanDescriptorSetLayout::Builder::Build() const { return MEM::Ref<VulkanDescriptorSetLayout>::Create(_Bindings); }
+    VulkanDescriptorSetLayout::Builder& VulkanDescriptorSetLayout::Builder::SetBindingFlags(VkDescriptorBindingFlags flags)
+    {
+		_BindingFlags = flags;
+		return *this;
+    }
+
+    VulkanDescriptorSetLayout::Builder& VulkanDescriptorSetLayout::Builder::SetLayoutFlags(VkDescriptorSetLayoutCreateFlags flags)
+    {
+		_LayoutFlags = flags;
+		return *this;
+    }
+
+    MEM::Ref<VulkanDescriptorSetLayout> VulkanDescriptorSetLayout::Builder::Build() const { return MEM::Ref<VulkanDescriptorSetLayout>::Create(_Bindings, _BindingFlags, _LayoutFlags); }
     MEM::Ref<VulkanDescriptorPool> VulkanDescriptorPool::Builder::Build() const { return MEM::Ref<VulkanDescriptorPool>::Create(_MaxSets, _PoolFlags, _PoolSizes); }
 
-    VulkanDescriptorSetLayout::VulkanDescriptorSetLayout(std::unordered_map<uint32_t, VkDescriptorSetLayoutBinding> bindings)
+    VulkanDescriptorSetLayout::VulkanDescriptorSetLayout(std::unordered_map<uint32_t, VkDescriptorSetLayoutBinding> bindings, VkDescriptorBindingFlags bindingFlags, VkDescriptorSetLayoutCreateFlags layoutFlags)
         : _Context(Application::Get()->GetRenderContext<VulkanContext>()), _Bindings(bindings)
     {
         std::vector<VkDescriptorSetLayoutBinding> setLayoutBindings{};
         for (auto kv : _Bindings) {
             setLayoutBindings.push_back(kv.second);
         }
+        
+        std::vector<VkDescriptorBindingFlags> bindingFlagsVector(setLayoutBindings.size(), 0);
+        for (uint32_t i = 0; i < setLayoutBindings.size(); i++) {
+            if (setLayoutBindings[i].descriptorCount > 1) {
+                bindingFlagsVector[i] = bindingFlags;
+            }
+        }
+
+        VkDescriptorSetLayoutBindingFlagsCreateInfo bindingFlagsInfo{};
+        bindingFlagsInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO;
+        bindingFlagsInfo.bindingCount = static_cast<uint32_t>(bindingFlagsVector.size());
+        bindingFlagsInfo.pBindingFlags = bindingFlagsVector.data();
 
         VkDescriptorSetLayoutCreateInfo descriptorSetLayoutInfo{};
         descriptorSetLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+		descriptorSetLayoutInfo.pNext = &bindingFlagsInfo;
+		descriptorSetLayoutInfo.flags = layoutFlags;
         descriptorSetLayoutInfo.bindingCount = static_cast<uint32_t>(setLayoutBindings.size());
         descriptorSetLayoutInfo.pBindings = setLayoutBindings.data();
 
@@ -99,7 +125,7 @@ namespace House {
     {
     }
 
-    VulkanDescriptorWriter& VulkanDescriptorWriter::WriteBuffer(uint32_t binding, VkDescriptorBufferInfo* bufferInfo)
+    VulkanDescriptorWriter& VulkanDescriptorWriter::WriteBuffer(uint32_t binding, VkDescriptorBufferInfo* bufferInfo, uint32_t count)
     {
         assert(_SetLayout._Bindings.count(binding) == 1 && "Layout does not contain specified binding");
 
@@ -111,13 +137,13 @@ namespace House {
         write.descriptorType = bindingDescription.descriptorType;
         write.dstBinding = binding;
         write.pBufferInfo = bufferInfo;
-        write.descriptorCount = 1;
+        write.descriptorCount = count;
 
         _Writes.push_back(write);
         return *this;
     }
 
-    VulkanDescriptorWriter& VulkanDescriptorWriter::WriteImage(uint32_t binding, VkDescriptorImageInfo* imageInfo)
+    VulkanDescriptorWriter& VulkanDescriptorWriter::WriteImage(uint32_t binding, VkDescriptorImageInfo* imageInfo, uint32_t count)
     {
         assert(_SetLayout._Bindings.count(binding) == 1 && "Layout does not contain specified binding");
 
@@ -129,7 +155,45 @@ namespace House {
         write.descriptorType = bindingDescription.descriptorType;
         write.dstBinding = binding;
         write.pImageInfo = imageInfo;
+        write.descriptorCount = count;
+
+        _Writes.push_back(write);
+        return *this;
+    }
+
+    VulkanDescriptorWriter& VulkanDescriptorWriter::WriteImageArray(uint32_t binding, uint32_t arrayIndex, VkDescriptorImageInfo* imageInfos)
+    {
+        assert(_SetLayout._Bindings.count(binding) == 1);
+        auto& bindingDescription = _SetLayout._Bindings[binding];
+        assert((bindingDescription.descriptorType == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER ||
+            bindingDescription.descriptorType == VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE) &&
+            "Trying to write image data to a non-image binding!");
+        assert(arrayIndex < bindingDescription.descriptorCount && "Trying to write to an index outside the descriptor array!");
+
+		VkWriteDescriptorSet write{};
+		write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		write.dstBinding = binding;
+        write.dstArrayElement = arrayIndex;
+		write.descriptorCount = 1;
+		write.pImageInfo = imageInfos;
+        write.descriptorType = bindingDescription.descriptorType;
+        _Writes.push_back(write);
+		return *this;
+    }
+
+    VulkanDescriptorWriter& VulkanDescriptorWriter::WriteBufferArray(uint32_t binding, uint32_t arrayIndex, VkDescriptorBufferInfo* bufferInfos)
+    {
+        assert(_SetLayout._Bindings.count(binding) == 1 && "Layout does not contain specified binding");
+        auto& bindingDescription = _SetLayout._Bindings[binding];
+        assert(bindingDescription.descriptorCount == 1 && "Binding single descriptor info, but binding expects multiple");
+
+        VkWriteDescriptorSet write{};
+        write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        write.dstBinding = binding;
+        write.dstArrayElement = arrayIndex;
         write.descriptorCount = 1;
+        write.pBufferInfo = bufferInfos;
+        write.descriptorType = bindingDescription.descriptorType;
 
         _Writes.push_back(write);
         return *this;

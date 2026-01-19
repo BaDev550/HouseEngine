@@ -5,6 +5,7 @@
 #include "Utilities/Logger.h"
 #include "Renderer/Camera.h"
 #include "Renderer/Model.h"
+#include "Renderer/Light.h"
 #include <entt/entt.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -50,10 +51,24 @@ namespace House {
 
 	struct StaticMeshComponent {
 		MEM::Ref<Model> Handle; // TODO - make this asset handle
-		StaticMeshComponent(const std::string& path = "Resources/Helmet/FlightHelmet.gltf") { Handle = MEM::Ref<Model>::Create(path); }
+		StaticMeshComponent(const std::string& path = "Resources/man/Man.gltf") { Handle = MEM::Ref<Model>::Create(path); }
 		StaticMeshComponent(const StaticMeshComponent& other) : Handle(other.Handle) {}
 		~StaticMeshComponent() {
 			Handle = nullptr;
 		}
+	};
+
+	struct DirectionalLightComponent {
+		DirectionalLight Handle;
+
+		DirectionalLightComponent() = default;
+		DirectionalLightComponent(const DirectionalLightComponent&) = default;
+	};
+
+	struct PointLightComponent {
+		PointLight Handle;
+
+		PointLightComponent() = default;
+		PointLightComponent(const PointLightComponent&) = default;
 	};
 }

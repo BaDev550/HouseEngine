@@ -84,10 +84,10 @@ namespace House {
 				std::filesystem::path texturePath = _ModelDirectory / path.C_Str();
 
 				MEM::Ref<Texture2D> texture = Texture2D::Create(textureSpec, texturePath.string());
-				material->GetMaterialData().DiffuseTexture = texture;
+				material->GetMaterialData().AlbedoTexture = texture;
 			}
 			else {
-				material->GetMaterialData().DiffuseTexture = Renderer::GetWhiteTexture();
+				material->GetMaterialData().AlbedoTexture = Renderer::GetWhiteTexture();
 			}
 			if (aiMat->GetTexture(aiTextureType_NORMALS, 0, &path) == AI_SUCCESS) {
 				std::filesystem::path texturePath = _ModelDirectory / path.C_Str();

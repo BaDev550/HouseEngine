@@ -13,12 +13,16 @@ namespace House {
 		public:
 			Builder() {}
 			Builder& AddBinding(uint32_t binding, VkDescriptorType descriptorType, VkShaderStageFlags stageFlags, uint32_t count = 1);
+			Builder& SetBindingFlags(VkDescriptorBindingFlags flags);
+			Builder& SetLayoutFlags(VkDescriptorSetLayoutCreateFlags flags);
 			MEM::Ref<VulkanDescriptorSetLayout> Build() const;
 		private:
+			VkDescriptorSetLayoutCreateFlags _LayoutFlags = 0;
+			VkDescriptorBindingFlags _BindingFlags = 0;
 			std::unordered_map<uint32_t, VkDescriptorSetLayoutBinding> _Bindings{};
 		};
 	public:
-		VulkanDescriptorSetLayout(std::unordered_map<uint32_t, VkDescriptorSetLayoutBinding> bindings);
+		VulkanDescriptorSetLayout(std::unordered_map<uint32_t, VkDescriptorSetLayoutBinding> bindings, VkDescriptorBindingFlags bindingFlags, VkDescriptorSetLayoutCreateFlags layoutFlags);
 		~VulkanDescriptorSetLayout();
 		VulkanDescriptorSetLayout(const VulkanDescriptorSetLayout&) = delete;
 		VulkanDescriptorSetLayout& operator=(const VulkanDescriptorSetLayout&) = delete;
@@ -65,8 +69,10 @@ namespace House {
 	class VulkanDescriptorWriter : public MEM::RefCounted {
 	public:
 		VulkanDescriptorWriter(VulkanDescriptorSetLayout& setLayout, VulkanDescriptorPool& pool);
-		VulkanDescriptorWriter& WriteBuffer(uint32_t binding, VkDescriptorBufferInfo* bufferInfo);
-		VulkanDescriptorWriter& WriteImage(uint32_t binding, VkDescriptorImageInfo* imageInfo);
+		VulkanDescriptorWriter& WriteBuffer(uint32_t binding, VkDescriptorBufferInfo* bufferInfo, uint32_t count = 1);
+		VulkanDescriptorWriter& WriteImage(uint32_t binding, VkDescriptorImageInfo* imageInfo, uint32_t count = 1);
+		VulkanDescriptorWriter& WriteImageArray(uint32_t binding, uint32_t arrayIndex, VkDescriptorImageInfo* imageInfos);
+		VulkanDescriptorWriter& WriteBufferArray(uint32_t binding, uint32_t arrayIndex, VkDescriptorBufferInfo* bufferInfos);
 		bool Build(VkDescriptorSet& set);
 		void Overwrite(VkDescriptorSet& set);
 		void Clear();

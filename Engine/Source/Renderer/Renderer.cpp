@@ -41,6 +41,7 @@ namespace House {
 		whiteTextureSpec.MipLevels = false;
 		uint32_t whiteTextureData = 0xffffffff;
 		s_Data.WhiteTexture = Texture2D::Create(whiteTextureSpec, DataBuffer(&whiteTextureData, sizeof(uint32_t)));
+
 		s_Data.ShaderLibrary = MEM::Ref<ShaderLibrary>::Create();
 
 		Renderer::GetShaderLibrary()->Load("PBRStatic", "Shaders/pbrstatic.vert", "Shaders/pbrstatic.frag");

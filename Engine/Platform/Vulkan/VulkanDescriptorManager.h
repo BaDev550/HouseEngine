@@ -1,8 +1,8 @@
 #pragma once
-#include "Vulkan/VulkanDescriptor.h"
-#include "Vulkan/VulkanTexture.h"
-#include "Vulkan/VulkanBuffer.h"
-#include "Vulkan/VulkanPipeline.h"
+#include "VulkanDescriptor.h"
+#include "VulkanTexture.h"
+#include "VulkanBuffer.h"
+#include "VulkanPipeline.h"
 #include "Utilities/Memory.h"
 #include <functional>
 #include <iostream>
@@ -29,6 +29,7 @@ namespace House {
 		ResourceBinding() : Data(std::vector<MEM::Ref<MEM::RefCounted>>(1, nullptr)) {}
 		ResourceBinding(MEM::Ref<VulkanBuffer> buffer) : Data(std::vector<MEM::Ref<MEM::RefCounted>>(1, buffer)), Type(ShaderReflectionDataType::UniformBuffer) {}
 		ResourceBinding(MEM::Ref<VulkanTexture> texture) : Data(std::vector<MEM::Ref<MEM::RefCounted>>(1, texture)), Type(ShaderReflectionDataType::Sampler2D) {}
+		ResourceBinding(uint32_t arraySize) : Data(std::vector<MEM::Ref<MEM::RefCounted>>(arraySize, nullptr)), Type(ShaderReflectionDataType::Sampler2D) {}
 		void Set(MEM::Ref<VulkanBuffer> buffer, uint32_t index = 0) {
 			Data[index] = buffer;
 			Type = ShaderReflectionDataType::UniformBuffer;

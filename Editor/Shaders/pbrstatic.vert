@@ -9,18 +9,19 @@ layout(location = 1) out vec2 vTexCoords;
 layout(location = 2) out vec3 vNormal;
 
 layout(push_constant) uniform TransformUniformData {
-	mat4 model;
+	mat4 Transform;
 } transform;
 
 layout(set = 0, binding = 0) uniform CameraUniformData {
 	mat4 view;
 	mat4 proj;
-} camera;
+    vec3 position;
+} uCamera;
 
 void main() {
-	vec4 worldPos = transform.model * vec4(aPos, 1.0);
+	vec4 worldPos = transform.Transform * vec4(aPos, 1.0);
     vWorldPos = worldPos.xyz;
     vTexCoords = aTexCoords;
-    vNormal = mat3(transpose(inverse(transform.model))) * aNormal;
-    gl_Position = camera.proj * camera.view * worldPos;
+    vNormal = mat3(transpose(inverse(transform.Transform))) * aNormal;
+    gl_Position = uCamera.proj * uCamera.view * worldPos;
 }

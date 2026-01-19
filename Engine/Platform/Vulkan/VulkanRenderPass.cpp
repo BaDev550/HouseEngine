@@ -227,10 +227,10 @@ namespace House {
 		auto vulkanBuffer = buffer.As<VulkanBuffer>();
 		_DescriptorManager->WriteInput(name, vulkanBuffer);
 	}
-	void VulkanRenderPass::SetInput(std::string_view name, const MEM::Ref<Texture2D>& texture)
+	void VulkanRenderPass::SetInput(std::string_view name, const MEM::Ref<Texture2D>& texture, uint32_t index)
 	{
 		auto vulkanTexture = texture.As<VulkanTexture>();
-		_DescriptorManager->WriteInput(name, vulkanTexture);
+		_DescriptorManager->WriteInput(name, vulkanTexture, index);
 	}
 
 	void VulkanRenderPass::BeginCustomFramebufferPass(

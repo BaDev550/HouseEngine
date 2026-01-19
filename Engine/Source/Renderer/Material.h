@@ -6,19 +6,18 @@
 
 namespace House {
 	struct MaterialData {
-		MEM::Ref<Texture2D> DiffuseTexture = nullptr;
-		MEM::Ref<Texture2D> NormalTexture = nullptr;
+		glm::vec4 AlbedoColor = glm::vec4(1.0f);
 		float Metallic = 0.0f;
-		float Roughness = 0.0f;
-
-		bool HasNormalMap = false;
+		float Roughness = 1.0f;
+		MEM::Ref<Texture2D> AlbedoTexture;
+		MEM::Ref<Texture2D> NormalTexture;
 	};
 
 	class Material : public MEM::RefCounted {
 	private:
 	public:
 		virtual ~Material() = default;
-
+		
 		virtual void Build() = 0;
 		virtual void Bind() = 0;
 

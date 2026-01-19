@@ -9,6 +9,15 @@
 #include "spirv_reflect.h"
 
 namespace House {
+    static std::filesystem::path s_ShaderDirectory;
+
+    // Forked from https://github.com/beaumanvienna/vulkan/blob/617f70e1a311c6f498ec69507dcc9d4aadb86612/engine/platform/Vulkan/VKshader.cpp
+    class ShaderIncluder : public shaderc::CompileOptions::IncluderInterface {
+        shaderc_include_result* GetInclude(const char* requestedSource, shaderc_include_type type, const char* requestingSource, size_t includeDepth) override;
+        void ReleaseInclude(shaderc_include_result* data) override;
+        static std::string ReadFile(const std::string& filepath);
+    };
+
     namespace helpers {
 
         shaderc_shader_kind InferShaderKind(const std::filesystem::path& path) {
@@ -54,6 +63,8 @@ namespace House {
             case SPV_REFLECT_DESCRIPTOR_TYPE_SAMPLED_IMAGE:  return ShaderReflectionDataType::Sampler2D;
             case SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_BUFFER: return ShaderReflectionDataType::UniformBuffer;
             case SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC: return ShaderReflectionDataType::UniformBuffer;
+            case SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_BUFFER:        return ShaderReflectionDataType::StorageBuffer;
+            case SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC: return ShaderReflectionDataType::StorageBuffer;
             default:
                 return ShaderReflectionDataType::UniformBuffer;
             }
@@ -79,12 +90,15 @@ namespace House {
         switch (type)
         {
         case ShaderReflectionDataType::UniformBuffer: return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        case ShaderReflectionDataType::StorageBuffer: return VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
         case ShaderReflectionDataType::Sampler2D: return VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        default: return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         }
     }
 
     std::vector<char> ShaderCompiler::CompileShaderFileToSpirv(const std::filesystem::path& path, CompiledShaderInfo& shaderInfo, bool optimize)
     {
+        s_ShaderDirectory = path.parent_path();
         if (path.extension() == ".spv") {
             std::ifstream in(path, std::ios::binary);
             CHECKF(!in, "Failed to open .spv file: " + path.string());
@@ -98,8 +112,9 @@ namespace House {
         CHECKF(!compiler.IsValid(), "shaderc::Compiler failed to initialize");
         shaderc_shader_kind kind = helpers::InferShaderKind(path);
         shaderc::CompileOptions options;
-
+        
         options.SetGenerateDebugInfo();
+        options.SetIncluder(MEM::MakeScope<ShaderIncluder>());
         options.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_1);
         if (optimize) {
             options.SetOptimizationLevel(shaderc_optimization_level_performance);
@@ -108,16 +123,27 @@ namespace House {
             options.SetOptimizationLevel(shaderc_optimization_level_zero);
         }
         options.SetWarningsAsErrors();
-        shaderc::SpvCompilationResult result = compiler.CompileGlslToSpv(source, kind, path.string().c_str(), options);
 
-        const auto status = result.GetCompilationStatus();
+        auto precompileResult = compiler.PreprocessGlsl(source, kind, path.string().c_str(), options);
+        if (precompileResult.GetCompilationStatus() != shaderc_compilation_status_success)
+        {
+            LOG_CORE_ERROR("VK_Shader: Could not preompile shader {0}, error message: {1}", path.string(), precompileResult.GetErrorMessage());
+        }
+
+        auto compileResult = compiler.CompileGlslToSpv(source, kind, path.string().c_str(), options);
+        if (compileResult.GetCompilationStatus() != shaderc_compilation_status_success)
+        {
+            LOG_CORE_ERROR("VK_Shader: Could not compile shader {0}, error message: {1}", path.string(), compileResult.GetErrorMessage());
+        }
+
+        const auto status = compileResult.GetCompilationStatus();
         if (status != shaderc_compilation_status_success) {
-            std::string err = result.GetErrorMessage();
+            std::string err = compileResult.GetErrorMessage();
             CHECKF(true, "Shader compile error (" + path.string() + "): " + err)
         }
 
-        const uint32_t* begin = result.cbegin();
-        const uint32_t* end = result.cend();
+        const uint32_t* begin = compileResult.cbegin();
+        const uint32_t* end = compileResult.cend();
         const size_t word_count = static_cast<size_t>(end - begin);
 
         std::vector<char> bytes;
@@ -151,7 +177,7 @@ namespace House {
         spvReflectEnumerateDescriptorBindings(&module, &count, bindings.data());
 
         for (const auto& ds : bindings) {
-            shaderInfo.ReflectData[ds->set][ds->binding] = { ds->name, helpers::GetResourceType(ds) };
+            shaderInfo.ReflectData[ds->set][ds->binding] = { ds->name, ds->count, helpers::GetResourceType(ds) };
         }
 
         if (module.shader_stage & SPV_REFLECT_SHADER_STAGE_VERTEX_BIT) {
@@ -190,5 +216,61 @@ namespace House {
         }
 
         spvReflectDestroyShaderModule(&module);
+    }
+
+    shaderc_include_result* ShaderIncluder::GetInclude(const char* requestedSource, shaderc_include_type type, const char* requestingSource, size_t includeDepth)
+    {
+        std::string msg = std::string(requestingSource);
+        msg += std::to_string(type);
+        msg += static_cast<char>(includeDepth);
+
+        const std::string name = std::string(requestedSource);
+        const std::string contents = ReadFile(name);
+
+        auto container = new std::array<std::string, 2>;
+        (*container)[0] = name;
+        (*container)[1] = contents;
+
+        auto data = new shaderc_include_result;
+
+        data->user_data = container;
+
+        data->source_name = (*container)[0].data();
+        data->source_name_length = (*container)[0].size();
+
+        data->content = (*container)[1].data();
+        data->content_length = (*container)[1].size();
+
+        return data;
+    }
+    void ShaderIncluder::ReleaseInclude(shaderc_include_result* data)
+    {
+        delete static_cast<std::array<std::string, 2>*>(data->user_data);
+        delete data;
+    }
+    std::string ShaderIncluder::ReadFile(const std::string& filepath)
+    {
+        std::string sourceCode;
+        std::ifstream in(s_ShaderDirectory / filepath, std::ios::in | std::ios::binary);
+        if (in)
+        {
+            in.seekg(0, std::ios::end);
+            size_t size = in.tellg();
+            if (size > 0)
+            {
+                sourceCode.resize(size);
+                in.seekg(0, std::ios::beg);
+                in.read(&sourceCode[0], size);
+            }
+            else
+            {
+                LOG_CORE_WARN("ShaderIncluder::ReadFile: Could not read shader file '{0}'", filepath);
+            }
+        }
+        else
+        {
+            LOG_CORE_WARN("ShaderIncluder::ReadFile Could not open shader file '{0}'", filepath);
+        }
+        return sourceCode;
     }
 }

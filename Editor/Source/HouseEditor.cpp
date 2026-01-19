@@ -32,6 +32,14 @@ namespace House::Editor {
 	void HouseEditorLayer::OnUpdate(float dt)
 	{
 		_EditorCamera->Update(dt);
+		static bool cursor = true;
+
+		if (Input::IsKeyJustPressed(Key::F1)) {
+			cursor = !cursor;
+			_EditorCamera->SetFirstMouse();
+			Application::Get()->GetWindow().EnableCursor(cursor);
+		}
+
 		_SceneRenderer->DrawScene(_EditorCamera);
 	}
 
@@ -39,11 +47,19 @@ namespace House::Editor {
 	{
 		std::string debuggerPanelName = "Scene: " + _ActiveScene->GetName() + " Debug Panel";
 		ImGui::Begin(debuggerPanelName.c_str());
-
+		
 		if (ImGui::CollapsingHeader("Entities")) {
 			if (ImGui::Button("Add Entity")) {
 				auto entity = _ActiveScene->CreateEntity("NEW_ENTITY");
 				entity.AddComponent<StaticMeshComponent>();
+			}
+			if (ImGui::Button("Add Sun Light Entity")) {
+				auto entity = _ActiveScene->CreateEntity("SUN_LIGHT");
+				entity.AddComponent<DirectionalLightComponent>();
+			}
+			if (ImGui::Button("Add Point Light Entity")) {
+				auto entity = _ActiveScene->CreateEntity("POINT_LIGHT");
+				entity.AddComponent<PointLightComponent>();
 			}
 
 			for (auto& [id, entity] : _ActiveScene->GetEntities()) {
@@ -77,6 +93,19 @@ namespace House::Editor {
 			ImGui::Image((ImTextureID)(void*)gbuffer->GetAttachmentTexture(0)->GetImGuiTextureID(), ImVec2(128, 128), ImVec2(0, 1), ImVec2(1, 0), ImVec4(1,1,1,1), ImVec4(1,0,0,1));
 			ImGui::Image((ImTextureID)(void*)gbuffer->GetAttachmentTexture(1)->GetImGuiTextureID(), ImVec2(128, 128), ImVec2(0, 1), ImVec2(1, 0), ImVec4(1,1,1,1), ImVec4(1,0,0,1));
 			ImGui::Image((ImTextureID)(void*)gbuffer->GetAttachmentTexture(2)->GetImGuiTextureID(), ImVec2(128, 128), ImVec2(0, 1), ImVec2(1, 0), ImVec4(1,1,1,1), ImVec4(1,0,0,1));
+		}
+		if (ImGui::CollapsingHeader("Light Data")) {
+			ImGui::Text("SunLight");
+			auto& lightEnviromentData = _SceneRenderer->GetSceneData().LightEnviromentData;
+			ImGui::ColorEdit3("Color", glm::value_ptr(lightEnviromentData.DirectionalLight.Color), 0.1f);
+
+			ImGui::Text("PointLights");
+			int lightIndex = 0;
+			for (auto& light : lightEnviromentData.PointLights) {
+				std::string uniqeName = "Color ##" + std::to_string(lightIndex);
+				ImGui::ColorEdit3(uniqeName.c_str(), glm::value_ptr(light.Color), 0.1f);
+				lightIndex++;
+			}
 		}
 		ImGui::End();
 	}

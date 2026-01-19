@@ -1,0 +1,10 @@
+struct Material {
+    vec4 albedoColor;
+    float metallic;
+    float roughness;
+    int albedoTextureIndex;
+    int normalTextureIndex;
+};
+
+layout(set = 1, binding = 0) uniform sampler2D uDiffTexture;
+layout(set = 1, binding = 1) uniform sampler2D uNormTexture;

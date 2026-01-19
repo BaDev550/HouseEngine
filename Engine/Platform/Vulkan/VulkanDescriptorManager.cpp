@@ -1,5 +1,6 @@
 #include "hepch.h"
 #include "VulkanDescriptorManager.h"
+#include "VulkanRenderAPI.h"
 #include "Core/Application.h"
 
 namespace House {
@@ -28,7 +29,7 @@ namespace House {
 	{
 		const RenderPassInputDeclaration* decl = GetInputDeclaration(name);
 		if (decl) {
-			_StoredResources[decl->Set][decl->Binding].Set(texture);
+			_StoredResources[decl->Set][decl->Binding].Set(texture, index);
 		}
 	}
 
@@ -37,7 +38,7 @@ namespace House {
 		for (auto& [setIndex, bindings] : _StoredResources) {
 			_Writers[setIndex]->Clear();
 			bool hasData = false;
-
+			
 			std::vector<VkDescriptorImageInfo> imageInfos;
 			imageInfos.reserve(bindings.size());
 
@@ -57,6 +58,12 @@ namespace House {
 					hasData = true;
 					break;
 				}
+				case ShaderReflectionDataType::StorageBuffer: {
+					bufferInfos.push_back(currentData.As<VulkanBuffer>()->DescriptorInfo());
+					_Writers[setIndex]->WriteBuffer(bindingIndex, &bufferInfos.back());
+					hasData = true;
+					break;
+				}
 				case ShaderReflectionDataType::Sampler2D: {
 					imageInfos.push_back(currentData.As<VulkanTexture>()->GetImageDescriptorInfo());
 					_Writers[setIndex]->WriteImage(bindingIndex, &imageInfos.back());
@@ -68,34 +75,35 @@ namespace House {
 
 			if (hasData) {
 				_Writers[setIndex]->Overwrite(_DescriptorSets[frameIndex][setIndex]);
+				vkCmdBindDescriptorSets(
+					cmd,
+					VK_PIPELINE_BIND_POINT_GRAPHICS,
+					layout,
+					setIndex,
+					1,
+					&_DescriptorSets[frameIndex][setIndex],
+					0, nullptr
+				);
 			}
-			vkCmdBindDescriptorSets(
-				cmd,
-				VK_PIPELINE_BIND_POINT_GRAPHICS,
-				layout,
-				setIndex,
-				1,
-				&_DescriptorSets[frameIndex][setIndex],
-				0, nullptr
-			);
 		}
 	}
 
 	void DescriptorManager::Invalidate(DescriptorManagerSpecification& spec)
 	{
+
 		_Pool = VulkanDescriptorPool::Builder()
 			.SetMaxSets(1000)
 			.AddPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1000)
-			.AddPoolSize(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1000)
-			.AddPoolSize(VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1000)
 			.AddPoolSize(VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1000)
 			.AddPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000)
+			.AddPoolSize(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1000)
+			.AddPoolSize(VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1000)
 			.AddPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 1000)
 			.AddPoolSize(VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 1000)
 			.AddPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1000)
 			.AddPoolSize(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1000)
 			.AddPoolSize(VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000)
-			.SetPoolFlags(VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT)
+			.SetPoolFlags(VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT | VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT)
 			.Build();
 
 		auto& pipeline = spec.Pipeline;

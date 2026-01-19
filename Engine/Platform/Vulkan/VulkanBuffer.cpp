@@ -12,6 +12,7 @@ namespace House {
             if (flags.Has(BufferType::VertexBuffer))  vkFlags |= VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
             if (flags.Has(BufferType::TransferDst))   vkFlags |= VK_BUFFER_USAGE_TRANSFER_DST_BIT;
             if (flags.Has(BufferType::TransferSrc))   vkFlags |= VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+			if (flags.Has(BufferType::StorageBuffer)) vkFlags |= VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
             return vkFlags;
         }
 

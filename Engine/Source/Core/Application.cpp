@@ -57,7 +57,6 @@ namespace House {
 
 	void Application::Run()
 	{
-		bool cursor = true;
 		while (!_Window->ShouldClose()) {
 			static auto lastFrameTime = std::chrono::high_resolution_clock::now();
 			auto currentTime = std::chrono::high_resolution_clock::now();
@@ -66,11 +65,6 @@ namespace House {
 
 			_Window->PollEvents();
 			Input::Update();
-
-			if (Input::IsKeyJustPressed(Key::F1)) {
-				cursor = !cursor;
-				_Window->EnableCursor(cursor);
-			}
 
 			Renderer::BeginFrame();
 			for (auto& layer : _LayerRegistry) { layer->OnUpdate(_DeltaTime); }

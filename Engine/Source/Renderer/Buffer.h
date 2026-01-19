@@ -11,6 +11,7 @@ namespace House {
 		IndexBuffer   = BIT(2),
 		TransferDst   = BIT(3),
 		TransferSrc   = BIT(4),
+		StorageBuffer = BIT(5)
 	};
 
 	enum class MemoryProperties : uint8_t {

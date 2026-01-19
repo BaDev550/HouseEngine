@@ -5,12 +5,14 @@
 #include <assert.h>
 #include "Texture.h"
 #include "Utilities/Frustum.h"
+#include "World/Components/Components.h"
 #include <glm/gtc/type_ptr.hpp>
 
 namespace House {
 	SceneRenderer::SceneRenderer(MEM::Ref<Scene>& scene)
 		: _Scene(scene)
 	{
+		// Create gbuffer and lightling buffer for deferred rendering
 		{
 			FramebufferSpecification spec{};
 			spec.Attachments = { 
@@ -40,11 +42,25 @@ namespace House {
 			_FinalImageRenderPass->SetInput("uAlbedo",   frameBuffer->GetAttachmentTexture(2));
 		}
 
-		VkDeviceSize camerabufferSize = sizeof(CameraUniformData);
-		_CameraUB = Buffer::Create(camerabufferSize, BufferType::UniformBuffer, MemoryProperties::HOST_VISIBLE | MemoryProperties::HOST_COHERENT);
-		_CameraUB->Map();
-		_GRenderPass->SetInput("camera", _CameraUB);
-		_FinalImageRenderPass->SetInput("camera", _CameraUB);
+		// Create uniform buffer objects
+		{
+			uint64_t camerabufferSize = sizeof(CameraUniformData);
+			_CameraUB = Buffer::Create(camerabufferSize, BufferType::UniformBuffer, MemoryProperties::HOST_VISIBLE | MemoryProperties::HOST_COHERENT);
+			_CameraUB->Map();
+
+			uint64_t directionalLightBufferSize = sizeof(UniformBufferDirectionalLight);
+			_DirectionalLightUB = Buffer::Create(directionalLightBufferSize, BufferType::UniformBuffer, MemoryProperties::HOST_VISIBLE | MemoryProperties::HOST_COHERENT);
+			_DirectionalLightUB->Map();
+
+			uint64_t pointLightsBufferSize = sizeof(UniformBufferPointLights);
+			_PointLightsUB = Buffer::Create(pointLightsBufferSize, BufferType::UniformBuffer, MemoryProperties::HOST_VISIBLE | MemoryProperties::HOST_COHERENT);
+			_PointLightsUB->Map();
+		}
+
+		_GRenderPass->SetInput("uCamera", _CameraUB);
+		_FinalImageRenderPass->SetInput("uCamera", _CameraUB);
+		_FinalImageRenderPass->SetInput("uDirectionalLight", _DirectionalLightUB);
+		_FinalImageRenderPass->SetInput("uPointLights", _PointLightsUB);
 	}
 
 	SceneRenderer::~SceneRenderer()
@@ -57,12 +73,12 @@ namespace House {
 		Frustum cameraFrustum;
 		cameraFrustum.Update(cam->GetProjection() * cam->GetView());
 #endif
-
 		_GRenderPass->Begin();
 		
-		_CameraUD.View = cam->GetView();
-		_CameraUD.Proj = cam->GetProjection();
-		_CameraUB->WriteToBuffer(&_CameraUD);
+		_SceneData.CameraData.View = cam->GetView();
+		_SceneData.CameraData.Proj = cam->GetProjection();
+		_SceneData.CameraData.Position = cam->GetPosition();
+		_CameraUB->WriteToBuffer(&_SceneData.CameraData);
 
 		auto view = _Scene->GetRegistry().view<TransformComponent, StaticMeshComponent>();
 		for (auto entity : view) {
@@ -76,7 +92,49 @@ namespace House {
 		_GRenderPass->End();
 
 		_FinalImageRenderPass->Begin();
+		CollectLightDataFromScene();
+		UniformBufferDirectionalLight& ubdDirectionalLight = _SceneData.LightEnviromentUniformData.UBDDirectionalLight;
+		UniformBufferPointLights& ubdPointLights = _SceneData.LightEnviromentUniformData.UBDPointLights;
+		ubdDirectionalLight.Light = _SceneData.LightEnviromentData.DirectionalLight;
+		ubdPointLights.Count = _SceneData.LightEnviromentData.GetPointLightCount();
+		bool hasPointLight = ubdPointLights.Count > 0;
+		if (hasPointLight) std::memcpy(ubdPointLights.PointLights, _SceneData.LightEnviromentData.PointLights.data(), sizeof(PointLight) * ubdPointLights.Count);
+
+		_DirectionalLightUB->WriteToBuffer(&ubdDirectionalLight);
+		_PointLightsUB->WriteToBuffer(&ubdPointLights);
+
 		Renderer::DrawFullscreenQuad(_FinalImageRenderPass);
 		_FinalImageRenderPass->End();
+	}
+
+	void SceneRenderer::CollectLightDataFromScene()
+	{
+		auto& lightEnviroment = _SceneData.LightEnviromentData;
+		{
+			auto view = _Scene->GetRegistry().view<TransformComponent, DirectionalLightComponent>();
+			uint32_t dirLightCount = 0;
+			for (auto entity : view) {
+				if (dirLightCount >= 1) break;
+				auto& tc = view.get<TransformComponent>(entity);
+				auto& dLightC = view.get<DirectionalLightComponent>(entity);
+
+				dLightC.Handle.Direction = glm::normalize(tc.Rotation);
+				lightEnviroment.DirectionalLight = dLightC.Handle;
+				dirLightCount++;
+			}
+		}
+		{
+			auto view = _Scene->GetRegistry().view<TransformComponent, PointLightComponent>();
+			uint32_t pointLightCount = 0;
+			lightEnviroment.PointLights.resize(view.size_hint());
+			for (auto entity : view) {
+				if (pointLightCount >= 1024) break;
+				auto& tc = view.get<TransformComponent>(entity);
+				auto& pLightC = view.get<PointLightComponent>(entity);
+
+				pLightC.Handle.Position = tc.Position;
+				lightEnviroment.PointLights[pointLightCount++] = pLightC.Handle;
+			}
+		}
 	}
 }

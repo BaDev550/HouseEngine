@@ -16,9 +16,9 @@ namespace House {
 			auto builder = VulkanDescriptorSetLayout::Builder();
 			for (auto const& [binding, info] : bindings)
 			{
-				LOG_RENDERER_INFO("  - Binding {0}: {1}", binding, info.Name);
+				LOG_RENDERER_INFO("  - Binding {0}: {1} {2} {3}", binding, info.Name, DescriptorInfo::ShaderReflectionDataTypeToString(info.Type), info.Count);
 				VkDescriptorType vkType = ShaderCompiler::ShaderReflectionTypeToVulkanType(info.Type);
-				builder.AddBinding(binding, vkType, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT);
+				builder.AddBinding(binding, vkType, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, info.Count);
 			}
 			_DescriptorLayouts[set] = builder.Build();
 		}

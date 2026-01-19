@@ -22,8 +22,8 @@ namespace House {
         for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
             _DescriptorSets[i] = _DescriptorManager.Allocate(layout);
             VulkanDescriptorWriter writer(*layout, *_DescriptorManager.GetPool());
-            
-            VkDescriptorImageInfo diffInfo = _Data.DiffuseTexture.As<VulkanTexture>()->GetImageDescriptorInfo();
+
+            VkDescriptorImageInfo diffInfo = _Data.AlbedoTexture.As<VulkanTexture>()->GetImageDescriptorInfo();
             VkDescriptorImageInfo normInfo = _Data.NormalTexture.As<VulkanTexture>()->GetImageDescriptorInfo();
 
             writer.WriteImage(0, &diffInfo);

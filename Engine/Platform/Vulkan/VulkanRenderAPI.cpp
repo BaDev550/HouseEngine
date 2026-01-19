@@ -104,15 +104,16 @@ namespace House {
 	void VulkanRenderAPI::DrawMesh(MEM::Ref<RenderPass>& renderPass, MEM::Ref<Model>& model, glm::mat4& transform)
 	{
 		auto cmd = GetCurrentCommandBuffer();
+
+		MeshPushConstants pc_data;
 		auto vulkanRenderPass = renderPass.As<VulkanRenderPass>();
 		const auto& vulkanPipeline = vulkanRenderPass->GetPipeline();
+		pc_data.Transform = transform;
 		vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, vulkanPipeline->GetVulkanPipeline());
-		VkDescriptorSet globalSet = vulkanRenderPass->GetDescriptorManager()->GetDescriptorSet(Renderer::GetFrameIndex(), 0);
-		vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, vulkanPipeline->GetPipelineLayout(), 0, 1, &globalSet, 0, nullptr);
-		vkCmdPushConstants(cmd, vulkanPipeline->GetPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), &transform);
+		vkCmdPushConstants(cmd, vulkanPipeline->GetPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(MeshPushConstants), &pc_data);
+
 		for (const auto& mesh : model->GetMeshes()) {
-			auto& material = model->GetMaterialByID(mesh.GetMaterialID());
-			material->Bind();
+			model->GetMaterialByID(mesh.GetMaterialID())->Bind();
 
 			const auto& vulkanVertexBuffer = mesh.GetVertexBuffer().As<VulkanBuffer>();
 			const auto& vulkanIndexBuffer = mesh.GetIndexBuffer().As<VulkanBuffer>();
@@ -121,6 +122,7 @@ namespace House {
 			vkCmdBindVertexBuffers(cmd, 0, 1, buffers, offsets);
 			vkCmdBindIndexBuffer(cmd, vulkanIndexBuffer->GetBuffer(), offsets[0], VK_INDEX_TYPE_UINT32);
 			vkCmdDrawIndexed(cmd, mesh.GetIndexCount(), 1, 0, 0, 0);
+
 			s_RenderStats.DrawCall++;
 			s_RenderStats.TriangleCount += mesh.GetIndexCount() / 3;
 		}

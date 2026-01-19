@@ -12,6 +12,10 @@
 #include "Material.h"
 
 namespace House {
+	struct MeshPushConstants { // Only used for Vulkan
+		glm::mat4 Transform;
+	};
+
 	struct AABB {
 		glm::vec3 Min = { FLT_MAX,  FLT_MAX,  FLT_MAX };
 		glm::vec3 Max = { -FLT_MAX, -FLT_MAX, -FLT_MAX };
@@ -49,7 +53,10 @@ namespace House {
 		aiProcess_Triangulate |
 		aiProcess_FlipUVs |
 		aiProcess_GenSmoothNormals |
-		aiProcess_CalcTangentSpace;
+		aiProcess_CalcTangentSpace |
+		aiProcess_JoinIdenticalVertices | 
+		aiProcess_OptimizeGraph |
+		aiProcess_OptimizeMeshes;
 
 	class Mesh {
 	public:

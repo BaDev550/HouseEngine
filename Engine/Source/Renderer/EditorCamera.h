@@ -7,7 +7,7 @@ namespace House {
 	{
 	public:
 		EditorCamera() = default;
-
+		
 		virtual void Update(float dt) override;
 		void SetProccessingMouse(bool processing) { _proccessingMouse = processing; }
 	private:

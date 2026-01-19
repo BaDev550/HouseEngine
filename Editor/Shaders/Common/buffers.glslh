@@ -1,0 +1,32 @@
+struct DirectionalLight {
+    vec3 Direction;
+    float padding0;
+    vec3 Color;
+    float Intensity;
+};
+
+struct PointLight {
+    vec3 Position;
+    float padding0;
+    vec3 Color;
+    float Intensity;
+    float Radius;
+    vec3 padding1;
+};
+
+layout(set = 0, binding = 0) uniform CameraUniformData {
+	mat4 view;
+	mat4 proj;
+    vec3 position;
+} uCamera;
+
+layout(set = 0, binding = 1) uniform DirectionalLightData 
+{ 
+    DirectionalLight Light;
+} uDirectionalLight;
+
+layout(set = 0, binding = 2) uniform PointLightData 
+{ 
+    uint Count;
+    PointLight Lights[1024];
+} uPointLights;

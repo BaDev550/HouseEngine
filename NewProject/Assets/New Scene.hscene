@@ -1,0 +1,11 @@
+Scene: New Scene
+Entities:
+  - Entity: 14285550876449533503
+    IdentityComponent:
+      Name: NEW_ENTITY
+    TransformComponent:
+      Position: [0, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    StaticMeshComponent:
+      ModelPath: Resources/man/Man.gltf

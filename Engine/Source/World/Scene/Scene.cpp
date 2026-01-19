@@ -13,13 +13,17 @@ namespace House {
 		_Registry.clear();
 	}
 
-	Entity Scene::CreateEntity(const std::string& name) {
+	Entity& Scene::CreateEntity(const std::string& name) {
+		return CreateEntityWithUUID(name, UUID());
+	}
+
+	Entity& Scene::CreateEntityWithUUID(const std::string& name, UUID id)
+	{
 		Entity entity = { _Registry.create(), this };
-		UUID entityID = UUID();
-		entity.AddComponent<IdentityComponent>(name, entityID);
+		entity.AddComponent<IdentityComponent>(name, id);
 		entity.AddComponent<TransformComponent>();
-		_Entities[entityID] = entity;
-		return entity;
+		_Entities[id] = entity;
+		return _Entities[id];
 	}
 
 	void Scene::DestroyEntity(Entity entity) {

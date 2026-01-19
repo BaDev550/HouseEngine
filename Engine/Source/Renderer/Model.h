@@ -93,9 +93,11 @@ namespace House {
 
 	class Model : public MEM::RefCounted {
 	public:
-		Model(const std::filesystem::path& path) { LoadModelFromFile(path); }
+		Model(const std::filesystem::path& path) { _ModelPath = path; LoadModelFromFile(path); }
 		~Model();
 
+		const std::filesystem::path& GetModelDirectory() const { return _ModelDirectory; }
+		const std::filesystem::path& GetFilePath() const { return _ModelPath; }
 		MEM::Ref<Material>& GetMaterialByID(uint32_t id) { return _Materials[id]; }
 		std::vector<Mesh>& GetMeshes() { return _Meshes; }
 		std::unordered_map<uint32_t, MEM::Ref<Material>>& GetMaterials() { return _Materials; }
@@ -107,6 +109,7 @@ namespace House {
 		Mesh ProcessMesh(aiMesh* mesh, const aiScene* scene);
 
 		std::filesystem::path _ModelDirectory = "EMPTY_MODEL_DIRECTORY";
+		std::filesystem::path _ModelPath = "EMPTY_MODEL_PATH";
 		std::vector<Mesh> _Meshes;
 		AABB _BoundingBox;
 		std::unordered_map<uint32_t, MEM::Ref<Material>> _Materials;

@@ -1,4 +1,7 @@
 #include "HouseEditor.h"
+#include "Project/Project.h"
+#include "Project/ProjectSerializer.h"
+#include "World/Scene/SceneSerializer.h"
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/string_cast.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -11,8 +14,17 @@ namespace House::Editor {
 
 	void HouseEditorLayer::OnAttach()
 	{
-		_ActiveScene = MEM::Ref<Scene>::Create("Test Scene");
-		_SceneRenderer = MEM::Ref<SceneRenderer>::Create(_ActiveScene);
+		auto commandLineArgs = Application::Get()->GetApplicationSpecs().CommandLineArgs;
+		if (commandLineArgs.Count > 1) {
+			auto projectPath = std::filesystem::path(commandLineArgs[1]);
+			OpenProject(projectPath);
+		}
+		else {
+			NewProject();
+			_ActiveScene = MEM::Ref<Scene>::Create("New Scene");
+			_SceneRenderer = MEM::Ref<SceneRenderer>::Create(_ActiveScene);
+		}
+
 		_EditorCamera = MEM::Ref<EditorCamera>::Create();
 
 		for (int i = 0; i < 1; i++) {
@@ -38,6 +50,9 @@ namespace House::Editor {
 			cursor = !cursor;
 			_EditorCamera->SetFirstMouse();
 			Application::Get()->GetWindow().EnableCursor(cursor);
+		}
+		if (Input::IsKeyJustPressed(Key::F3)) {
+			SaveScene();
 		}
 
 		_SceneRenderer->DrawScene(_EditorCamera);
@@ -108,5 +123,42 @@ namespace House::Editor {
 			}
 		}
 		ImGui::End();
+	}
+
+	void HouseEditorLayer::NewScene()
+	{
+		_ActiveScene = MEM::Ref<Scene>::Create("New Scene");
+	}
+
+	void HouseEditorLayer::OpenScene()
+	{
+	}
+
+	void HouseEditorLayer::SaveSceneAs()
+	{
+	}
+
+	void HouseEditorLayer::SaveScene()
+	{
+		SceneSerializer serializer(_ActiveScene);
+		std::filesystem::path scenePath = Project::GetAssetDirectory() / (_ActiveScene->GetName() + ".hscene");
+		serializer.Serialize(scenePath);
+	}
+
+	void HouseEditorLayer::NewProject()
+	{
+		Project::New();
+	}
+
+	void HouseEditorLayer::OpenProject(const std::filesystem::path& path)
+	{
+		if (Project::Load(path)) {
+			_ActiveScene = MEM::Ref<Scene>::Create("New Scene");
+			_SceneRenderer = MEM::Ref<SceneRenderer>::Create(_ActiveScene);
+		};
+	}
+
+	void HouseEditorLayer::SaveProject()
+	{
 	}
 }

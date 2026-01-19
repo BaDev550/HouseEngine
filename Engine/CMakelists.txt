@@ -35,6 +35,7 @@ target_include_directories(Engine
         ${CMAKE_CURRENT_SOURCE_DIR}/vendor/glm
         ${CMAKE_CURRENT_SOURCE_DIR}/vendor/assimp/include
         ${CMAKE_CURRENT_SOURCE_DIR}/vendor/stb/
+	${CMAKE_CURRENT_SOURCE_DIR}/vendor/yaml-cpp/include
         ${VULKAN_INCLUDE_DIR}
 )
 
@@ -43,6 +44,7 @@ target_link_libraries(Engine
         glfw
         ImGui
         assimp
+	yaml-cpp
         ${VULKAN_LIB}
         ${SHADERC_LIB}
         ${SPIRV_CROSS_CORE_LIB}

@@ -11,7 +11,8 @@ namespace House {
 		Scene(const std::string& name);
 		~Scene();
 
-		Entity CreateEntity(const std::string& name);
+		Entity& CreateEntity(const std::string& name);
+		Entity& CreateEntityWithUUID(const std::string& name, UUID id);
 		void DestroyEntity(Entity entity);
 		void Clear();
 

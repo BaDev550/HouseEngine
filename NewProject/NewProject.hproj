@@ -1,0 +1,5 @@
+Project:
+  Name: NewProject
+  AssetDirectory: Assets
+  CacheDirectory: Cache
+  ConfigDirectory: Config

@@ -14,7 +14,17 @@ namespace House::Editor {
 		virtual void OnUpdate(float dt) override;
 		virtual void OnImGuiRender() override;
 	private:
+		void NewScene();
+		void OpenScene();
+		void SaveSceneAs();
+		void SaveScene();
+
+		void NewProject();
+		void OpenProject(const std::filesystem::path& path);
+		void SaveProject();
+	private:
 		MEM::Ref<Scene> _ActiveScene;
+		MEM::Ref<Scene> _EditorScene;
 		MEM::Ref<SceneRenderer> _SceneRenderer;
 		MEM::Ref<EditorCamera> _EditorCamera;
 		Entity* _SelectedEntity = nullptr;

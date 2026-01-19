@@ -13,8 +13,8 @@ namespace House {
 
 		std::map<std::string, MEM::Ref<Pipeline>> CompiledPipelines;
 	} s_Data;
-	static RenderAPI* s_RenderAPI = nullptr;
 
+	RenderAPI* Renderer::s_RenderAPI = nullptr;
 	RenderAPI* CreateRenderAPI() {
 		switch (RenderAPI::CurrentAPI())
 		{
@@ -23,10 +23,8 @@ namespace House {
 		}
 	}
 
-	RenderAPI* Renderer::GetAPI() { return s_RenderAPI; }
 	uint32_t Renderer::GetFrameIndex() { return Application::Get()->GetFrameIndex(); }
 	RenderStats Renderer::GetRenderStats() { return s_RenderAPI->GetRenderStats(); }
-
 	MEM::Ref<ShaderLibrary>& Renderer::GetShaderLibrary() { return s_Data.ShaderLibrary; }
 	MEM::Ref<Pipeline>& Renderer::GetPipeline(const std::string& pipeline) { return s_Data.CompiledPipelines[pipeline]; }
 	MEM::Ref<Texture2D>& Renderer::GetWhiteTexture() { return s_Data.WhiteTexture; }

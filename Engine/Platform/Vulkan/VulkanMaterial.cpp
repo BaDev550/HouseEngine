@@ -34,7 +34,7 @@ namespace House {
 
     void House::VulkanMaterial::Bind()
     { 
-        auto cmd = dynamic_cast<VulkanRenderAPI*>(Renderer::GetAPI())->GetCurrentCommandBuffer();
+        auto cmd = Renderer::GetAPI<VulkanRenderAPI>()->GetCurrentCommandBuffer();
         uint32_t frameIndex = Renderer::GetFrameIndex();
         vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, _Pipeline->GetPipelineLayout(), 1, 1, &_DescriptorSets[frameIndex], 0, nullptr);
     }

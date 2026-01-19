@@ -179,7 +179,7 @@ namespace House {
 
 	void VulkanRenderPass::Begin()
 	{
-		auto cmd = dynamic_cast<VulkanRenderAPI*>(Renderer::GetAPI())->GetCurrentCommandBuffer();
+		auto cmd = Renderer::GetAPI<VulkanRenderAPI>()->GetCurrentCommandBuffer();
 		PipelineData pipelineData = _Pipeline->GetPipelineData();
 
 		VkExtent2D extent{};
@@ -214,7 +214,7 @@ namespace House {
 
 	void VulkanRenderPass::End()
 	{
-		auto cmd = dynamic_cast<VulkanRenderAPI*>(Renderer::GetAPI())->GetCurrentCommandBuffer();
+		auto cmd = Renderer::GetAPI<VulkanRenderAPI>()->GetCurrentCommandBuffer();
 		vkCmdEndRendering(cmd);
 
 		PipelineData pipelineData = _Pipeline->GetPipelineData();

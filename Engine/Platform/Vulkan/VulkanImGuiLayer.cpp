@@ -79,7 +79,7 @@ namespace House {
 	}
 	void VulkanImGuiLayer::End()
 	{
-		auto cmd = dynamic_cast<VulkanRenderAPI*>(Renderer::GetAPI())->GetCurrentCommandBuffer();
+		auto cmd = Renderer::GetAPI<VulkanRenderAPI>()->GetCurrentCommandBuffer();
 		ImGui::Render();
 
 		auto& swapchain = *dynamic_cast<VulkanSwapchain*>(&Application::Get()->GetWindow().GetSwapchain());

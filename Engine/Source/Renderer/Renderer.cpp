@@ -15,6 +15,7 @@ namespace House {
 	} s_Data;
 
 	RenderAPI* Renderer::s_RenderAPI = nullptr;
+	RenderCommandQueue Renderer::s_RenderCommandQueue;
 	RenderAPI* CreateRenderAPI() {
 		switch (RenderAPI::CurrentAPI())
 		{
@@ -71,12 +72,17 @@ namespace House {
 		s_RenderAPI->BeginFrame();
 	}
 
-	void Renderer::EndFrame() {
-		s_RenderAPI->EndFrame();
+	bool Renderer::EndFrame() {
+		return s_RenderAPI->EndFrame();
 	}
 
 	void Renderer::CopyBuffer(MEM::Ref<Buffer>& srcBuffer, MEM::Ref<Buffer>& dstBuffer, uint64_t size) {
 		s_RenderAPI->CopyBuffer(srcBuffer, dstBuffer, size);
+	}
+
+	void Renderer::WaitAndRender()
+	{
+		s_RenderCommandQueue.Execute();
 	}
 
 	void Renderer::DrawMesh(MEM::Ref<RenderPass>& renderPass, MEM::Ref<Model>& model, glm::mat4& transform) {

@@ -44,7 +44,7 @@ namespace House {
 		bool IsActive;
 
 		void Update(float dt) { Handle.Update(dt); }
-		const Camera& GetCamera() const { return Handle; }
+		Camera& GetCamera() { return Handle; }
 		CameraComponent(bool isActive = false) : IsActive(isActive) {}
 		CameraComponent(const CameraComponent&) = default;
 	};

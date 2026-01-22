@@ -1,6 +1,26 @@
 Scene: New Scene
 Entities:
-  - Entity: 14285550876449533503
+  - Entity: 17023763075468523683
+    IdentityComponent:
+      Name: SUN_LIGHT
+    TransformComponent:
+      Position: [0, 0, 0]
+      Rotation: [0, -3.8, -8.4]
+      Scale: [1, 1, 1]
+    DirectionalLightComponent:
+      Color: [1, 1, 1]
+      Intensity: 1
+      Direction: [0, -0.41216788, -0.9111079]
+  - Entity: 14972880761875474052
+    IdentityComponent:
+      Name: NEW_ENTITY
+    TransformComponent:
+      Position: [0, 0, 2.2]
+      Rotation: [0, -180, 0]
+      Scale: [1, 1, 1]
+    StaticMeshComponent:
+      ModelPath: Resources/man/Man.gltf
+  - Entity: 12344470018375085915
     IdentityComponent:
       Name: NEW_ENTITY
     TransformComponent:

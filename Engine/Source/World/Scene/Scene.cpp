@@ -1,14 +1,17 @@
 #include "hepch.h"
 #include "Scene.h"
 
+#include "Renderer/SceneRenderer.h"
 #include "World/Entity/Entity.h"
 
 namespace House {
 	Scene::Scene(const std::string& name) : _Name(name) {}
-	Scene::~Scene() {}
+	Scene::~Scene() {
+		Clear();
+	}
 
 	void Scene::Clear() {
-		LOG_CORE_INFO("Cleaning up Scene...");
+		LOG_CORE_INFO("Cleaning up Scene {}", _Name);
 		_Entities.clear();
 		_Registry.clear();
 	}
@@ -60,11 +63,14 @@ namespace House {
 	void Scene::OnRuntimeStart() {}
 	void Scene::OnRumtimeStop() {}
 
-	void Scene::OnRuntimeUpdate(float DeltaTime) {
-
+	void Scene::OnRuntimeUpdate(float DeltaTime, MEM::Ref<SceneRenderer>& renderer) {
+		if (GetPrimaryCamera()) {
+			auto mainCameraComponent = GetPrimaryCamera().GetComponent<CameraComponent>();
+			renderer->DrawScene(mainCameraComponent.GetCamera());
+		}
 	}
 
-	void Scene::OnEditorUpdate(float DeltaTime, const MEM::Ref<Camera>& editorCamera) {
-
+	void Scene::OnEditorUpdate(float DeltaTime, MEM::Ref<SceneRenderer>& renderer, Camera& editorCamera) {
+		renderer->DrawScene(editorCamera);
 	}
 }

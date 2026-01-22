@@ -203,7 +203,7 @@ namespace House {
 		vkCmdBeginRendering(cmd, &renderingInfo);
 		vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, _Pipeline->GetVulkanPipeline());
 		_DescriptorManager->UpdateSets(cmd, Renderer::GetFrameIndex(), _Pipeline->GetPipelineLayout());
-
+		
 		VkViewport viewport{ 0, 0, (float)extent.width, (float)extent.height };
 		viewport.minDepth = 0;
 		viewport.maxDepth = 1;

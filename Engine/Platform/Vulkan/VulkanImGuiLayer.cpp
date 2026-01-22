@@ -79,8 +79,12 @@ namespace House {
 	}
 	void VulkanImGuiLayer::End()
 	{
-		auto cmd = Renderer::GetAPI<VulkanRenderAPI>()->GetCurrentCommandBuffer();
 		ImGui::Render();
+
+		auto cmd = Renderer::GetAPI<VulkanRenderAPI>()->GetCurrentCommandBuffer();
+		auto frameStarted = Renderer::GetAPI<VulkanRenderAPI>()->FrameStarted();
+		if (!frameStarted)
+			return;
 
 		auto& swapchain = *dynamic_cast<VulkanSwapchain*>(&Application::Get()->GetWindow().GetSwapchain());
 		VkExtent2D extent = swapchain.GetSwapChainExtent();

@@ -49,7 +49,7 @@ namespace House {
 		template<typename T>
 		T& GetRenderContext() { return *dynamic_cast<T*>(&_Window->GetRenderContext()); }
 	private:
-		static Application* _Instance;
+		void DrawImGui();
 
 		ApplicationSpecs _ApplicationSpecs;
 		LayerRegistry _LayerRegistry;
@@ -58,6 +58,8 @@ namespace House {
 
 		float _DeltaTime;
 		uint32_t _FrameIndex = 0;
+
+		static Application* _Instance;
 	};
 
 }

@@ -67,14 +67,24 @@ namespace House {
 			Input::Update();
 
 			Renderer::BeginFrame();
-			for (auto& layer : _LayerRegistry) { layer->OnUpdate(_DeltaTime); }
 
-			_ImGuiLayer->Begin();
-			for (auto& layer : _LayerRegistry) { layer->OnImGuiRender(); }
-			_ImGuiLayer->End();
-			Renderer::EndFrame();
+			{
+				for (auto& layer : _LayerRegistry)
+					layer->OnUpdate(_DeltaTime); 
+			}
 
-			_FrameIndex = (_FrameIndex + 1) % MAX_FRAMES_IN_FLIGHT;
+			Renderer::Submit([this]() { DrawImGui(); });
+			Renderer::Submit([=]() { _ImGuiLayer->End(); });
+
+			Renderer::WaitAndRender();
+			if (Renderer::EndFrame())
+				_FrameIndex = (_FrameIndex + 1) % MAX_FRAMES_IN_FLIGHT;
 		}
+	}
+	void Application::DrawImGui()
+	{
+		_ImGuiLayer->Begin();
+		for (auto& layer : _LayerRegistry)
+			layer->OnImGuiRender();
 	}
 }

@@ -37,12 +37,12 @@ namespace House {
 		auto& config = _Project->GetConfig();
 		YAML::Node data;
 		try {
-			YAML::LoadFile(path.string());
+			data = YAML::LoadFile(path.string());
 		} catch (YAML::ParserException& e) {
 			LOG_CORE_CRITICAL("Failed to load project file: {0}", e.what());
 			return false;
 		}
-
+		
 		auto projectNode = data["Project"];
 		if (!projectNode)
 			return false;

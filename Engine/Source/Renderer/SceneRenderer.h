@@ -1,8 +1,8 @@
 #pragma once
 #include "Utilities/Memory.h"
 
-#include "World/Entity/Entity.h"
 #include "World/Scene/Scene.h"
+#include "World/Entity/Entity.h"
 #include "RenderPass.h"
 #include "Camera.h"
 #include "Buffer.h"
@@ -42,9 +42,12 @@ namespace House {
 		MEM::Ref<RenderPass> GetGBufferRenderPass() const { return _GRenderPass; }
 		SceneRenderData& GetSceneData() { return _SceneData; }
 
-		void DrawScene(const MEM::Ref<Camera>& cam);
+		void DrawScene(Camera& cam);
+		void SetScene(MEM::Ref<Scene>& scene) { _Scene = scene; }
 	private:
 		void CollectLightDataFromScene();
+
+		MEM::Ref<Scene> _Scene;
 
 		SceneRenderData _SceneData;
 		MEM::Ref<Buffer> _CameraUB;
@@ -56,7 +59,5 @@ namespace House {
 
 		MEM::Ref<Pipeline> _FinalImagePipeline;
 		MEM::Ref<RenderPass> _FinalImageRenderPass;
-
-		MEM::Ref<Scene> _Scene;
 	};
 }

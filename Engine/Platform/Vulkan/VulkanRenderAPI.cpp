@@ -14,6 +14,11 @@ namespace House {
 
 	static std::chrono::system_clock::time_point s_FrameStartTime;
 
+	bool VulkanRenderAPI::FrameStarted() const
+	{
+		return s_FrameStarted;
+	}
+
 	VkCommandBuffer VulkanRenderAPI::GetCurrentCommandBuffer() {
 		CHECKF(!s_FrameStarted, "Cannot get a command buffer while frame is not in progress");
 		return s_Frames[Renderer::GetFrameIndex()].CommandBuffer;
@@ -69,9 +74,10 @@ namespace House {
 		CHECKF((vkBeginCommandBuffer(cmd, &beginInfo) != VK_SUCCESS), "Failed to begin recording to command buffer");
 	}
 
-	void VulkanRenderAPI::EndFrame()
+	bool VulkanRenderAPI::EndFrame()
 	{
 		CHECKF(!s_FrameStarted, "Cant submit a not recorded frame");
+
 		VkCommandBuffer cmd = GetCurrentCommandBuffer();
 		auto& window = Application::Get()->GetWindow();
 		auto& swapchain = *dynamic_cast<VulkanSwapchain*>(&window.GetSwapchain());
@@ -91,6 +97,7 @@ namespace House {
 		s_RenderStats.DrawCall = 0;
 		s_RenderStats.TriangleCount = 0;
 		s_FrameStarted = false;
+		return true;
 	}
 	 
 	void VulkanRenderAPI::CopyBuffer(MEM::Ref<Buffer>& srcBuffer, MEM::Ref<Buffer>& dstBuffer, uint64_t size)
@@ -140,6 +147,21 @@ namespace House {
 		vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, vulkanPipeline->GetPipelineLayout(), 0, 1, &globalSet, 0, nullptr);
 		vkCmdDraw(cmd, 3, 1, 0, 0);
 		s_RenderStats.DrawCall++;
+	}
+
+	void VulkanRenderAPI::ResetRenderState()
+	{
+		Application::Get()->GetWindow().GetRenderContext().WaitDeviceIdle();
+
+		if (s_FrameStarted) {
+			VkCommandBufferBeginInfo beginInfo{};
+			beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+			beginInfo.flags = 0;
+			beginInfo.pInheritanceInfo = nullptr;
+
+			vkResetCommandPool(Application::Get()->GetRenderContext<VulkanContext>().GetDevice(), s_Frames[Renderer::GetFrameIndex()].CommandPool, 0);
+			CHECKF((vkBeginCommandBuffer(s_Frames[Renderer::GetFrameIndex()].CommandBuffer, &beginInfo) != VK_SUCCESS), "Failed to begin recording to command buffer");
+		}
 	}
 
 	RenderStats VulkanRenderAPI::GetRenderStats() { return s_RenderStats; }

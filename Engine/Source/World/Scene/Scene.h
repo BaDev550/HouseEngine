@@ -6,6 +6,7 @@
 #include "Utilities/Defines.h"
 
 namespace House {
+	class SceneRenderer;
 	class Scene : public MEM::RefCounted {
 	public:
 		Scene(const std::string& name);
@@ -23,8 +24,8 @@ namespace House {
 
 		void OnRuntimeStart();
 		void OnRumtimeStop();
-		void OnRuntimeUpdate(float DeltaTime);
-		void OnEditorUpdate(float DeltaTime, const MEM::Ref<Camera>& editorCamera);
+		void OnRuntimeUpdate(float DeltaTime, MEM::Ref<SceneRenderer>& renderer);
+		void OnEditorUpdate(float DeltaTime, MEM::Ref<SceneRenderer>& renderer, Camera& editorCamera);
 
 		const std::string& GetName() const { return _Name; }
 		std::unordered_map<UUID, Entity>& GetEntities() { return _Entities; }

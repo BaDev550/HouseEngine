@@ -5,6 +5,7 @@
 #include "Buffer.h"
 #include "Model.h"
 #include "RenderAPI.h"
+#include "RenderCommandQueue.h"
 #include "ShaderLibrary.h"
 
 #include "Utilities/Memory.h"
@@ -19,11 +20,15 @@ namespace House {
 		static void Init();
 		static void Destroy();
 		static void CompileShaders();
+		static void Submit(std::function<void()> func) {
+			s_RenderCommandQueue.Submit(func);
+		}
 
 		static void BeginFrame();
-		static void EndFrame();
+		static bool EndFrame();
 		static void CopyBuffer(MEM::Ref<Buffer>& srcBuffer, MEM::Ref<Buffer>& dstBuffer, uint64_t size);
 
+		static void WaitAndRender();
 		static void DrawMesh(MEM::Ref<RenderPass>& renderPass, MEM::Ref<Model>& model, glm::mat4& transform);
 		static void DrawFullscreenQuad(MEM::Ref<RenderPass>& renderPass);
 
@@ -37,5 +42,6 @@ namespace House {
 		static T* GetAPI() { return static_cast<T*>(s_RenderAPI); }
 	private:
 		static RenderAPI* s_RenderAPI;
+		static RenderCommandQueue s_RenderCommandQueue;
 	};
 }

@@ -67,17 +67,17 @@ namespace House {
 	{
 	}
 
-	void SceneRenderer::DrawScene(const MEM::Ref<Camera>& cam)
+	void SceneRenderer::DrawScene(Camera& cam)
 	{
 #if 0
 		Frustum cameraFrustum;
 		cameraFrustum.Update(cam->GetProjection() * cam->GetView());
 #endif
 		_GRenderPass->Begin();
-		
-		_SceneData.CameraData.View = cam->GetView();
-		_SceneData.CameraData.Proj = cam->GetProjection();
-		_SceneData.CameraData.Position = cam->GetPosition();
+
+		_SceneData.CameraData.View = cam.GetView();
+		_SceneData.CameraData.Proj = cam.GetProjection();
+		_SceneData.CameraData.Position = cam.GetPosition();
 		_CameraUB->WriteToBuffer(&_SceneData.CameraData);
 
 		auto view = _Scene->GetRegistry().view<TransformComponent, StaticMeshComponent>();
@@ -86,7 +86,6 @@ namespace House {
 			auto& model = view.get<StaticMeshComponent>(entity);
 
 			glm::mat4 transformMatrix = transform.ModelMatrix();
-
 			Renderer::DrawMesh(_GRenderPass, model.Handle, transformMatrix);
 		}
 		_GRenderPass->End();

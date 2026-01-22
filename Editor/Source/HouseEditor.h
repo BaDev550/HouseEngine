@@ -6,6 +6,12 @@
 #include "World/Entity/Entity.h"
 
 namespace House::Editor {
+	enum class EditorState {
+		Edit, 
+		Play, 
+		Pause, 
+		Simulate
+	};
 	class HouseEditorLayer : public Layer {
 	public:
 		HouseEditorLayer();
@@ -15,7 +21,7 @@ namespace House::Editor {
 		virtual void OnImGuiRender() override;
 	private:
 		void NewScene();
-		void OpenScene();
+		void OpenScene(const std::filesystem::path& path);
 		void SaveSceneAs();
 		void SaveScene();
 
@@ -28,5 +34,10 @@ namespace House::Editor {
 		MEM::Ref<SceneRenderer> _SceneRenderer;
 		MEM::Ref<EditorCamera> _EditorCamera;
 		Entity* _SelectedEntity = nullptr;
+
+		EditorState _EditorState = EditorState::Edit;
+
+		bool _PendingSceneLoad = false;
+		std::filesystem::path _PendingScenePath;
 	};
 }

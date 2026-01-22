@@ -9,12 +9,14 @@ namespace House {
 		virtual void Destroy() override;
 
 		virtual void BeginFrame() override;
-		virtual void EndFrame() override;
+		virtual bool EndFrame() override;
 
 		virtual void CopyBuffer(MEM::Ref<Buffer>& srcBuffer, MEM::Ref<Buffer>& dstBuffer, uint64_t size) override;
 		virtual void DrawMesh(MEM::Ref<RenderPass>& renderPass, MEM::Ref<Model>& model, glm::mat4& transform) override;
 		virtual void DrawFullscreenQuad(MEM::Ref<RenderPass>& renderPass) override;
+		virtual void ResetRenderState() override;
 		virtual RenderStats GetRenderStats() override;
+		virtual bool FrameStarted() const override;
 	public:
 		VkCommandBuffer GetCurrentCommandBuffer();
 	};

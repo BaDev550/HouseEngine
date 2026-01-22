@@ -1,4 +1,5 @@
 #include "HouseEditor.h"
+#include "Utilities/Platform.h"
 #include "Project/Project.h"
 #include "Project/ProjectSerializer.h"
 #include "World/Scene/SceneSerializer.h"
@@ -20,12 +21,12 @@ namespace House::Editor {
 			OpenProject(projectPath);
 		}
 		else {
-			NewProject();
-			_ActiveScene = MEM::Ref<Scene>::Create("New Scene");
-			_SceneRenderer = MEM::Ref<SceneRenderer>::Create(_ActiveScene);
+			std::string projectPath = Platform::FileDialog::OpenFile(".hproj");
+			OpenProject(projectPath);
 		}
 
 		_EditorCamera = MEM::Ref<EditorCamera>::Create();
+		_SceneRenderer = MEM::Ref<SceneRenderer>::Create(_ActiveScene);
 
 		for (int i = 0; i < 1; i++) {
 			auto entity = _ActiveScene->CreateEntity("NEW_ENTITY");
@@ -54,15 +55,18 @@ namespace House::Editor {
 		if (Input::IsKeyJustPressed(Key::F3)) {
 			SaveScene();
 		}
+		if (Input::IsKeyJustPressed(Key::F2)) {
+			OpenScene("F:/Github/HouseEngine/NewProject/Assets/New Scene.hscene");
+		}
 
-		_SceneRenderer->DrawScene(_EditorCamera);
+		_ActiveScene->OnEditorUpdate(dt, _SceneRenderer, *_EditorCamera);
 	}
 
 	void HouseEditorLayer::OnImGuiRender()
 	{
 		std::string debuggerPanelName = "Scene: " + _ActiveScene->GetName() + " Debug Panel";
 		ImGui::Begin(debuggerPanelName.c_str());
-		
+
 		if (ImGui::CollapsingHeader("Entities")) {
 			if (ImGui::Button("Add Entity")) {
 				auto entity = _ActiveScene->CreateEntity("NEW_ENTITY");
@@ -105,9 +109,9 @@ namespace House::Editor {
 		if (ImGui::CollapsingHeader("Deferred Rendering Debug")) {
 			auto gbufferPass = _SceneRenderer->GetGBufferRenderPass();
 			auto gbuffer = gbufferPass->GetFramebuffer();
-			ImGui::Image((ImTextureID)(void*)gbuffer->GetAttachmentTexture(0)->GetImGuiTextureID(), ImVec2(128, 128), ImVec2(0, 1), ImVec2(1, 0), ImVec4(1,1,1,1), ImVec4(1,0,0,1));
-			ImGui::Image((ImTextureID)(void*)gbuffer->GetAttachmentTexture(1)->GetImGuiTextureID(), ImVec2(128, 128), ImVec2(0, 1), ImVec2(1, 0), ImVec4(1,1,1,1), ImVec4(1,0,0,1));
-			ImGui::Image((ImTextureID)(void*)gbuffer->GetAttachmentTexture(2)->GetImGuiTextureID(), ImVec2(128, 128), ImVec2(0, 1), ImVec2(1, 0), ImVec4(1,1,1,1), ImVec4(1,0,0,1));
+			ImGui::Image((ImTextureID)(void*)gbuffer->GetAttachmentTexture(0)->GetImGuiTextureID(), ImVec2(128, 128), ImVec2(0, 1), ImVec2(1, 0), ImVec4(1, 1, 1, 1), ImVec4(1, 0, 0, 1));
+			ImGui::Image((ImTextureID)(void*)gbuffer->GetAttachmentTexture(1)->GetImGuiTextureID(), ImVec2(128, 128), ImVec2(0, 1), ImVec2(1, 0), ImVec4(1, 1, 1, 1), ImVec4(1, 0, 0, 1));
+			ImGui::Image((ImTextureID)(void*)gbuffer->GetAttachmentTexture(2)->GetImGuiTextureID(), ImVec2(128, 128), ImVec2(0, 1), ImVec2(1, 0), ImVec4(1, 1, 1, 1), ImVec4(1, 0, 0, 1));
 		}
 		if (ImGui::CollapsingHeader("Light Data")) {
 			ImGui::Text("SunLight");
@@ -123,6 +127,39 @@ namespace House::Editor {
 			}
 		}
 		ImGui::End();
+
+		ImGui::Begin("Engine Editor");
+
+		if (ImGui::CollapsingHeader("Assets")) {
+			std::filesystem::path projectDir = Project::GetProjectDirectory();
+			std::filesystem::path assetDir = Project::GetAssetDirectory();
+			ImGui::Text("Project Directory: %s", projectDir.string().c_str());
+			ImGui::Text("Asset Directory: %s", assetDir.string().c_str());
+
+			for (auto& dirEntry : std::filesystem::directory_iterator(assetDir)) {
+				if (dirEntry.is_directory()) {
+					std::string dirName = dirEntry.path().filename().string();
+					if (ImGui::TreeNode(dirName.c_str())) {
+						for (auto& fileEntry : std::filesystem::directory_iterator(dirEntry.path())) {
+							std::string fileName = fileEntry.path().filename().string();
+							ImGui::Text(fileName.c_str());
+						}
+						ImGui::TreePop();
+					}
+				}
+				else {
+					std::string fileName = dirEntry.path().filename().string();
+					if (ImGui::Selectable(fileName.c_str())) {
+						std::filesystem::path selectedFilePath = dirEntry.path();
+						if (selectedFilePath.extension() == ".hscene") {
+							OpenScene(dirEntry.path());
+						}
+					}
+				}
+			}
+		}
+
+		ImGui::End();
 	}
 
 	void HouseEditorLayer::NewScene()
@@ -130,8 +167,19 @@ namespace House::Editor {
 		_ActiveScene = MEM::Ref<Scene>::Create("New Scene");
 	}
 
-	void HouseEditorLayer::OpenScene()
+	void HouseEditorLayer::OpenScene(const std::filesystem::path& path)
 	{
+		Renderer::GetAPI<RenderAPI>()->ResetRenderState();
+
+		MEM::Ref<Scene> newScene = MEM::Ref<Scene>::Create("New Scene");
+		SceneSerializer serializer(newScene);
+		serializer.Deserialize(path);
+
+		_EditorScene = newScene;
+
+		_ActiveScene->Clear();
+		_ActiveScene = _EditorScene;
+		_SceneRenderer->SetScene(_ActiveScene);
 	}
 
 	void HouseEditorLayer::SaveSceneAs()
@@ -154,7 +202,6 @@ namespace House::Editor {
 	{
 		if (Project::Load(path)) {
 			_ActiveScene = MEM::Ref<Scene>::Create("New Scene");
-			_SceneRenderer = MEM::Ref<SceneRenderer>::Create(_ActiveScene);
 		};
 	}
 

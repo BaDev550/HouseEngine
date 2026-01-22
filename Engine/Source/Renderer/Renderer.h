@@ -20,9 +20,7 @@ namespace House {
 		static void Init();
 		static void Destroy();
 		static void CompileShaders();
-		static void Submit(std::function<void()> func) {
-			s_RenderCommandQueue.Submit(func);
-		}
+		static void Submit(std::function<void()> func) { s_RenderCommandQueue.Submit(func); }
 
 		static void BeginFrame();
 		static bool EndFrame();

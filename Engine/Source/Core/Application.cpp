@@ -23,10 +23,11 @@ namespace House {
 
 		_Window = MEM::MakeScope<Window>(config);
 		Input::Init();
-		Renderer::Init();
 
 		_ImGuiLayer = ImGuiLayer::Create();
 		PushOverlay(_ImGuiLayer);
+
+		Renderer::Init();
 		LOG_CORE_INFO("Application started");
 	}
 
@@ -34,7 +35,7 @@ namespace House {
 	{
 		LOG_CORE_INFO("Exiting...");
 		_Window->GetRenderContext().WaitDeviceIdle();
-
+		
 		for (Layer* layer : _LayerRegistry) {
 			layer->OnDetach();
 			delete layer;

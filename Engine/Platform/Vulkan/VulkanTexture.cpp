@@ -70,11 +70,11 @@ namespace House {
 
 	VulkanTexture::~VulkanTexture()
 	{
+		ImGui_ImplVulkan_RemoveTexture(_ImGuiDescriptorSet);
 		vkDestroySampler(_Context.GetDevice(), _TextureImageSampler, nullptr);
 		vkDestroyImageView(_Context.GetDevice(), _TextureImageView, nullptr);
 		vkDestroyImage(_Context.GetDevice(), _TextureImage, nullptr);
 		vkFreeMemory(_Context.GetDevice(), _TextureImageMemory, nullptr);
-		_ImGuiDescriptorSet = VK_NULL_HANDLE;
 	}
 
 	VkDescriptorImageInfo VulkanTexture::GetImageDescriptorInfo()
@@ -86,17 +86,16 @@ namespace House {
 		return imageInfo;
 	}
 
-	uint64_t VulkanTexture::GetImGuiTextureID()
+	ImTextureID VulkanTexture::GetImGuiTextureID()
 	{
-		if (_ImGuiDescriptorSet == VK_NULL_HANDLE) {
-			_ImGuiDescriptorSet = ImGui_ImplVulkan_AddTexture(_TextureImageSampler, _TextureImageView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-		}
-		return (uint64_t)_ImGuiDescriptorSet;
+		return (ImTextureID)_ImGuiDescriptorSet;
 	}
 
 	void VulkanTexture::LoadTexture(void* data, uint32_t width, uint32_t height, uint32_t channels)
 	{
 		uint64_t imageSize = width * height * STBI_rgb_alpha;
+		CreateTexture();
+
 		if (data) {
 			MEM::Scope<VulkanBuffer> stagingBuffer;
 			stagingBuffer = MEM::MakeScope<VulkanBuffer>(
@@ -107,7 +106,6 @@ namespace House {
 			stagingBuffer->Map();
 			stagingBuffer->WriteToBuffer(data);
 			stagingBuffer->Unmap();
-			CreateTexture();
 			_Context.TransitionImageLayout(_TextureImage, _Specs.MipLevels, _TextureFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 			_Context.CopyBufferToImage(stagingBuffer->GetBuffer(), _TextureImage, width, height);
 
@@ -152,6 +150,7 @@ namespace House {
 			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, _TextureImage, _TextureImageMemory);
 		CreateTextureImageView();
 		CreateTextureSampler();
+		_ImGuiDescriptorSet = ImGui_ImplVulkan_AddTexture(_TextureImageSampler, _TextureImageView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 	}
 
 	void VulkanTexture::CreateTextureImageView()

@@ -7,6 +7,9 @@
 #include <glm/gtx/string_cast.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include <backends/imgui_impl_vulkan.h>
+#include "Vulkan/VulkanTexture.h"
+
 namespace House::Editor {
 	HouseEditorLayer::HouseEditorLayer()
 		: Layer("EditorLayer")
@@ -109,9 +112,10 @@ namespace House::Editor {
 		if (ImGui::CollapsingHeader("Deferred Rendering Debug")) {
 			auto gbufferPass = _SceneRenderer->GetGBufferRenderPass();
 			auto gbuffer = gbufferPass->GetFramebuffer();
-			ImGui::Image((ImTextureID)(void*)gbuffer->GetAttachmentTexture(0)->GetImGuiTextureID(), ImVec2(128, 128), ImVec2(0, 1), ImVec2(1, 0), ImVec4(1, 1, 1, 1), ImVec4(1, 0, 0, 1));
-			ImGui::Image((ImTextureID)(void*)gbuffer->GetAttachmentTexture(1)->GetImGuiTextureID(), ImVec2(128, 128), ImVec2(0, 1), ImVec2(1, 0), ImVec4(1, 1, 1, 1), ImVec4(1, 0, 0, 1));
-			ImGui::Image((ImTextureID)(void*)gbuffer->GetAttachmentTexture(2)->GetImGuiTextureID(), ImVec2(128, 128), ImVec2(0, 1), ImVec2(1, 0), ImVec4(1, 1, 1, 1), ImVec4(1, 0, 0, 1));
+
+			ImGui::Image(gbuffer->GetAttachmentTexture(0)->GetImGuiTextureID(), ImVec2(128, 128), ImVec2(0, 1), ImVec2(1, 0));
+			ImGui::Image(gbuffer->GetAttachmentTexture(1)->GetImGuiTextureID(), ImVec2(128, 128), ImVec2(0, 1), ImVec2(1, 0));
+			ImGui::Image(gbuffer->GetAttachmentTexture(2)->GetImGuiTextureID(), ImVec2(128, 128), ImVec2(0, 1), ImVec2(1, 0));
 		}
 		if (ImGui::CollapsingHeader("Light Data")) {
 			ImGui::Text("SunLight");

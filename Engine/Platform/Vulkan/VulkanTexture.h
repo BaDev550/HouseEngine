@@ -27,7 +27,7 @@ namespace House {
 		VkImage GetImage() const { return _TextureImage; }
 		VkImageView GetImageView() const { return _TextureImageView; }
 		uint32_t GetMipLevels() const { return _Specs.MipLevels; }
-		virtual uint64_t GetImGuiTextureID() override;
+		virtual ImTextureID GetImGuiTextureID() override;
 
 		void SetImage(VkImage image) { _TextureImage = image; }
 		void SetImageView(VkImageView image) { _TextureImageView = image; }

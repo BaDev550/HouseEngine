@@ -6,6 +6,7 @@ namespace House {
 	static VkFormat TextureImageFormatToVulkanFormat(TextureImageFormat format) {
 		switch (format)
 		{
+		case House::TextureImageFormat::R16F: return VK_FORMAT_R16_UNORM;
 		case House::TextureImageFormat::RGBA: return VK_FORMAT_R8G8B8A8_SRGB;
 		case House::TextureImageFormat::RGBA16F: return VK_FORMAT_R16G16B16A16_SFLOAT;
 		case House::TextureImageFormat::RGBA32F: return VK_FORMAT_R32G32B32A32_SFLOAT;

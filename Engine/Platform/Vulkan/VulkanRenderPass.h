@@ -23,10 +23,11 @@ namespace House {
 		DescriptorManager* GetDescriptorManager() { return _DescriptorManager; }
 	private:
 		void BeginCustomFramebufferPass(
-			VkCommandBuffer cmd, 
+			VkCommandBuffer cmd,
 			MEM::Ref<Framebuffer>& framebuffer, 
 			std::vector<VkRenderingAttachmentInfo>& colorAttachments, 
 			VkRenderingAttachmentInfo& depthAttachment,
+			bool& hasDepthBuffer,
 			VkExtent2D& extent
 		);
 		void BeginDefaultSwapchainPass(

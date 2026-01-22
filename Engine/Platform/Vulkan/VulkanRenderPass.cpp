@@ -184,12 +184,11 @@ namespace House {
 
 		VkExtent2D extent{};
 		std::vector<VkRenderingAttachmentInfo> colorAttachments{};
+		bool hasDepthBuffer = false;
 		VkRenderingAttachmentInfo depthAttachment{};
 		uint32_t frameIndex = Renderer::GetFrameIndex();
-		auto set = _DescriptorManager->GetDescriptorSet(frameIndex, 0);
-		auto set2 = _DescriptorManager->GetDescriptorSet(frameIndex, 1);
 
-		if (pipelineData.Framebuffer) { BeginCustomFramebufferPass(cmd, pipelineData.Framebuffer, colorAttachments, depthAttachment, extent); }
+		if (pipelineData.Framebuffer) { BeginCustomFramebufferPass(cmd, pipelineData.Framebuffer, colorAttachments, depthAttachment, hasDepthBuffer, extent); }
 		else { BeginDefaultSwapchainPass(cmd, colorAttachments, depthAttachment, extent); }
 
 		VkRenderingInfo renderingInfo{};
@@ -198,7 +197,7 @@ namespace House {
 		renderingInfo.layerCount = 1;
 		renderingInfo.colorAttachmentCount = static_cast<uint32_t>(colorAttachments.size());
 		renderingInfo.pColorAttachments = colorAttachments.data();
-		renderingInfo.pDepthAttachment = &depthAttachment;
+		renderingInfo.pDepthAttachment = hasDepthBuffer ? &depthAttachment : nullptr;
 
 		vkCmdBeginRendering(cmd, &renderingInfo);
 		vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, _Pipeline->GetVulkanPipeline());
@@ -238,21 +237,31 @@ namespace House {
 		MEM::Ref<Framebuffer>& framebuffer, 
 		std::vector<VkRenderingAttachmentInfo>& colorAttachments, 
 		VkRenderingAttachmentInfo& depthAttachment, 
+		bool& hasDepthBuffer,
 		VkExtent2D& extent
 	)
 	{
 		const FramebufferSpecification fbSpecs = framebuffer->GetSpecification();
 
-		const float DepthClearColor = fbSpecs.DepthClearValue;
 		const glm::vec4 clearColor = fbSpecs.ClearColor;
-		const MEM::Ref<VulkanTexture>& vulkanAttachmentDepth = framebuffer->GetDepthTextureAttachment().As<VulkanTexture>();
 		extent = { framebuffer->GetWidth(), framebuffer->GetHeight() };
-		VkImage fbDepthImage = vulkanAttachmentDepth->GetImage();
-		VkFormat fbDepthFormat = vulkanAttachmentDepth->GetFormat();
+
+		hasDepthBuffer = framebuffer->DoesFramebufferHasDepthAttachment();
+		if (hasDepthBuffer) {
+			const float DepthClearColor = fbSpecs.DepthClearValue;
+			const MEM::Ref<VulkanTexture>& vulkanAttachmentDepth = framebuffer->GetDepthTextureAttachment().As<VulkanTexture>();
+			VkImage fbDepthImage = vulkanAttachmentDepth->GetImage();
+			VkFormat fbDepthFormat = vulkanAttachmentDepth->GetFormat();
+			Utils::ImageMemBarrier(cmd, fbDepthImage, fbDepthFormat, 1, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, 1);
+			depthAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+			depthAttachment.imageView = vulkanAttachmentDepth->GetImageView();
+			depthAttachment.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+			depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+			depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+			depthAttachment.clearValue = { DepthClearColor, 0 };
+		}
+
 		uint32_t attachmentCount = framebuffer->GetAttachmentCount();
-
-		Utils::ImageMemBarrier(cmd, fbDepthImage, fbDepthFormat, 1, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, 1);
-
 		framebuffer->Bind();
 		colorAttachments.resize(attachmentCount);
 		for (int i = 0; i < colorAttachments.size(); i++) {
@@ -270,13 +279,6 @@ namespace House {
 
 			Utils::ImageMemBarrier(cmd, fbImage, fbformat, fbMipLevelCount, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 1);
 		}
-
-		depthAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
-		depthAttachment.imageView = vulkanAttachmentDepth->GetImageView();
-		depthAttachment.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-		depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-		depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-		depthAttachment.clearValue = { DepthClearColor, 0 };
 	}
 
 	void VulkanRenderPass::BeginDefaultSwapchainPass(VkCommandBuffer cmd, std::vector<VkRenderingAttachmentInfo>& colorAttachments, VkRenderingAttachmentInfo& depthAttachment, VkExtent2D& extent)

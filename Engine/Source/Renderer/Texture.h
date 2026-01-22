@@ -7,6 +7,7 @@
 namespace House {
 	enum class TextureImageFormat {
 		None = 0,
+		R16F,
 		RG16F,
 		RG32F,
 		RGB,

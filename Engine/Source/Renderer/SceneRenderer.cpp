@@ -12,6 +12,23 @@ namespace House {
 	SceneRenderer::SceneRenderer(MEM::Ref<Scene>& scene)
 		: _Scene(scene)
 	{
+		// Create uniform buffer objects
+		{
+			CreateSSAO();
+
+			uint64_t camerabufferSize = sizeof(CameraUniformData);
+			_CameraUB = Buffer::Create(camerabufferSize, BufferType::UniformBuffer, MemoryProperties::HOST_VISIBLE | MemoryProperties::HOST_COHERENT);
+			_CameraUB->Map();
+
+			uint64_t directionalLightBufferSize = sizeof(UniformBufferDirectionalLight);
+			_DirectionalLightUB = Buffer::Create(directionalLightBufferSize, BufferType::UniformBuffer, MemoryProperties::HOST_VISIBLE | MemoryProperties::HOST_COHERENT);
+			_DirectionalLightUB->Map();
+
+			uint64_t pointLightsBufferSize = sizeof(UniformBufferPointLights);
+			_PointLightsUB = Buffer::Create(pointLightsBufferSize, BufferType::UniformBuffer, MemoryProperties::HOST_VISIBLE | MemoryProperties::HOST_COHERENT);
+			_PointLightsUB->Map();
+		}
+
 		// Create gbuffer and lightling buffer for deferred rendering
 		{
 			FramebufferSpecification spec{};
@@ -42,20 +59,34 @@ namespace House {
 			_FinalImageRenderPass->SetInput("uAlbedo",   frameBuffer->GetAttachmentTexture(2));
 		}
 
-		// Create uniform buffer objects
+		// Create screen space ao render pass
 		{
-			uint64_t camerabufferSize = sizeof(CameraUniformData);
-			_CameraUB = Buffer::Create(camerabufferSize, BufferType::UniformBuffer, MemoryProperties::HOST_VISIBLE | MemoryProperties::HOST_COHERENT);
-			_CameraUB->Map();
+			FramebufferSpecification ssaoSpec{};
+			ssaoSpec.Attachments = { TextureImageFormat::R16F };
+			MEM::Ref<Framebuffer> ssaoFramebuffer = Framebuffer::Create(ssaoSpec);
 
-			uint64_t directionalLightBufferSize = sizeof(UniformBufferDirectionalLight);
-			_DirectionalLightUB = Buffer::Create(directionalLightBufferSize, BufferType::UniformBuffer, MemoryProperties::HOST_VISIBLE | MemoryProperties::HOST_COHERENT);
-			_DirectionalLightUB->Map();
+			PipelineData ssaoPipelineData;
+			ssaoPipelineData.Framebuffer = ssaoFramebuffer;
+			ssaoPipelineData.Shader = Renderer::GetShaderLibrary()->GetShader("SSAO");
+			MEM::Ref<Pipeline> ssaoPipeline = Pipeline::Create(ssaoPipelineData);
+			_SSAO.AOPass = RenderPass::Create(ssaoPipeline);
+			_SSAO.AOPass->SetInput("uPosition", _GRenderPass->GetFramebuffer()->GetAttachmentTexture(0));
+			_SSAO.AOPass->SetInput("uNormal",   _GRenderPass->GetFramebuffer()->GetAttachmentTexture(1));
+			_SSAO.AOPass->SetInput("uTexNoise", _SSAO.NoiseTexture);
+			_SSAO.AOPass->SetInput("uKernel",   _SSAO.KernelBuffer);
+			_SSAO.AOPass->SetInput("uCamera", _CameraUB);
 
-			uint64_t pointLightsBufferSize = sizeof(UniformBufferPointLights);
-			_PointLightsUB = Buffer::Create(pointLightsBufferSize, BufferType::UniformBuffer, MemoryProperties::HOST_VISIBLE | MemoryProperties::HOST_COHERENT);
-			_PointLightsUB->Map();
+			MEM::Ref<Framebuffer> ssaoBlurFramebuffer = Framebuffer::Create(ssaoSpec);
+			PipelineData blurPipelineData;
+			blurPipelineData.Framebuffer = ssaoBlurFramebuffer;
+			blurPipelineData.Shader = Renderer::GetShaderLibrary()->GetShader("SSAO_Blur");
+			MEM::Ref<Pipeline> ssaoBlurPipeline = Pipeline::Create(blurPipelineData);
+			_SSAO.AOBlurPass = RenderPass::Create(ssaoBlurPipeline);
+			_SSAO.AOBlurPass->SetInput("ssaoInput", ssaoFramebuffer->GetAttachmentTexture(0));
+
+			_FinalImageRenderPass->SetInput("uSSAO", ssaoBlurFramebuffer->GetAttachmentTexture(0));
 		}
+
 		_EndlessGrid = MEM::Ref<EndlessGrid>::Create();
 
 		_GRenderPass->SetInput("uCamera", _CameraUB);
@@ -90,6 +121,14 @@ namespace House {
 			Renderer::DrawMesh(_GRenderPass, model.Handle, transformMatrix);
 		}
 		_GRenderPass->End();
+
+		_SSAO.AOPass->Begin();
+		Renderer::DrawFullscreenQuad(_SSAO.AOPass);
+		_SSAO.AOPass->End();
+
+		_SSAO.AOBlurPass->Begin();
+		Renderer::DrawFullscreenQuad(_SSAO.AOBlurPass);
+		_SSAO.AOBlurPass->End();
 
 		_FinalImageRenderPass->Begin();
 		CollectLightDataFromScene();
@@ -140,5 +179,49 @@ namespace House {
 				lightEnviroment.PointLights[pointLightCount++] = pLightC.Handle;
 			}
 		}
+	}
+
+	// From learnopengl.com
+	void SceneRenderer::CreateSSAO()
+	{
+		std::uniform_real_distribution<float> randomFloats(0.0, 1.0f);
+		std::default_random_engine generator;
+
+		_SSAO.Kernel.clear();
+		for (uint32_t i = 0; i < _SSAO.Samples; i++) {
+			glm::vec3 sample(
+				randomFloats(generator) * 2.0 - 1.0,
+				randomFloats(generator) * 2.0 - 1.0,
+				randomFloats(generator)
+			);
+			sample = glm::normalize(sample);
+			sample *= randomFloats(generator);
+
+			float scale = float(i) / _SSAO.Samples;
+			scale = 0.1f + scale * scale * (1.0f - 0.1f);
+			sample *= scale;
+			_SSAO.Kernel.push_back(sample);
+		}
+
+		_SSAO.KernelBuffer = Buffer::Create(sizeof(glm::vec3) * _SSAO.Samples, BufferType::UniformBuffer, MemoryProperties::HOST_VISIBLE | MemoryProperties::HOST_COHERENT);
+		_SSAO.KernelBuffer->Map();
+		_SSAO.KernelBuffer->WriteToBuffer(_SSAO.Kernel.data());
+
+		std::vector<glm::vec4> ssaoNoise;
+		for (unsigned int i = 0; i < 16; i++) {
+			glm::vec3 noise(
+				randomFloats(generator) * 2.0 - 1.0,
+				randomFloats(generator) * 2.0 - 1.0,
+				0.0f
+			);
+			ssaoNoise.push_back(glm::vec4(noise, 1.0));
+		}
+
+		TextureSpecification noiseSpec;
+		noiseSpec.Width = 4;
+		noiseSpec.Height = 4;
+		noiseSpec.Format = TextureImageFormat::RGBA32F;
+		uint64_t sizeInBytes = ssaoNoise.size() * sizeof(glm::vec4);
+		_SSAO.NoiseTexture = Texture2D::Create(noiseSpec, DataBuffer(ssaoNoise.data(), sizeInBytes));
 	}
 }

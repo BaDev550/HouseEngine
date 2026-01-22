@@ -12,6 +12,7 @@ namespace House {
 			{
 			case House::TextureImageFormat::None:
 				break;
+			case House::TextureImageFormat::R16F:    return VK_IMAGE_ASPECT_COLOR_BIT;
 			case House::TextureImageFormat::RG16F:	 return VK_IMAGE_ASPECT_COLOR_BIT;
 			case House::TextureImageFormat::RG32F:	 return VK_IMAGE_ASPECT_COLOR_BIT;
 			case House::TextureImageFormat::RGB:	 return VK_IMAGE_ASPECT_COLOR_BIT;
@@ -36,6 +37,17 @@ namespace House {
 			case House::TextureWrap::None: return VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
 			case House::TextureWrap::Clamp: return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
 			case House::TextureWrap::Repeat: return VK_SAMPLER_ADDRESS_MODE_REPEAT;
+			}
+		}
+		uint32_t GetBytesPerPixel(TextureImageFormat format) {
+			switch (format) {
+			case TextureImageFormat::RGBA:    return 4;
+			case TextureImageFormat::RGB:     return 3;
+			case TextureImageFormat::R16F:    return 2;
+			case TextureImageFormat::RG16F:   return 4;
+			case TextureImageFormat::RGBA16F: return 8;
+			case TextureImageFormat::RGBA32F: return 16;
+			default: return 4;
 			}
 		}
 	}
@@ -93,7 +105,8 @@ namespace House {
 
 	void VulkanTexture::LoadTexture(void* data, uint32_t width, uint32_t height, uint32_t channels)
 	{
-		uint64_t imageSize = width * height * STBI_rgb_alpha;
+		uint32_t bytesPerPixel = Utils::GetBytesPerPixel(_Specs.Format);
+		uint64_t imageSize = width * height * bytesPerPixel;
 		CreateTexture();
 
 		if (data) {

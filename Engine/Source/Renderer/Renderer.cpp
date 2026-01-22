@@ -46,6 +46,8 @@ namespace House {
 		Renderer::GetShaderLibrary()->Load("PBRStatic", "Shaders/pbrstatic.vert", "Shaders/pbrstatic.frag");
 		Renderer::GetShaderLibrary()->Load("DeferredLighting", "Shaders/deferredLighting.vert", "Shaders/deferredLighting.frag");
 		Renderer::GetShaderLibrary()->Load("Grid", "Shaders/grid.vert", "Shaders/grid.frag");
+		Renderer::GetShaderLibrary()->Load("SSAO", "Shaders/SSAO.vert", "Shaders/SSAO.frag");
+		Renderer::GetShaderLibrary()->Load("SSAO_Blur", "Shaders/SSAO_Blur.vert", "Shaders/SSAO_Blur.frag");
 		Renderer::CompileShaders();
 	}
 

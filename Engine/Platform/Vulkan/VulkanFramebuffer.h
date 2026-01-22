@@ -16,6 +16,7 @@ namespace House {
 
 		virtual MEM::Ref<Texture2D> GetAttachmentTexture(uint32_t index = 0) const override;
 		virtual MEM::Ref<Texture2D> GetDepthTextureAttachment() const override;
+		virtual bool DoesFramebufferHasDepthAttachment() const override { return _DepthAttachmentImage; }
 
 		virtual const FramebufferSpecification& GetSpecification() const override;
 		void Invalidate();

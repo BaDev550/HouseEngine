@@ -61,6 +61,16 @@ namespace House {
 		MEM::Ref<RenderPass> _GRenderPass;
 		MEM::Ref<EndlessGrid> _EndlessGrid;
 
+		struct SSAO {
+			std::vector<glm::vec3> Kernel;
+			MEM::Ref<Texture2D> NoiseTexture;
+			MEM::Ref<Buffer> KernelBuffer;
+			MEM::Ref<RenderPass> AOPass;
+			MEM::Ref<RenderPass> AOBlurPass;
+			uint32_t Samples = 64;
+		} _SSAO;
+		void CreateSSAO();
+
 		MEM::Ref<Pipeline> _FinalImagePipeline;
 		MEM::Ref<RenderPass> _FinalImageRenderPass;
 	};

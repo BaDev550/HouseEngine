@@ -207,6 +207,7 @@ namespace House::Editor {
 
 	void HouseEditorLayer::OpenScene(const std::filesystem::path& path)
 	{
+		_SelectedEntity = nullptr;
 		Renderer::GetAPI()->ResetRenderState();
 
 		MEM::Ref<Scene> newScene = MEM::Ref<Scene>::Create("New Scene");

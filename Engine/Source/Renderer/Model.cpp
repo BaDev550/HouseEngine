@@ -84,20 +84,28 @@ namespace House {
 				std::filesystem::path texturePath = _ModelDirectory / path.C_Str();
 
 				MEM::Ref<Texture2D> texture = Texture2D::Create(textureSpec, texturePath.string());
-				material->GetMaterialData().AlbedoTexture = texture;
+				material->SetAlbedoTexture(texture);
 			}
 			else {
-				material->GetMaterialData().AlbedoTexture = Renderer::GetWhiteTexture();
+				material->SetAlbedoTexture(Renderer::GetWhiteTexture());
 			}
 			if (aiMat->GetTexture(aiTextureType_NORMALS, 0, &path) == AI_SUCCESS) {
 				std::filesystem::path texturePath = _ModelDirectory / path.C_Str();
 
 				MEM::Ref<Texture2D> texture = Texture2D::Create(textureSpec, texturePath.string());
-				material->GetMaterialData().NormalTexture = texture;
+				material->SetNormalTexture(texture);
 			}
 			else {
-				material->GetMaterialData().NormalTexture = Renderer::GetWhiteTexture();
+				material->SetNormalTexture(Renderer::GetWhiteTexture());
 			}
+			if (aiMat->GetTexture(aiTextureType_DIFFUSE_ROUGHNESS, 0, &path) == AI_SUCCESS) {
+				LOG_RENDERER_WARN("aiTextureType_DIFFUSE_ROUGHNESS not supported yet.");
+				material->SetMetallicRoughnessTexture(Renderer::GetWhiteTexture());
+			}
+			else {
+				material->SetMetallicRoughnessTexture(Renderer::GetWhiteTexture());
+			}
+
 			material->Build();
 
 			material->_Id = i;
@@ -129,6 +137,11 @@ namespace House {
 			if (mesh->mTextureCoords[0]) {
 				v.TexCoords = { mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y };
 			}
+			if (mesh->HasTangentsAndBitangents()) {
+				v.Tangent = { mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z };
+				v.Bitangent = { mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z };
+			}
+
 			meshBounds.Merge(v.Position);
 			vertices.push_back(v);
 		}

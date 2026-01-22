@@ -98,6 +98,27 @@ namespace House::Editor {
 				ImGui::DragFloat3("Position", glm::value_ptr(tc.Position), 0.1f);
 				ImGui::DragFloat3("Rotation", glm::value_ptr(tc.Rotation), 0.1f);
 				ImGui::DragFloat3("Scale", glm::value_ptr(tc.Scale), 0.1f);
+
+				if (_SelectedEntity->HasComponent<StaticMeshComponent>()) {
+					auto& smc = _SelectedEntity->GetComponent<StaticMeshComponent>();
+					ImGui::Text("Static Mesh Component:");
+					std::string modelPath = smc.Handle ? smc.Handle->GetFilePath().string() : "No Model Loaded";
+					ImGui::Text("Model Path: %s", modelPath.c_str());
+
+					for (auto& [matID, material] : smc.Handle->GetMaterials()) {
+						std::string matLabel = "Material ID: " + std::to_string(matID);
+						if (ImGui::TreeNode(matLabel.c_str())) {
+							ImGui::ColorEdit3("Albedo Color", glm::value_ptr(material->GetAlbedoColor()));
+							float metallic = material->GetMetallic();
+							ImGui::DragFloat("Metallic", &metallic, 0.01f, 0.0f, 1.0f);
+							material->SetMetallic(metallic);
+							float roughness = material->GetRoughness();
+							ImGui::DragFloat("Roughness", &roughness, 0.01f, 0.0f, 1.0f);
+							material->SetRoughness(roughness);
+							ImGui::TreePop();
+						}
+					}
+				}
 			}
 		}
 		if (ImGui::CollapsingHeader("Camera Data")) {

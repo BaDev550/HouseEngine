@@ -29,7 +29,6 @@ namespace House {
 
 	struct UniformBufferPointLights {
 		uint32_t Count{ 0 };
-		float pad[3];
 		PointLight PointLights[1024];
 	};
 }

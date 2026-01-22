@@ -11,24 +11,25 @@ layout(set = 1, binding = 0) uniform sampler2D uPosition;
 layout(set = 1, binding = 1) uniform sampler2D uNormal;
 layout(set = 1, binding = 2) uniform sampler2D uAlbedo;
 
-const float AMBIENT = 0.5f;
+const float AMBIENT = 0.02f;
 
 void main() {
     vec3 fragPos = texture(uPosition, vTexCoords).rgb;
-    vec3 normal  = texture(uNormal, vTexCoords).rgb;
+    vec4 normal  = texture(uNormal, vTexCoords);
     vec4 albedo  = texture(uAlbedo, vTexCoords);
+    vec3  A = albedo.rgb;
+    vec3  N = normal.rgb;
+    float R = normal.a;
+    float M = albedo.a;
 
-    float roughness = 0.5f;
-    float metallic = 0.5f; // TODO - Move this into material buffer
-
-    vec3 f0 = mix(vec3(0.04), albedo.rgb, metallic);
+    vec3 f0 = mix(vec3(0.04), A, M);
     vec3 Vdir = normalize(uCamera.position - fragPos);
 
     vec3 directLighting = vec3(0.0);
     {
         vec3 L = normalize(-uDirectionalLight.Light.Direction);
         vec3 radiance = uDirectionalLight.Light.Color * uDirectionalLight.Light.Intensity;
-        directLighting += BRDF(L, Vdir, normal, f0, roughness, albedo.rgb, metallic) * radiance;
+        directLighting += BRDF(L, Vdir, N, f0, R, albedo.rgb, M) * radiance;
     }
 
     for (int i = 0; i < uPointLights.Count; i++){
@@ -40,7 +41,7 @@ void main() {
         attenuation *= attenuation;
 
         vec3 radiance = light.Color * light.Intensity * attenuation;
-        directLighting += BRDF(L, Vdir, normal, f0, roughness, albedo.rgb, metallic) * radiance;
+        directLighting += BRDF(L, Vdir, N, f0, R, albedo.rgb, M) * radiance;
     }
     vec3 ambient = vec3(AMBIENT) * albedo.rgb;
     vec3 finalColor = ambient + directLighting;

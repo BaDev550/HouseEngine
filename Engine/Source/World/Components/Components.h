@@ -51,7 +51,7 @@ namespace House {
 
 	struct StaticMeshComponent {
 		MEM::Ref<Model> Handle; // TODO - make this asset handle
-		StaticMeshComponent(const std::string& path = "Resources/DamagedHelmet/DamagedHelmet.gltf") { Handle = MEM::Ref<Model>::Create(path); }
+		StaticMeshComponent(const std::string& path = "Resources/Box/SpecularTest.gltf") { Handle = MEM::Ref<Model>::Create(path); }
 		StaticMeshComponent(const StaticMeshComponent& other) : Handle(other.Handle) {}
 		~StaticMeshComponent() {
 			Handle = nullptr;

@@ -17,8 +17,11 @@ namespace House {
 		virtual void Build() override;
 		virtual void Bind() override;
 	private:
+		virtual void MaterialDataChanged() override;
+
 		DescriptorManager _DescriptorManager;
 		std::vector<VkDescriptorSet> _DescriptorSets;
+		MEM::Ref<VulkanBuffer> _MaterialBuffer;
 		MEM::Ref<VulkanPipeline> _Pipeline;
 
 		friend class Model;

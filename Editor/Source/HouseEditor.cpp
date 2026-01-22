@@ -118,16 +118,29 @@ namespace House::Editor {
 			ImGui::Image(gbuffer->GetAttachmentTexture(2)->GetImGuiTextureID(), ImVec2(128, 128), ImVec2(0, 1), ImVec2(1, 0));
 		}
 		if (ImGui::CollapsingHeader("Light Data")) {
-			ImGui::Text("SunLight");
-			auto& lightEnviromentData = _SceneRenderer->GetSceneData().LightEnviromentData;
-			ImGui::ColorEdit3("Color", glm::value_ptr(lightEnviromentData.DirectionalLight.Color), 0.1f);
+			auto dirLights = _ActiveScene->GetRegistry().view<DirectionalLightComponent>();
+			for (auto entity : dirLights) {
+				auto& dLight = dirLights.get<DirectionalLightComponent>(entity);
+				ImGui::Text("SunLight");
+				ImGui::DragFloat("Intensity##Sun", &dLight.Handle.Intensity, 0.1f, 0.0f, 100.0f);
+				ImGui::ColorEdit3("Color##Sun", glm::value_ptr(dLight.Handle.Color), 0.1f);
+			}
 
-			ImGui::Text("PointLights");
-			int lightIndex = 0;
-			for (auto& light : lightEnviromentData.PointLights) {
-				std::string uniqeName = "Color ##" + std::to_string(lightIndex);
-				ImGui::ColorEdit3(uniqeName.c_str(), glm::value_ptr(light.Color), 0.1f);
-				lightIndex++;
+			ImGui::Separator();
+
+			ImGui::Text("Point Lights");
+			auto pointLights = _ActiveScene->GetRegistry().view<PointLightComponent, TransformComponent>();
+			int i = 0;
+			for (auto entity : pointLights) {
+				auto& pLight = pointLights.get<PointLightComponent>(entity);
+
+				std::string label = "Point Light " + std::to_string(i++);
+				if (ImGui::TreeNode(label.c_str())) {
+					ImGui::DragFloat("Intensity", &pLight.Handle.Intensity, 0.1f, 0.0f, 100.0f);
+					ImGui::DragFloat("Radius", &pLight.Handle.Radius, 0.1f, 0.0f, 100.0f);
+					ImGui::ColorEdit3("Color", glm::value_ptr(pLight.Handle.Color));
+					ImGui::TreePop();
+				}
 			}
 		}
 		ImGui::End();

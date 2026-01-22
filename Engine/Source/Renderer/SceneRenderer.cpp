@@ -56,6 +56,7 @@ namespace House {
 			_PointLightsUB = Buffer::Create(pointLightsBufferSize, BufferType::UniformBuffer, MemoryProperties::HOST_VISIBLE | MemoryProperties::HOST_COHERENT);
 			_PointLightsUB->Map();
 		}
+		_EndlessGrid = MEM::Ref<EndlessGrid>::Create();
 
 		_GRenderPass->SetInput("uCamera", _CameraUB);
 		_FinalImageRenderPass->SetInput("uCamera", _CameraUB);
@@ -102,6 +103,10 @@ namespace House {
 		_DirectionalLightUB->WriteToBuffer(&ubdDirectionalLight);
 		_PointLightsUB->WriteToBuffer(&ubdPointLights);
 
+		if (_SceneData.DrawGrid) {
+			Renderer::DrawVertex(Renderer::GetPipeline("Grid"), _EndlessGrid->_GridBuffer, _EndlessGrid->_VertexCount);
+		}
+
 		Renderer::DrawFullscreenQuad(_FinalImageRenderPass);
 		_FinalImageRenderPass->End();
 	}
@@ -109,9 +114,10 @@ namespace House {
 	void SceneRenderer::CollectLightDataFromScene()
 	{
 		auto& lightEnviroment = _SceneData.LightEnviromentData;
+		uint32_t pointLightCount = 0;
+		uint32_t dirLightCount = 0;
 		{
 			auto view = _Scene->GetRegistry().view<TransformComponent, DirectionalLightComponent>();
-			uint32_t dirLightCount = 0;
 			for (auto entity : view) {
 				if (dirLightCount >= 1) break;
 				auto& tc = view.get<TransformComponent>(entity);
@@ -123,9 +129,8 @@ namespace House {
 			}
 		}
 		{
-			auto view = _Scene->GetRegistry().view<TransformComponent, PointLightComponent>();
-			uint32_t pointLightCount = 0;
-			lightEnviroment.PointLights.resize(view.size_hint());
+			auto view = _Scene->GetRegistry().group<PointLightComponent>(entt::get<TransformComponent>);
+			lightEnviroment.PointLights.resize(view.size());
 			for (auto entity : view) {
 				if (pointLightCount >= 1024) break;
 				auto& tc = view.get<TransformComponent>(entity);

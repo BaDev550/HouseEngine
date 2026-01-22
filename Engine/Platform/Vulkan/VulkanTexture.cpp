@@ -70,7 +70,7 @@ namespace House {
 
 	VulkanTexture::~VulkanTexture()
 	{
-		ImGui_ImplVulkan_RemoveTexture(_ImGuiDescriptorSet);
+		//ImGui_ImplVulkan_RemoveTexture(_ImGuiDescriptorSet);
 		vkDestroySampler(_Context.GetDevice(), _TextureImageSampler, nullptr);
 		vkDestroyImageView(_Context.GetDevice(), _TextureImageView, nullptr);
 		vkDestroyImage(_Context.GetDevice(), _TextureImage, nullptr);

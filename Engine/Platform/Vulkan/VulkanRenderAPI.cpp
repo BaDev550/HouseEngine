@@ -135,6 +135,40 @@ namespace House {
 		}
 	}
 
+	void VulkanRenderAPI::DrawIndexed(MEM::Ref<Pipeline>& pipeline, MEM::Ref<Buffer>& vertexBuffer, MEM::Ref<Buffer>& indexBuffer, uint32_t count)
+	{
+		auto cmd = GetCurrentCommandBuffer();
+
+		const auto& vulkanPipeline = pipeline.As<VulkanPipeline>();
+		vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, vulkanPipeline->GetVulkanPipeline());
+
+		const auto& vulkanVertexBuffer = vertexBuffer.As<VulkanBuffer>();
+		const auto& vulkanIndexBuffer = indexBuffer.As<VulkanBuffer>();
+		VkBuffer buffers[] = { vulkanVertexBuffer->GetBuffer() };
+		VkDeviceSize offsets[] = { 0 };
+		vkCmdBindVertexBuffers(cmd, 0, 1, buffers, offsets);
+		vkCmdBindIndexBuffer(cmd, vulkanIndexBuffer->GetBuffer(), offsets[0], VK_INDEX_TYPE_UINT32);
+		vkCmdDrawIndexed(cmd, count, 1, 0, 0, 0);
+
+		s_RenderStats.DrawCall++;
+	}
+
+	void VulkanRenderAPI::DrawVertex(MEM::Ref<Pipeline>& pipeline, MEM::Ref<Buffer>& buffer, uint32_t count)
+	{
+		auto cmd = GetCurrentCommandBuffer();
+
+		const auto& vulkanPipeline = pipeline.As<VulkanPipeline>();
+		vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, vulkanPipeline->GetVulkanPipeline());
+
+		const auto& vulkanVertexBuffer = buffer.As<VulkanBuffer>();
+		VkBuffer buffers[] = { vulkanVertexBuffer->GetBuffer() };
+		VkDeviceSize offsets[] = { 0 };
+		vkCmdBindVertexBuffers(cmd, 0, 1, buffers, offsets);
+		vkCmdDraw(cmd, count, 1, 0, 0);
+
+		s_RenderStats.DrawCall++;
+	}
+
 	void VulkanRenderAPI::DrawFullscreenQuad(MEM::Ref<RenderPass>& renderPass)
 	{
 		auto cmd = GetCurrentCommandBuffer();

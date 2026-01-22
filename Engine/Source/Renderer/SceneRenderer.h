@@ -4,6 +4,7 @@
 #include "World/Scene/Scene.h"
 #include "World/Entity/Entity.h"
 #include "RenderPass.h"
+#include "EndlessGrid.h"
 #include "Camera.h"
 #include "Buffer.h"
 #include "Light.h"
@@ -31,6 +32,8 @@ namespace House {
 		CameraUniformData CameraData;
 		SceneLightEnviroment LightEnviromentData;
 		LightUniformBuffers LightEnviromentUniformData;
+
+		bool DrawGrid = false; // doesnt work
 	};
 
 	class SceneRenderer : public MEM::RefCounted
@@ -56,6 +59,7 @@ namespace House {
 
 		MEM::Ref<Pipeline> _GPipeline;
 		MEM::Ref<RenderPass> _GRenderPass;
+		MEM::Ref<EndlessGrid> _EndlessGrid;
 
 		MEM::Ref<Pipeline> _FinalImagePipeline;
 		MEM::Ref<RenderPass> _FinalImageRenderPass;

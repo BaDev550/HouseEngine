@@ -28,6 +28,8 @@ namespace House {
 
 		static void WaitAndRender();
 		static void DrawMesh(MEM::Ref<RenderPass>& renderPass, MEM::Ref<Model>& model, glm::mat4& transform);
+		static void DrawIndexed(MEM::Ref<Pipeline>& pipeline, MEM::Ref<Buffer>& vertexBuffer, MEM::Ref<Buffer>& indexBuffer, uint32_t count);
+		static void DrawVertex(MEM::Ref<Pipeline>& pipeline, MEM::Ref<Buffer>& buffer, uint32_t count);
 		static void DrawFullscreenQuad(MEM::Ref<RenderPass>& renderPass);
 
 		static uint32_t GetFrameIndex();

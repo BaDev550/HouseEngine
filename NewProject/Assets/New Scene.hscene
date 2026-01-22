@@ -1,40 +1,22 @@
 Scene: New Scene
 Entities:
-  - Entity: 11395588708688882948
-    IdentityComponent:
-      Name: NEW_ENTITY
-    TransformComponent:
-      Position: [1.5, 0, 1]
-      Rotation: [0, -67.6, 0]
-      Scale: [1, 1, 1]
-    StaticMeshComponent:
-      ModelPath: Resources/man/Man.gltf
-  - Entity: 12344470018375085915
-    IdentityComponent:
-      Name: NEW_ENTITY
-    TransformComponent:
-      Position: [0, 0, 0]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
-    StaticMeshComponent:
-      ModelPath: Resources/man/Man.gltf
-  - Entity: 14972880761875474052
-    IdentityComponent:
-      Name: NEW_ENTITY
-    TransformComponent:
-      Position: [0, 0, 2.2]
-      Rotation: [0, -180, 0]
-      Scale: [1, 1, 1]
-    StaticMeshComponent:
-      ModelPath: Resources/man/Man.gltf
-  - Entity: 17023763075468523683
+  - Entity: 939795142642379133
     IdentityComponent:
       Name: SUN_LIGHT
     TransformComponent:
       Position: [0, 0, 0]
-      Rotation: [0, -3.8, -8.4]
+      Rotation: [0, 6.1, -14.1]
       Scale: [1, 1, 1]
     DirectionalLightComponent:
       Color: [1, 1, 1]
       Intensity: 1
-      Direction: [0, -0.41216788, -0.9111079]
+      Direction: [0, 0.39705935, -0.917793]
+  - Entity: 16461840056679908071
+    IdentityComponent:
+      Name: NEW_ENTITY
+    TransformComponent:
+      Position: [0, 0, 0]
+      Rotation: [90, 0, 0]
+      Scale: [1, 1, 1]
+    StaticMeshComponent:
+      ModelPath: Resources/DamagedHelmet/DamagedHelmet.gltf

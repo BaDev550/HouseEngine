@@ -45,6 +45,7 @@ namespace House {
 
 		Renderer::GetShaderLibrary()->Load("PBRStatic", "Shaders/pbrstatic.vert", "Shaders/pbrstatic.frag");
 		Renderer::GetShaderLibrary()->Load("DeferredLighting", "Shaders/deferredLighting.vert", "Shaders/deferredLighting.frag");
+		Renderer::GetShaderLibrary()->Load("Grid", "Shaders/grid.vert", "Shaders/grid.frag");
 		Renderer::CompileShaders();
 	}
 
@@ -87,6 +88,14 @@ namespace House {
 
 	void Renderer::DrawMesh(MEM::Ref<RenderPass>& renderPass, MEM::Ref<Model>& model, glm::mat4& transform) {
 		s_RenderAPI->DrawMesh(renderPass, model, transform);
+	}
+	void Renderer::DrawIndexed(MEM::Ref<Pipeline>& pipeline, MEM::Ref<Buffer>& vertexBuffer, MEM::Ref<Buffer>& indexBuffer, uint32_t count)
+	{
+		s_RenderAPI->DrawIndexed(pipeline, vertexBuffer, indexBuffer, count);
+	}
+	void Renderer::DrawVertex(MEM::Ref<Pipeline>& pipeline, MEM::Ref<Buffer>& buffer, uint32_t count)
+	{
+		s_RenderAPI->DrawVertex(pipeline, buffer, count);
 	}
 	void Renderer::DrawFullscreenQuad(MEM::Ref<RenderPass>& renderPass)
 	{

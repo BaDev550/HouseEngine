@@ -38,7 +38,7 @@ namespace House {
 		static MEM::Ref<ShaderLibrary>& GetShaderLibrary();
 		static MEM::Ref<Texture2D>& GetWhiteTexture();
 
-		template<typename T>
+		template<typename T = RenderAPI>
 		static T* GetAPI() { return static_cast<T*>(s_RenderAPI); }
 	private:
 		static RenderAPI* s_RenderAPI;

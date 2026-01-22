@@ -169,16 +169,14 @@ namespace House::Editor {
 
 	void HouseEditorLayer::OpenScene(const std::filesystem::path& path)
 	{
-		Renderer::GetAPI<RenderAPI>()->ResetRenderState();
+		Renderer::GetAPI()->ResetRenderState();
 
 		MEM::Ref<Scene> newScene = MEM::Ref<Scene>::Create("New Scene");
 		SceneSerializer serializer(newScene);
 		serializer.Deserialize(path);
 
-		_EditorScene = newScene;
-
 		_ActiveScene->Clear();
-		_ActiveScene = _EditorScene;
+		_ActiveScene = newScene;
 		_SceneRenderer->SetScene(_ActiveScene);
 	}
 

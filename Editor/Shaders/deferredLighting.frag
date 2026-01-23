@@ -50,7 +50,7 @@ void main() {
     vec3 ambient1 = vec3(0.2, 0.25, 0.2); 
     vec3 ambient2 = vec3(0.2, 0.2, 0.3);
     vec3 indirectLighting = CalcRadiosityNormalMapping(N, ambient0, ambient1, ambient2);
-    indirectLighting *= A * ao;
+    indirectLighting *= A;
 
     vec3 finalColor = indirectLighting + directLighting;
 

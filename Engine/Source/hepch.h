@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <unordered_map>
 #include <iostream>
+#include <fstream>
 
 #include "Core/Application.h"
 #include "Utilities/Memory.h"

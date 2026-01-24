@@ -13,18 +13,18 @@ namespace House {
 	class MeshSourceSerializer : public AssetSerializer {
 	public:
 		virtual void Serialize(const AssetMetadata& metadata, const MEM::Ref<Asset>& asset) {};
-		virtual bool TryLoadData(const AssetMetadata& metadata, MEM::Ref<Asset>& asset) {};
+		virtual bool TryLoadData(const AssetMetadata& metadata, MEM::Ref<Asset>& asset) { return 0; };
 	};
 
 	class MeshSerializer : public AssetSerializer {
 	public:
 		virtual void Serialize(const AssetMetadata& metadata, const MEM::Ref<Asset>& asset) {};
-		virtual bool TryLoadData(const AssetMetadata& metadata, MEM::Ref<Asset>& asset) {};
+		virtual bool TryLoadData(const AssetMetadata& metadata, MEM::Ref<Asset>& asset) { return 0; };
 	};
 
 	class TextureSerializer : public AssetSerializer {
 	public:
 		virtual void Serialize(const AssetMetadata& metadata, const MEM::Ref<Asset>& asset) {};
-		virtual bool TryLoadData(const AssetMetadata& metadata, MEM::Ref<Asset>& asset) {};
+		virtual bool TryLoadData(const AssetMetadata& metadata, MEM::Ref<Asset>& asset) { return 0; };
 	};
 }

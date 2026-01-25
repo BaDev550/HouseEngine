@@ -21,6 +21,9 @@ namespace House {
 
 	MEM::Ref<Asset> AssetManagerEditor::GetAsset(AssetHandle handle)
 	{
+		if (IsMemoryAsset(handle))
+			return _MemoryAssets[handle];
+
 		MEM::Ref<Asset> asset;
 		AssetMetadata metadata = GetMetadata(handle);
 		if (metadata.IsValid()) {
@@ -31,17 +34,19 @@ namespace House {
 					_AssetRegistry[metadata.Handle] = metadata;
 					_LoadedAssets[metadata.Handle] = asset;
 					SaveAssetRegistry();
-					LOG_CORE_INFO("Asset Loaded {}", metadata.FilePath);
+					LOG_CORE_INFO("Asset Loaded {}", metadata.FilePath.string());
 				}
 			}
 		}
 		return asset;
 	}
 
-	//MEM::Ref<Asset> AssetManagerEditor::GetMemoryAsset(AssetHandle handle)
-	//{
-	//	return MEM::Ref<Asset>();
-	//}
+	MEM::Ref<Asset> AssetManagerEditor::GetMemoryAsset(AssetHandle handle)
+	{
+		if (auto it = _MemoryAssets.find(handle); it != _MemoryAssets.end())
+			return it->second;
+		return nullptr;
+	}
 
 	bool AssetManagerEditor::IsAssetHandleValid(AssetHandle handle) const
 	{
@@ -81,6 +86,26 @@ namespace House {
 		return AssetMetadata();
 	}
 
+	AssetMap AssetManagerEditor::GetLoadedAssets() const
+	{
+		return _LoadedAssets;
+	}
+
+	AssetMap AssetManagerEditor::GetMemoryAssets() const
+	{
+		return _MemoryAssets;
+	}
+
+	AssetMap AssetManagerEditor::GetLoadedAssetsWithType(AssetType type)
+	{
+		AssetMap resultMap;
+		for (auto& [handle, asset] : _LoadedAssets) {
+			if (asset && asset->GetAssetType() == type)
+				resultMap[handle] = asset;
+		}
+		return resultMap;
+	}
+
 	AssetHandle AssetManagerEditor::ImportAsset(const std::filesystem::path& path)
 	{
 		if (AssetMetadata loadedMetadata = GetMetadata(path); loadedMetadata.IsValid()) {
@@ -101,10 +126,22 @@ namespace House {
 			_AssetRegistry[mtd.Handle] = mtd;
 			_LoadedAssets[mtd.Handle] = asset;
 			SaveAssetRegistry();
-			LOG_CORE_INFO("Asset Loaded {}", mtd.FilePath);
+			LOG_CORE_INFO("Asset Loaded {}", mtd.FilePath.string());
 			return mtd.Handle;
 		}
 		return 0;
+	}
+
+	bool AssetManagerEditor::IsMemoryAsset(AssetHandle handle) const
+	{
+		if (_MemoryAssets.find(handle) != _MemoryAssets.end())
+			return true;
+		return false;
+	}
+
+	void AssetManagerEditor::AddMemoryOnlyAsset(MEM::Ref<Asset> asset)
+	{
+		_MemoryAssets[asset->Handle] = asset;
 	}
 
 	void AssetManagerEditor::SaveAssetRegistry()

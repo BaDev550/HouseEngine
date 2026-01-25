@@ -1,8 +1,10 @@
 #include "hepch.h"
 #include "Model.h"
 #include "Core/Application.h"
+#include "MeshSourceImporter.h"
 
 namespace House {
+#if 0
 	Mesh::Mesh(const std::string& name, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, const uint32_t materialID)
 		: _Name(name), _MaterialId(materialID)
 	{
@@ -67,6 +69,20 @@ namespace House {
 
 		ProcessMaterials(scene);
 		ProcessNode(scene->mRootNode, scene);
+	}
+
+	MeshSourceImporter::MeshSourceImporter(const std::filesystem::path& path)
+	{
+	}
+
+	MEM::Ref<MeshSource> MeshSourceImporter::ImportToMeshSource()
+	{
+		return MEM::Ref<MeshSource>();
+	}
+
+	Submesh MeshSourceImporter::ProcessSubmesh(aiMesh* mesh, const aiScene* scene)
+	{
+		return Submesh();
 	}
 
 	void Model::ProcessMaterials(const aiScene* scene) {
@@ -159,5 +175,21 @@ namespace House {
 		_BoundingBox.Merge(meshBounds.Max);
 
 		return resultMesh;
+	}
+#endif
+	MeshSource::MeshSource(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices)
+	{
+
+	}
+
+	void MeshSource::CreateBuffers()
+	{
+	}
+
+	StaticMesh::StaticMesh(AssetHandle meshSource)
+	{
+	}
+	StaticMesh::~StaticMesh()
+	{
 	}
 }

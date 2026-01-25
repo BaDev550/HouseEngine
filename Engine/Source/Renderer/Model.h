@@ -1,12 +1,8 @@
 #pragma once
-#include <assimp/Importer.hpp>
-#include <assimp/postprocess.h>
-#include <assimp/scene.h>
-#include <assimp/types.h>
 #include <glm/glm.hpp>
 #include <array>
 #include <filesystem>
-#include <Vulkan/vulkan.h>
+#include "AssetManager/Asset.h"
 
 #include "Buffer.h"
 #include "Material.h"
@@ -51,69 +47,57 @@ namespace House {
 		Vertex() = default;
 	};
 
-	static constexpr uint32_t S_ASSIMPIMPORTERFLAGS =
-		aiProcess_Triangulate |
-		aiProcess_FlipUVs |
-		aiProcess_GenSmoothNormals |
-		aiProcess_CalcTangentSpace |
-		aiProcess_JoinIdenticalVertices | 
-		aiProcess_OptimizeGraph |
-		aiProcess_OptimizeMeshes;
+	struct Submesh {
+		std::string Name = "EMPTY_MESH";
+		uint32_t MaterialId = UINT32_MAX;
+		uint32_t BaseVertex = 0;
+		uint32_t BaseIndex = 0;
+		uint32_t VertexCount = 0;
+		uint32_t IndexCount = 0;
+		AABB BoundingBox;
 
-	class Mesh {
+		bool IsVisible = true;
+	};
+	
+	class MeshSource : public Asset {
 	public:
-		Mesh(
-			const std::string& name,
-			std::vector<Vertex>& vertices,
-			std::vector<uint32_t>& indices,
-			const uint32_t materialID);
-		~Mesh() = default;
-		const std::string& GetName() const { return _Name; }
-		const uint32_t GetMaterialID() const { return _MaterialId; }
-		const uint32_t GetIndexCount() const { return _IndexCount; }
+		MeshSource() = default;
+		MeshSource(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices);
+		const std::vector<Vertex>& GetVertices() const { return _Vertices; }
+		const std::vector<uint32_t>& GetIndices() const { return _Indices; }
 		const MEM::Ref<Buffer>& GetVertexBuffer() const { return _VertexBuffer; }
 		const MEM::Ref<Buffer>& GetIndexBuffer() const { return _IndexBuffer; }
+		const std::filesystem::path& GetModelDirectory() const { return _Directory; }
+		const std::filesystem::path& GetFilePath() const { return _Path; }
 		const AABB& GetBoundingBox() const { return _BoundingBox; }
+		std::vector<Submesh>& GetSubmeshes() { return _Submeshes; }
+
+		static AssetType GetStaticAssetType() { return AssetType::MeshSource; }
+		virtual AssetType GetAssetType() const override { return GetStaticAssetType(); }
 	private:
-		std::string _Name = "EMPTY_MESH";
+		AABB _BoundingBox;
+		std::vector<Submesh> _Submeshes;
 		MEM::Ref<Buffer> _VertexBuffer;
 		MEM::Ref<Buffer> _IndexBuffer;
 		std::vector<Vertex> _Vertices;
 		std::vector<uint32_t> _Indices;
-		uint32_t _MaterialId = UINT32_MAX;
-		uint32_t _VertexCount = 0;
-		uint32_t _IndexCount = 0;
-		AABB _BoundingBox;
+		std::vector<AssetHandle> _Materials;
+		std::filesystem::path _Directory = "EMPTY_MODEL_DIRECTORY";
+		std::filesystem::path _Path = "EMPTY_MODEL_PATH";
 
-		bool _IsVisible = true;
-
-		void CreateVertexBuffer(std::vector<Vertex>& vertices);
-		void CreateIndexBuffer(std::vector<uint32_t>& indices);
-
-		friend class Model;
+		void CreateBuffers();
+		friend class MeshSourceImporter;
 	};
 
-	class Model : public MEM::RefCounted {
+	class StaticMesh : public Asset {
 	public:
-		Model(const std::filesystem::path& path) { _ModelPath = path; LoadModelFromFile(path); }
-		~Model();
+		StaticMesh(AssetHandle meshSource);
+		~StaticMesh();
 
-		const std::filesystem::path& GetModelDirectory() const { return _ModelDirectory; }
-		const std::filesystem::path& GetFilePath() const { return _ModelPath; }
-		MEM::Ref<Material>& GetMaterialByID(uint32_t id) { return _Materials[id]; }
-		std::vector<Mesh>& GetMeshes() { return _Meshes; }
 		std::unordered_map<uint32_t, MEM::Ref<Material>>& GetMaterials() { return _Materials; }
-		const AABB& GetBoundingBox() const { return _BoundingBox; }
+		MEM::Ref<Material>& GetMaterialByID(uint32_t id) { return _Materials[id]; }
 	private:
-		void LoadModelFromFile(const std::filesystem::path& path);
-		void ProcessNode(aiNode* node, const aiScene* scene);
-		void ProcessMaterials(const aiScene* scene);
-		Mesh ProcessMesh(aiMesh* mesh, const aiScene* scene);
-
-		std::filesystem::path _ModelDirectory = "EMPTY_MODEL_DIRECTORY";
-		std::filesystem::path _ModelPath = "EMPTY_MODEL_PATH";
-		std::vector<Mesh> _Meshes;
-		AABB _BoundingBox;
+		AssetHandle _MeshSource = INVALID_ASSET_HANDLE;
 		std::unordered_map<uint32_t, MEM::Ref<Material>> _Materials;
 	};
 }

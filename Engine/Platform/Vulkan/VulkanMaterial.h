@@ -16,9 +16,22 @@ namespace House {
 
 		virtual void Build() override;
 		virtual void Bind() override;
-	private:
-		virtual void MaterialDataChanged() override;
 
+		virtual void Set(const std::string& name, float value) override;
+		virtual void Set(const std::string& name, int value) override;
+		virtual void Set(const std::string& name, bool value) override;
+		virtual void Set(const std::string& name, const glm::vec2& value) override;
+		virtual void Set(const std::string& name, const glm::vec3& value) override;
+		virtual void Set(const std::string& name, const glm::vec4& value) override;
+		virtual void Set(const std::string& name, const MEM::Ref<Texture2D>& value) override;
+
+		virtual float& GetFloat(const std::string& name) override;
+		virtual glm::vec2& GetVector2(const std::string& name) override;
+		virtual glm::vec3& GetVector3(const std::string& name) override;
+
+		virtual void MaterialDataChanged() override;
+	private:
+		MaterialData _Data;
 		DescriptorManager _DescriptorManager;
 		std::vector<VkDescriptorSet> _DescriptorSets;
 		MEM::Ref<VulkanBuffer> _MaterialBuffer;

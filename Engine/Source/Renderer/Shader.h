@@ -10,6 +10,32 @@ namespace House {
 		Sampler2D
 	};
 
+	enum class ShaderUniformType {
+		None = 0,
+		Bool,
+		Int,
+		Float,
+		Vec2,
+		Vec3,
+		Vec4,
+		Mat3,
+		Mat4
+	};
+
+	class ShaderUniform {
+	public:
+		ShaderUniform() = default;
+		ShaderUniform(std::string name, ShaderUniformType type, uint32_t size, uint32_t offset);
+
+		const std::string& GetName() const { return _Name; }
+
+	private:
+		std::string _Name;
+		ShaderUniformType _Type = ShaderUniformType::None;
+		uint32_t _Size = 0;
+		uint32_t _Offset = 0;
+	};
+
 	struct DescriptorInfo {
 		std::string Name;
 		uint32_t Count = 1;

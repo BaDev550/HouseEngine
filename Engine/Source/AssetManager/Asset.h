@@ -3,6 +3,8 @@
 #include "Utilities/Memory.h"
 
 namespace House {
+#define INVALID_ASSET_HANDLE 0
+#define INVALID_ASSET_TYPE AssetType::None
 	enum class  AssetType {
 		None = 0,
 		Scene,
@@ -16,9 +18,10 @@ namespace House {
 
 	using AssetHandle = UUID;
 	class Asset : public MEM::RefCounted {
+	public:
 		AssetHandle Handle;
 
-		static AssetType GetStaticAssetType() { return AssetType::None; }
+		static AssetType GetStaticAssetType() { return INVALID_ASSET_TYPE; }
 		virtual AssetType GetAssetType() const { return GetStaticAssetType(); }
 	};
 }

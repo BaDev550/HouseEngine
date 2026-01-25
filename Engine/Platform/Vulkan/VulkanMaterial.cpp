@@ -47,6 +47,50 @@ namespace House {
         vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, _Pipeline->GetPipelineLayout(), 1, 1, &_DescriptorSets[frameIndex], 0, nullptr);
     }
 
+    void VulkanMaterial::Set(const std::string& name, float value)
+    {
+    }
+
+    void VulkanMaterial::Set(const std::string& name, int value)
+    {
+    }
+
+    void VulkanMaterial::Set(const std::string& name, bool value)
+    {
+    }
+
+    void VulkanMaterial::Set(const std::string& name, const glm::vec2& value)
+    {
+    }
+
+    void VulkanMaterial::Set(const std::string& name, const glm::vec3& value)
+    {
+    }
+
+    void VulkanMaterial::Set(const std::string& name, const glm::vec4& value)
+    {
+    }
+
+    void VulkanMaterial::Set(const std::string& name, const MEM::Ref<Texture2D>& value)
+    {
+        //_DescriptorManager.WriteInput(name, value);
+    }
+
+    float& VulkanMaterial::GetFloat(const std::string& name)
+    {
+        // TODO: insert return statement here
+    }
+
+    glm::vec2& VulkanMaterial::GetVector2(const std::string& name)
+    {
+        // TODO: insert return statement here
+    }
+
+    glm::vec3& VulkanMaterial::GetVector3(const std::string& name)
+    {
+        // TODO: insert return statement here
+    }
+
     void VulkanMaterial::MaterialDataChanged()
     {
         _MaterialBuffer->WriteToBuffer(&_Data);

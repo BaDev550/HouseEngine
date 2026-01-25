@@ -12,4 +12,9 @@ namespace House {
 		case GrapichsAPI::OpenGL: return nullptr;
 		}
 	}
+	ShaderUniform::ShaderUniform(std::string name, ShaderUniformType type, uint32_t size, uint32_t offset)
+		:_Name(name), _Type(type), _Size(size), _Offset(offset)
+	{
+
+	}
 }

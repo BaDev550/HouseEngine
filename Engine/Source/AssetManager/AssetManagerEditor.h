@@ -7,13 +7,18 @@ namespace House {
 		AssetManagerEditor();
 		~AssetManagerEditor();
 		virtual MEM::Ref<Asset> GetAsset(AssetHandle handle) override;
-		virtual MEM::Ref<Asset> GetMemoryAsset(AssetHandle handle) override {}
+		virtual MEM::Ref<Asset> GetMemoryAsset(AssetHandle handle) override;
 		virtual bool IsAssetHandleValid(AssetHandle handle) const override;
 		virtual bool IsAssetLoaded(AssetHandle handle) const override;
 		virtual AssetType GetAssetType(AssetHandle handle) const override;
 		AssetMetadata GetMetadata(AssetHandle handle) const;
 		AssetMetadata GetMetadata(const std::filesystem::path& path);
+		AssetMap GetLoadedAssets() const;
+		AssetMap GetMemoryAssets() const;
+		AssetMap GetLoadedAssetsWithType(AssetType type);
 		AssetHandle ImportAsset(const std::filesystem::path& path);
+		bool IsMemoryAsset(AssetHandle handle) const;
+		void AddMemoryOnlyAsset(MEM::Ref<Asset> asset);
 
 		void SaveAssetRegistry();
 		void LoadAssetRegistry();
@@ -25,7 +30,7 @@ namespace House {
 		template<typename T, typename... Args>
 		MEM::Ref<T> Create(const std::string& filename, Args&&... args) {
 			static_assert(std::is_base_of<Asset, T>::value, "T Must inherit from asset");
-			if (AssetMetadata loadedMetadata = GetMetadata(path); loadedMetadata.IsValid()) {
+			if (AssetMetadata loadedMetadata = GetMetadata(filename); loadedMetadata.IsValid()) {
 				MEM::Ref<Asset> asset = GetAsset(loadedMetadata.Handle);
 				_LoadedAssets[loadedMetadata.Handle] = asset;
 				return loadedMetadata.Handle;
@@ -48,6 +53,7 @@ namespace House {
 	private:
 		AssetRegistry _AssetRegistry;
 		AssetMap _LoadedAssets;
+		AssetMap _MemoryAssets;
 
 		const std::filesystem::path _RegistryFilePath = "AssetRegistry.hfile";
 	};

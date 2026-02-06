@@ -1,7 +1,7 @@
 #include "hepch.h"
 #include "Model.h"
+#include "AssetManager/AssetManager.h"
 #include "Core/Application.h"
-#include "MeshSourceImporter.h"
 
 namespace House {
 #if 0
@@ -178,17 +178,61 @@ namespace House {
 	}
 #endif
 	MeshSource::MeshSource(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices)
+		: _Vertices(vertices), _Indices(indices)
 	{
-
+		CreateBuffers();
 	}
 
 	void MeshSource::CreateBuffers()
 	{
+		// Vertex buffer
+		uint64_t vertexbufferSize = sizeof(Vertex) * _Vertices.size();
+		MEM::Ref<Buffer> vstagingBuffer = Buffer::Create(
+			vertexbufferSize,
+			BufferType::TransferSrc,
+			MemoryProperties::HOST_VISIBLE | MemoryProperties::HOST_COHERENT
+		);
+		vstagingBuffer->Map();
+		vstagingBuffer->WriteToBuffer(_Vertices.data());
+		vstagingBuffer->Unmap();
+
+		_VertexBuffer = Buffer::Create(
+			vertexbufferSize,
+			BufferType::TransferDst | BufferType::VertexBuffer,
+			MemoryProperties::DEVICE
+		);
+		Renderer::CopyBuffer(vstagingBuffer, _VertexBuffer, vertexbufferSize);
+
+		// Index buffer
+		uint64_t indexbufferSize = sizeof(uint32_t) * _Indices.size();
+		MEM::Ref<Buffer> IstagingBuffer = Buffer::Create(
+			indexbufferSize,
+			BufferType::TransferSrc,
+			MemoryProperties::HOST_VISIBLE | MemoryProperties::HOST_COHERENT
+		);
+		IstagingBuffer->Map();
+		IstagingBuffer->WriteToBuffer(_Indices.data());
+		IstagingBuffer->Unmap();
+
+		_IndexBuffer = Buffer::Create(
+			indexbufferSize,
+			BufferType::TransferDst | BufferType::IndexBuffer,
+			MemoryProperties::DEVICE
+		);
+		Renderer::CopyBuffer(IstagingBuffer, _IndexBuffer, indexbufferSize);
 	}
 
 	StaticMesh::StaticMesh(AssetHandle meshSource)
+		: _MeshSource(meshSource)
 	{
+		if (auto meshSourceAsset = AssetManager::GetAsset<MeshSource>(meshSource); meshSourceAsset) {
+			const std::vector<AssetHandle>& meshMaterials = meshSourceAsset->GetMaterials();
+			for (size_t i = 0; i < meshMaterials.size(); i++) {
+				_Materials[(uint32_t)i] = AssetManager::GetAsset<MaterialAsset>(meshMaterials[i]);
+			}
+		}
 	}
+
 	StaticMesh::~StaticMesh()
 	{
 	}

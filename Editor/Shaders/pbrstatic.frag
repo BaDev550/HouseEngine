@@ -15,17 +15,16 @@ layout(location = 0) in VS_OUT {
 #include "Common/PBRResources.glslh"
 
 void main(){
-    vec3 rm = texture(uMetalRoughnessTexture, fs_in.TexCoords).rgb;
-	outPosition = vec4(fs_in.WorldPos, 1.0);
+    outPosition = vec4(fs_in.WorldPos, 1.0);
 
     vec3 normal = texture(uNormTexture, fs_in.TexCoords).rgb;
     normal = normal * 2.0 - 1.0;
     normal = normalize(fs_in.TBN * normal);
-    float roughness = rm.g * uMaterial.roughness;
+    
+    float roughness = uMaterial.roughness;
     outNormal = vec4(normal, roughness);
 
     vec3 albedoTextureColor = texture(uDiffTexture, fs_in.TexCoords).rgb;
-    vec3 albedo = albedoTextureColor * uMaterial.albedoColor.rgb;
-    float metallic = rm.b * uMaterial.metallic;
-    outAlbedo = vec4(albedo, metallic);
+    vec3 albedo = albedoTextureColor * uMaterial.albedoColor;
+    outAlbedo = vec4(albedo, 1.0f);
 }

@@ -100,22 +100,32 @@ namespace House::Editor {
 				ImGui::DragFloat3("Scale", glm::value_ptr(tc.Scale), 0.1f);
 
 				if (_SelectedEntity->HasComponent<StaticMeshComponent>()) {
-					auto& smc = _SelectedEntity->GetComponent<StaticMeshComponent>();
-					ImGui::Text("Static Mesh Component:");
-					std::string modelPath = smc.Handle ? smc.Handle->GetFilePath().string() : "No Model Loaded";
-					ImGui::Text("Model Path: %s", modelPath.c_str());
+					auto& staticMeshComponent = _SelectedEntity->GetComponent<StaticMeshComponent>();
+					MEM::Ref<StaticMesh> staticMesh = AssetManager::GetAsset<StaticMesh>(staticMeshComponent.Handle);
+					MEM::Ref<MeshSource> meshSource = AssetManager::GetAsset<StaticMesh>(staticMesh->GetMeshSource());
 
-					for (auto& [matID, material] : smc.Handle->GetMaterials()) {
-						std::string matLabel = "Material ID: " + std::to_string(matID);
-						if (ImGui::TreeNode(matLabel.c_str())) {
-							ImGui::ColorEdit3("Albedo Color", glm::value_ptr(material->GetAlbedoColor()));
-							float metallic = material->GetMetallic();
-							ImGui::DragFloat("Metallic", &metallic, 0.01f, 0.0f, 1.0f);
-							material->SetMetallic(metallic);
-							float roughness = material->GetRoughness();
-							ImGui::DragFloat("Roughness", &roughness, 0.01f, 0.0f, 1.0f);
-							material->SetRoughness(roughness);
-							ImGui::TreePop();
+					if (meshSource && staticMesh) {
+						ImGui::Text("Static Mesh Component:");
+						ImGui::Text("Model Path: %s", meshSource->GetFilePath().c_str());
+
+						for (auto& [matID, materialAsset] : staticMesh->GetMaterials()) {
+							std::string matLabel = "Material ID: " + std::to_string(matID);
+							if (ImGui::TreeNode(matLabel.c_str())) {
+								
+								glm::vec3 albedoColor = materialAsset->GetAlbedoColor();
+								ImGui::ColorEdit3("Albedo Color", glm::value_ptr(albedoColor));
+								materialAsset->SetAlbedoColor(albedoColor);
+
+								float metallic = materialAsset->GetMetalness();
+								ImGui::DragFloat("Metallic", &metallic, 0.01f, 0.0f, 1.0f);
+								materialAsset->SetMetalness(metallic);
+
+								float roughness = materialAsset->GetRoughness();
+								ImGui::DragFloat("Roughness", &roughness, 0.01f, 0.0f, 1.0f);
+								materialAsset->SetRoughness(roughness);
+
+								ImGui::TreePop();
+							}
 						}
 					}
 				}

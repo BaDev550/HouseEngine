@@ -27,7 +27,11 @@ namespace House {
 	uint32_t Renderer::GetFrameIndex() { return Application::Get()->GetFrameIndex(); }
 	RenderStats Renderer::GetRenderStats() { return s_RenderAPI->GetRenderStats(); }
 	MEM::Ref<ShaderLibrary>& Renderer::GetShaderLibrary() { return s_Data.ShaderLibrary; }
-	MEM::Ref<Pipeline>& Renderer::GetPipeline(const std::string& pipeline) { return s_Data.CompiledPipelines[pipeline]; }
+
+	MEM::Ref<Pipeline>& Renderer::GetPipeline(const std::string& pipeline) { 
+		return s_Data.CompiledPipelines.at(pipeline);
+	}
+
 	MEM::Ref<Texture2D>& Renderer::GetWhiteTexture() { return s_Data.WhiteTexture; }
 
 	void Renderer::Init() {
@@ -88,8 +92,8 @@ namespace House {
 		s_RenderCommandQueue.Execute();
 	}
 
-	void Renderer::DrawMesh(MEM::Ref<RenderPass>& renderPass, MEM::Ref<Model>& model, glm::mat4& transform) {
-		s_RenderAPI->DrawMesh(renderPass, model, transform);
+	void Renderer::DrawStaticMesh(MEM::Ref<RenderPass>& renderPass, MEM::Ref<StaticMesh>& mesh, MEM::Ref<MeshSource>& meshSource, glm::mat4& transform) {
+		s_RenderAPI->DrawStaticMesh(renderPass, mesh, meshSource, transform);
 	}
 	void Renderer::DrawIndexed(MEM::Ref<Pipeline>& pipeline, MEM::Ref<Buffer>& vertexBuffer, MEM::Ref<Buffer>& indexBuffer, uint32_t count)
 	{

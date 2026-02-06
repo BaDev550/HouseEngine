@@ -70,6 +70,7 @@ namespace House {
 		const std::filesystem::path& GetModelDirectory() const { return _Directory; }
 		const std::filesystem::path& GetFilePath() const { return _Path; }
 		const AABB& GetBoundingBox() const { return _BoundingBox; }
+		const std::vector<AssetHandle>& GetMaterials() const { return _Materials; }
 		std::vector<Submesh>& GetSubmeshes() { return _Submeshes; }
 
 		static AssetType GetStaticAssetType() { return AssetType::MeshSource; }
@@ -94,10 +95,14 @@ namespace House {
 		StaticMesh(AssetHandle meshSource);
 		~StaticMesh();
 
-		std::unordered_map<uint32_t, MEM::Ref<Material>>& GetMaterials() { return _Materials; }
-		MEM::Ref<Material>& GetMaterialByID(uint32_t id) { return _Materials[id]; }
+		const AssetHandle& GetMeshSource() const { return _MeshSource; }
+		std::unordered_map<uint32_t, MEM::Ref<MaterialAsset>>& GetMaterials() { return _Materials; }
+		MEM::Ref<MaterialAsset>& GetMaterialByID(uint32_t id) { return _Materials[id]; }
+
+		static AssetType GetStaticAssetType() { return AssetType::StaticMesh; }
+		virtual AssetType GetAssetType() const override { return GetStaticAssetType(); }
 	private:
 		AssetHandle _MeshSource = INVALID_ASSET_HANDLE;
-		std::unordered_map<uint32_t, MEM::Ref<Material>> _Materials;
+		std::unordered_map<uint32_t, MEM::Ref<MaterialAsset>> _Materials;
 	};
 }

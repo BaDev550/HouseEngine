@@ -6,6 +6,7 @@
 #include "Renderer/Camera.h"
 #include "Renderer/Model.h"
 #include "Renderer/Light.h"
+#include "AssetManager/AssetManager.h"
 #include <entt/entt.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -50,12 +51,17 @@ namespace House {
 	};
 
 	struct StaticMeshComponent {
-		MEM::Ref<Model> Handle; // TODO - make this asset handle
-		StaticMeshComponent(const std::string& path = "Resources/Box/SpecularTest.gltf") { Handle = MEM::Ref<Model>::Create(path); }
-		StaticMeshComponent(const StaticMeshComponent& other) : Handle(other.Handle) {}
-		~StaticMeshComponent() {
-			Handle = nullptr;
+		AssetHandle Handle;
+		StaticMeshComponent(const std::string& path = "DamagedHelmet/DamagedHelmet.gltf") {
+			std::filesystem::path staticMeshPath = path;
+			staticMeshPath.replace_extension(".hmesh");
+
+			AssetHandle sourceMesh = AssetManager::ImportAsset(path);
+			const auto& sMesh = AssetManager::Create<StaticMesh>(staticMeshPath.string(), sourceMesh);
+			Handle = sMesh->Handle;
 		}
+
+		StaticMeshComponent(const StaticMeshComponent& other) : Handle(other.Handle) {}
 	};
 
 	struct DirectionalLightComponent {

@@ -1,0 +1,7 @@
+Assets:
+  - Handle: 2008757659790423491
+    Path: F:\Github\HouseEngine\NewProject\Assets\DamagedHelmet/DamagedHelmet.hmesh
+    Type: StaticMesh
+  - Handle: 17523498787734840260
+    Path: F:\Github\HouseEngine\NewProject\Assets\DamagedHelmet/DamagedHelmet.gltf
+    Type: MeshSource

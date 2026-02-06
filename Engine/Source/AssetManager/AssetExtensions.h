@@ -14,6 +14,7 @@ namespace House {
 		
 		{ ".fbx", AssetType::MeshSource },
 		{ ".obj", AssetType::MeshSource },
+		{ ".gltf", AssetType::MeshSource },
 
 		{ ".hmesh", AssetType::StaticMesh },
 		{ ".hmat", AssetType::Material }

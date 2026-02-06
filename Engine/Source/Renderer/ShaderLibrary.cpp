@@ -14,6 +14,11 @@ namespace House {
 		return _Shaders[name];
 	}
 
+	MEM::Ref<Shader>& ShaderLibrary::GetShader(const std::string& name)
+	{
+		return _Shaders.at(name);
+	}
+
 	const MEM::Ref<Shader>& ShaderLibrary::GetShader(const std::string& name) const
 	{
 		return _Shaders.at(name);

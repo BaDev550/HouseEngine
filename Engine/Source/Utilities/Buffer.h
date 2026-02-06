@@ -46,6 +46,18 @@ struct DataBuffer
 	}
 
 	template<typename T>
+	T& Read(uint64_t offset = 0)
+	{
+		return *(T*)((uint8_t*)Data + offset);
+	}
+
+	template<typename T>
+	const T& Read(uint64_t offset = 0) const
+	{
+		return *(T*)((uint8_t*)Data + offset);
+	}
+
+	template<typename T>
 	T* As()
 	{
 		return (T*)Data;
@@ -56,6 +68,16 @@ struct DataBuffer
 		return (bool)Data;
 	}
 
+	void Write(const void* data, uint64_t size, uint64_t offset = 0)
+	{
+		memcpy((uint8_t*)Data + offset, data, size);
+	}
+
+	void ZeroInitialize()
+	{
+		if (Data)
+			memset(Data, 0, Size);
+	}
 };
 
 struct ScopedBuffer

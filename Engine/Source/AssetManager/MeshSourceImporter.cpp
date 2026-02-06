@@ -41,7 +41,7 @@ namespace House {
 		const aiScene* scene = importer.ReadFile(_Path.string(), S_ASSIMPIMPORTERFLAGS);
 		if (!scene) {
 			LOG_CORE_WARN("	-Failed to load mesh source");
-			return;
+			return nullptr;
 		}
 
 		// Loading the actual mesh
@@ -59,7 +59,7 @@ namespace House {
 				submesh.BaseIndex = indexCount;
 				submesh.MaterialId = mesh->mMaterialIndex;
 				submesh.VertexCount = skipLoad ? 0 : mesh->mNumVertices;
-				submesh.IndexCount = skipLoad ? 0 : mesh->mNumFaces;
+				submesh.IndexCount = skipLoad ? 0 : (mesh->mNumFaces * 3);
 				submesh.Name = mesh->mName.C_Str();
 
 				if (skipLoad) continue;
@@ -104,22 +104,23 @@ namespace House {
 					auto aiMaterial = scene->mMaterials[i];
 					auto aiMaterialName = aiMaterial->GetName();
 					auto modelDirectory = _Path.parent_path();
-					MEM::Ref<Material> material = Material::Create(Renderer::GetPipeline("PBRStatic"));
+					MEM::Ref<Material> material = Material::Create(Renderer::GetShaderLibrary()->GetShader("PBRStatic"));
+					MEM::Ref<MaterialAsset> ma = MEM::Ref<MaterialAsset>::Create(material);
 
 					aiString aiTexturePath;
 					glm::vec3 albedoColor = glm::vec3(1.0f);
 					aiColor3D aiColor;
 					if (aiMaterial->Get(AI_MATKEY_COLOR_DIFFUSE, aiColor) == AI_SUCCESS)
 						albedoColor = Utils::Vec3FromAIColor(aiColor);
-					material->SetAlbedoColor(albedoColor); // TEMP make the material side of color vec3
+					ma->SetAlbedoColor(albedoColor); // TEMP make the material side of color vec3
 
 					float roughness, metalness;
 					if (aiMaterial->Get(AI_MATKEY_ROUGHNESS_FACTOR, roughness) != AI_SUCCESS)
 						roughness = 0.4f;
 					if (aiMaterial->Get(AI_MATKEY_METALLIC_FACTOR, metalness) != AI_SUCCESS)
 						metalness = 0.0f;
-					material->SetRoughness(roughness);
-					material->SetMetallic(metalness);
+					ma->SetRoughness(roughness);
+					ma->SetMetalness(metalness);
 
 					bool hasAlbedoMap = aiMaterial->GetTexture(AI_MATKEY_BASE_COLOR_TEXTURE, &aiTexturePath) == AI_SUCCESS;
 					if (!hasAlbedoMap)
@@ -136,8 +137,8 @@ namespace House {
 						specs.Format = TextureImageFormat::RGBA;
 						auto texturePath = modelDirectory / aiTexturePath.C_Str();
 						textureHandle = AssetManager::AddMemoryOnlyAsset(Texture2D::Create(specs, texturePath.string()));
-						material->SetAlbedoTexture(textureHandle);
-						material->SetAlbedoColor(glm::vec3(1.0f));
+						ma->SetAlbedoTexture(textureHandle);
+						ma->SetAlbedoColor(glm::vec3(1.0f));
 					}
 
 					// Normal map
@@ -152,7 +153,7 @@ namespace House {
 						specs.Format = TextureImageFormat::RGBA;
 						auto texturePath = modelDirectory / aiTexturePath.C_Str();
 						textureHandle = AssetManager::AddMemoryOnlyAsset(Texture2D::Create(specs, texturePath.string()));
-						material->SetNormalTexture(textureHandle);
+						ma->SetNormalTexture(textureHandle);
 					}
 
 					// Metallic map
@@ -167,9 +168,9 @@ namespace House {
 						specs.Format = TextureImageFormat::RGBA;
 						auto texturePath = modelDirectory / aiTexturePath.C_Str();
 						textureHandle = AssetManager::AddMemoryOnlyAsset(Texture2D::Create(specs, texturePath.string()));
-						material->SetMetallicRoughnessTexture(textureHandle);
+						ma->SetMetallicTexture(textureHandle);
 					}
-					AssetHandle materialHandle = AssetManager::AddMemoryOnlyAsset(material);
+					AssetHandle materialHandle = AssetManager::AddMemoryOnlyAsset(ma);
 					meshSource->_Materials[i] = materialHandle;
 				}
 			}

@@ -1,5 +1,6 @@
 #pragma once 
 #include "AssetManagerBase.h"
+#include "AssetImporter.h"
 
 namespace House {
 	class AssetManagerEditor : public AssetManagerBase {
@@ -32,8 +33,9 @@ namespace House {
 			static_assert(std::is_base_of<Asset, T>::value, "T Must inherit from asset");
 			if (AssetMetadata loadedMetadata = GetMetadata(filename); loadedMetadata.IsValid()) {
 				MEM::Ref<Asset> asset = GetAsset(loadedMetadata.Handle);
-				_LoadedAssets[loadedMetadata.Handle] = asset;
-				return loadedMetadata.Handle;
+				_AssetRegistry[loadedMetadata.Handle] = loadedMetadata;
+				_LoadedAssets[asset->Handle] = asset;
+				return asset;
 			}
 			AssetMetadata metadata;
 

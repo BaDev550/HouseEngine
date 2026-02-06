@@ -1,9 +1,9 @@
 layout(set = 1, binding = 0) uniform sampler2D uDiffTexture;
 layout(set = 1, binding = 1) uniform sampler2D uNormTexture;
-layout(set = 1, binding = 2) uniform sampler2D uMetalRoughnessTexture;
+layout(set = 1, binding = 2) uniform sampler2D uMetallicTexture;
 
 layout(set = 1, binding = 3) uniform MaterialData {
-    vec4 albedoColor;
+    vec3 albedoColor;
     float metallic;
     float roughness;
 } uMaterial;

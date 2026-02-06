@@ -167,7 +167,7 @@ namespace House {
 		: _Pipeline(pipeline)
 	{
 		DescriptorManagerSpecification specs{};
-		specs.Pipeline = _Pipeline;
+		specs.Shader = _Pipeline->GetShader().As<VulkanShader>();
 		_DescriptorManager = new DescriptorManager(specs);
 	}
 
@@ -201,7 +201,7 @@ namespace House {
 
 		vkCmdBeginRendering(cmd, &renderingInfo);
 		vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, _Pipeline->GetVulkanPipeline());
-		_DescriptorManager->UpdateSets(cmd, Renderer::GetFrameIndex(), _Pipeline->GetPipelineLayout());
+		_DescriptorManager->UpdateSets(cmd, _Pipeline->GetPipelineLayout());
 		
 		VkViewport viewport{ 0, 0, (float)extent.width, (float)extent.height };
 		viewport.minDepth = 0;

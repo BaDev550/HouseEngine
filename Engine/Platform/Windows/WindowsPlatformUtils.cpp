@@ -6,6 +6,7 @@
 
 #include "Utilities/Platform.h"
 #include "Core/Application.h"
+#define UUID_DEFINED
 #include <commdlg.h>
 #include <shlobj.h>
 

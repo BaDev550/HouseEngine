@@ -1,6 +1,7 @@
 #include "hepch.h"
 #include "Project.h"
 #include "ProjectSerializer.h"
+#include "AssetManager/AssetManager.h"
 
 namespace House {
 	MEM::Ref<Project> Project::New()
@@ -23,6 +24,7 @@ namespace House {
 			project->_ProjectDirectory = path.parent_path();
 			project->_ProjectFilePath = path;
 			_ActiveProject = std::move(project);
+			AssetManager::Init();
 			return _ActiveProject;
 		}
 		return nullptr;

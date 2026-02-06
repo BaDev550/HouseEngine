@@ -18,7 +18,7 @@ namespace House {
 	};
 
 	struct DescriptorManagerSpecification {
-		MEM::Ref<VulkanPipeline> Pipeline;
+		MEM::Ref<VulkanShader> Shader;
 	};
 
 	class ResourceBinding {
@@ -50,7 +50,7 @@ namespace House {
 		void WriteInput(std::string_view name, MEM::Ref<VulkanBuffer>  buffer);
 		void WriteInput(std::string_view name, MEM::Ref<VulkanTexture> texture, uint32_t index = 0);
 
-		void UpdateSets(VkCommandBuffer cmd, uint32_t frameIndex, VkPipelineLayout layout);
+		void UpdateSets(VkCommandBuffer cmd, VkPipelineLayout layout);
 		void Invalidate(DescriptorManagerSpecification& spec);
 
 		VkDescriptorSet Allocate(MEM::Ref<VulkanDescriptorSetLayout>& layout);

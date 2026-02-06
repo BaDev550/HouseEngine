@@ -12,6 +12,7 @@ namespace House {
 		~ShaderLibrary();
 
 		MEM::Ref<Shader>& Load(const std::string& name, const std::string& vertexPath, const std::string& fragPath);
+		MEM::Ref<Shader>& GetShader(const std::string& name);
 		const MEM::Ref<Shader>& GetShader(const std::string& name) const;
 		const std::unordered_map<std::string, MEM::Ref<Shader>>& GetShaders() const { return _Shaders; }
 		std::unordered_map<std::string, MEM::Ref<Shader>>& GetShaders() { return _Shaders; }

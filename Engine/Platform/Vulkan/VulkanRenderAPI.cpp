@@ -3,6 +3,7 @@
 #include "VulkanPipeline.h"
 #include "VulkanRenderPass.h"
 #include "VulkanSwapchain.h"
+#include "VulkanMaterial.h"
 
 namespace House {
 	struct FrameContext {
@@ -108,30 +109,37 @@ namespace House {
 		device.CopyBuffer(vulkanSrcBuffer->GetBuffer(), vulkanDstBuffer->GetBuffer(), size);
 	}
 
-	void VulkanRenderAPI::DrawMesh(MEM::Ref<RenderPass>& renderPass, MEM::Ref<Model>& model, glm::mat4& transform)
+	void VulkanRenderAPI::DrawStaticMesh(MEM::Ref<RenderPass>& renderPass, MEM::Ref<StaticMesh>& mesh, MEM::Ref<MeshSource>& meshSource, glm::mat4& transform)
 	{
 		auto cmd = GetCurrentCommandBuffer();
 
 		MeshPushConstants pc_data;
+		uint32_t frameIndex = Renderer::GetFrameIndex();
 		auto vulkanRenderPass = renderPass.As<VulkanRenderPass>();
 		const auto& vulkanPipeline = vulkanRenderPass->GetPipeline();
 		pc_data.Transform = transform;
 		vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, vulkanPipeline->GetVulkanPipeline());
 		vkCmdPushConstants(cmd, vulkanPipeline->GetPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(MeshPushConstants), &pc_data);
 
-		for (const auto& mesh : model->GetMeshes()) {
-			model->GetMaterialByID(mesh.GetMaterialID())->Bind();
+		for (const auto& submesh : meshSource->GetSubmeshes()) {
+			MEM::Ref<MaterialAsset>& materialAsset = mesh->GetMaterialByID(submesh.MaterialId);
+			MEM::Ref<VulkanMaterial> material = materialAsset->GetMaterial().As<VulkanMaterial>();
 
-			const auto& vulkanVertexBuffer = mesh.GetVertexBuffer().As<VulkanBuffer>();
-			const auto& vulkanIndexBuffer = mesh.GetIndexBuffer().As<VulkanBuffer>();
+			VkDescriptorSet descriptorSet = material->GetDescriptorSet(frameIndex);
+			if (descriptorSet)
+				vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, vulkanPipeline->GetPipelineLayout(), 1, 1, &descriptorSet, 0, nullptr);
+			material->Bind(cmd, vulkanPipeline->GetPipelineLayout());
+
+			const auto& vulkanVertexBuffer = meshSource->GetVertexBuffer().As<VulkanBuffer>();
+			const auto& vulkanIndexBuffer = meshSource->GetIndexBuffer().As<VulkanBuffer>();
 			VkBuffer buffers[] = { vulkanVertexBuffer->GetBuffer()};
 			VkDeviceSize offsets[] = { 0 };
 			vkCmdBindVertexBuffers(cmd, 0, 1, buffers, offsets);
 			vkCmdBindIndexBuffer(cmd, vulkanIndexBuffer->GetBuffer(), offsets[0], VK_INDEX_TYPE_UINT32);
-			vkCmdDrawIndexed(cmd, mesh.GetIndexCount(), 1, 0, 0, 0);
+			vkCmdDrawIndexed(cmd, submesh.IndexCount, 1, submesh.BaseIndex, submesh.BaseVertex, 0);
 
 			s_RenderStats.DrawCall++;
-			s_RenderStats.TriangleCount += mesh.GetIndexCount() / 3;
+			s_RenderStats.TriangleCount += submesh.IndexCount / 3;
 		}
 	}
 

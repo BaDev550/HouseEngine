@@ -115,10 +115,12 @@ namespace House {
 		auto view = _Scene->GetRegistry().view<TransformComponent, StaticMeshComponent>();
 		for (auto entity : view) {
 			auto& transform = view.get<TransformComponent>(entity);
-			auto& model = view.get<StaticMeshComponent>(entity);
+			auto& staticMeshHandle = view.get<StaticMeshComponent>(entity).Handle;
+			auto staticMesh = AssetManager::GetAsset<StaticMesh>(staticMeshHandle);
+			auto meshSource = AssetManager::GetAsset<MeshSource>(staticMesh->GetMeshSource());
 
 			glm::mat4 transformMatrix = transform.ModelMatrix();
-			Renderer::DrawMesh(_GRenderPass, model.Handle, transformMatrix);
+			Renderer::DrawStaticMesh(_GRenderPass, staticMesh, meshSource, transformMatrix);
 		}
 		_GRenderPass->End();
 

@@ -27,7 +27,7 @@ namespace House {
 		static void CopyBuffer(MEM::Ref<Buffer>& srcBuffer, MEM::Ref<Buffer>& dstBuffer, uint64_t size);
 
 		static void WaitAndRender();
-		static void DrawMesh(MEM::Ref<RenderPass>& renderPass, MEM::Ref<Model>& model, glm::mat4& transform);
+		static void DrawStaticMesh(MEM::Ref<RenderPass>& renderPass, MEM::Ref<StaticMesh>& mesh, MEM::Ref<MeshSource>& meshSource, glm::mat4& transform);
 		static void DrawIndexed(MEM::Ref<Pipeline>& pipeline, MEM::Ref<Buffer>& vertexBuffer, MEM::Ref<Buffer>& indexBuffer, uint32_t count);
 		static void DrawVertex(MEM::Ref<Pipeline>& pipeline, MEM::Ref<Buffer>& buffer, uint32_t count);
 		static void DrawFullscreenQuad(MEM::Ref<RenderPass>& renderPass);

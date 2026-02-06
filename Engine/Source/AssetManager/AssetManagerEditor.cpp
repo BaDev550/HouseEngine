@@ -194,9 +194,10 @@ namespace House {
 
 			_AssetRegistry[metadata.Handle] = metadata;
 		}
+		LOG_CORE_INFO("Asset registry loaded");
 	}
 
-	inline const std::filesystem::path AssetManagerEditor::GetAssetPath(const std::filesystem::path& path) { return  (Project::GetCacheDirectory() / path); }
-	inline const std::filesystem::path AssetManagerEditor::GetAssetPath(const AssetMetadata metadata) { return  (Project::GetCacheDirectory() / metadata.FilePath); }
+	inline const std::filesystem::path AssetManagerEditor::GetAssetPath(const std::filesystem::path& path) { return  (Project::GetAssetDirectory() / path); }
+	inline const std::filesystem::path AssetManagerEditor::GetAssetPath(const AssetMetadata metadata) { return  (Project::GetAssetDirectory() / metadata.FilePath); }
 	inline const std::filesystem::path AssetManagerEditor::GetAssetRegistryPath() { return (Project::GetCacheDirectory() / _RegistryFilePath); }
 }

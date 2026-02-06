@@ -2,6 +2,7 @@
 #include "Utilities/Memory.h"
 #include "Texture.h"
 #include "Pipeline.h"
+#include "AssetManager/Asset.h"
 #include <glm/glm.hpp>
 
 namespace House {
@@ -13,12 +14,10 @@ namespace House {
 
 	class Material : public MEM::RefCounted {
 	public:
-		static MEM::Ref<Material> Create(MEM::Ref<Pipeline>& pipeline);
+		static MEM::Ref<Material> Create(MEM::Ref<Shader>& shader);
 		virtual ~Material() = default;
 		
 		virtual void Build() = 0;
-		virtual void Bind() = 0;
-
 		virtual void Set(const std::string& name, float value) = 0;
 		virtual void Set(const std::string& name, int value) = 0;
 		virtual void Set(const std::string& name, bool value) = 0;
@@ -32,37 +31,33 @@ namespace House {
 		virtual glm::vec3& GetVector3(const std::string& name) = 0;
 
 		virtual void MaterialDataChanged() = 0;
-	protected:
-		friend class Model;
 	};
 
 	class MaterialAsset : public Asset {
+	public:
+		MaterialAsset(const MEM::Ref<Material>& material) : _Material(material) {}
 
+		MEM::Ref<Material>& GetMaterial() { return _Material; }
+		AssetHandle& GetAlbedoTexture() { return _TextureHandles.AlbedoTexture; }
+		AssetHandle& GetNormalTexture() { return _TextureHandles.NormalTexture; }
+		AssetHandle& GetMetallicTexture() { return _TextureHandles.MetallicTexture; }
+		glm::vec3& GetAlbedoColor();
+		float& GetMetalness();
+		float& GetRoughness();
+
+		void SetAlbedoColor(const glm::vec3& color);
+		void SetMetalness(float value);
+		void SetRoughness(float value);
+		void SetAlbedoTexture(const AssetHandle& texture);
+		void SetNormalTexture(const AssetHandle& texture);
+		void SetMetallicTexture(const AssetHandle& texture);
+	private:
+		MEM::Ref<Material> _Material;
+
+		struct TextureHandles {
+			AssetHandle AlbedoTexture;
+			AssetHandle NormalTexture;
+			AssetHandle MetallicTexture;
+		} _TextureHandles;
 	};
-#if 0
-	AssetHandle _AlbedoTextureHandle;
-	AssetHandle _NormalTextureHandle;
-	AssetHandle _MetallicRoughnessTextureHandle;
-
-	uint32_t GetID() const { return _Id; }
-
-	glm::vec3& GetAlbedoColor() { return _Data.AlbedoColor; }
-	void SetAlbedoColor(const glm::vec3& color) { _Data.AlbedoColor = color; MaterialDataChanged(); }
-
-	float GetMetallic() const { return _Data.Metallic; }
-	void SetMetallic(float metallic) { _Data.Metallic = metallic; MaterialDataChanged(); }
-
-	float GetRoughness() const { return _Data.Roughness; }
-	void SetRoughness(float roughness) { _Data.Roughness = roughness; MaterialDataChanged(); }
-
-	AssetHandle& GetAlbedoTexture() { return _AlbedoTextureHandle; }
-	void SetAlbedoTexture(const AssetHandle& texture) { _AlbedoTextureHandle = texture; }
-
-	AssetHandle& GetNormalTexture() { return _NormalTextureHandle; }
-	void SetNormalTexture(const AssetHandle& texture) { _NormalTextureHandle = texture; }
-
-	AssetHandle& GetMetallicRoughnessTexture() { return _MetallicRoughnessTextureHandle; }
-	void SetMetallicRoughnessTexture(const AssetHandle& texture) { _MetallicRoughnessTextureHandle = texture; }
-
-#endif
 }

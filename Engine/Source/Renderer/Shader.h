@@ -28,12 +28,21 @@ namespace House {
 		ShaderUniform(std::string name, ShaderUniformType type, uint32_t size, uint32_t offset);
 
 		const std::string& GetName() const { return _Name; }
-
+		const uint32_t& GetSize() const { return _Size; }
+		const uint32_t& GetOffset() const { return _Offset; }
 	private:
 		std::string _Name;
 		ShaderUniformType _Type = ShaderUniformType::None;
 		uint32_t _Size = 0;
 		uint32_t _Offset = 0;
+
+		friend class ShaderCompiler;
+	};
+
+	struct ShaderBuffer {
+		std::string Name;
+		uint32_t Size = 0;
+		std::unordered_map<std::string, ShaderUniform> Uniforms;
 	};
 
 	struct DescriptorInfo {

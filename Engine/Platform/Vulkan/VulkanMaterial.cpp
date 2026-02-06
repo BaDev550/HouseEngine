@@ -3,96 +3,136 @@
 #include "VulkanRenderAPI.h"
 #include "VulkanTexture.h"
 
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/string_cast.hpp>
+
 namespace House {
-    VulkanMaterial::VulkanMaterial(MEM::Ref<Pipeline>& pipeline)
+    VulkanMaterial::VulkanMaterial(MEM::Ref<Shader>& shader)
     {
-        _Pipeline = pipeline.As<VulkanPipeline>();
+        _Shader = shader.As<VulkanShader>();
+
         DescriptorManagerSpecification spec{};
-        spec.Pipeline = _Pipeline;
+        spec.Shader = _Shader;
         _DescriptorManager.Invalidate(spec);
+
+        Build();
+    }
+
+    VulkanMaterial::~VulkanMaterial()
+    {
+        _StorageBuffer.Release();
     }
 
     void VulkanMaterial::Build()
     {
-        auto shader = _Pipeline->GetShader().As<VulkanShader>();
-        auto& layout = shader->GetDescriptorLayout(1);
+        if (_Shader->GetDescriptorLayout(1)) {
+            auto& layout = _Shader->GetDescriptorLayout(1);
+            const auto& shaderBuffers = _Shader->GetShaderBuffers();
 
-		_MaterialBuffer = MEM::Ref<VulkanBuffer>::Create(sizeof(MaterialData), BufferType::UniformBuffer, MemoryProperties::HOST_VISIBLE | MemoryProperties::HOST_COHERENT);
-        _MaterialBuffer->Map();
-        _MaterialBuffer->WriteToBuffer(&_Data);
+            if (shaderBuffers.size() > 0) {
+                uint32_t size = 0;
+                for (auto [name, buffer] : shaderBuffers)
+                    size += buffer.Size;
 
-        _DescriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
+                _StorageBuffer.Allocate(size);
+                _StorageBuffer.ZeroInitialize();
+            }
 
-        for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-            _DescriptorSets[i] = _DescriptorManager.Allocate(layout);
-            VulkanDescriptorWriter writer(*layout, *_DescriptorManager.GetPool());
+            _DescriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
+            for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+                _DescriptorSets[i] = _DescriptorManager.Allocate(layout);
+            }
 
-            VkDescriptorImageInfo diffInfo = _AlbedoTexture.As<VulkanTexture>()->GetImageDescriptorInfo();
-            VkDescriptorImageInfo normInfo = _NormalTexture.As<VulkanTexture>()->GetImageDescriptorInfo();
-            VkDescriptorImageInfo metallicRoughnessInfo = _MetallicRoughnessTexture.As<VulkanTexture>()->GetImageDescriptorInfo();
-			VkDescriptorBufferInfo materialBufferInfo = _MaterialBuffer->DescriptorInfo();
-
-            writer.WriteImage(0, &diffInfo);
-            writer.WriteImage(1, &normInfo);
-			writer.WriteImage(2, &metallicRoughnessInfo);
-			writer.WriteBuffer(3, &materialBufferInfo);
-            writer.Overwrite(_DescriptorSets[i]);
+            for (const auto& [name, decl] : _DescriptorManager.GetInputDeclarations()) {
+                if (decl.Type == ShaderReflectionDataType::Sampler2D) {
+                    _DescriptorManager.WriteInput(name, Renderer::GetWhiteTexture().As<VulkanTexture>());
+                }
+            }
         }
     }
 
-    void House::VulkanMaterial::Bind()
-    { 
-        auto cmd = Renderer::GetAPI<VulkanRenderAPI>()->GetCurrentCommandBuffer();
-        uint32_t frameIndex = Renderer::GetFrameIndex();
-        vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, _Pipeline->GetPipelineLayout(), 1, 1, &_DescriptorSets[frameIndex], 0, nullptr);
+    void VulkanMaterial::Bind(VkCommandBuffer cmd, VkPipelineLayout layout)
+    {
+        _DescriptorManager.UpdateSets(cmd, layout);
     }
 
     void VulkanMaterial::Set(const std::string& name, float value)
     {
+        Set<float>(name, value);
     }
 
     void VulkanMaterial::Set(const std::string& name, int value)
     {
+        Set<int>(name, value);
     }
 
     void VulkanMaterial::Set(const std::string& name, bool value)
     {
+        Set<bool>(name, value);
     }
 
     void VulkanMaterial::Set(const std::string& name, const glm::vec2& value)
     {
+        Set<glm::vec2>(name, value);
     }
 
     void VulkanMaterial::Set(const std::string& name, const glm::vec3& value)
     {
+        Set<glm::vec3>(name, value);
     }
 
     void VulkanMaterial::Set(const std::string& name, const glm::vec4& value)
     {
+        Set<glm::vec4>(name, value);
     }
 
     void VulkanMaterial::Set(const std::string& name, const MEM::Ref<Texture2D>& value)
     {
-        //_DescriptorManager.WriteInput(name, value);
+        _DescriptorManager.WriteInput(name, value.As<VulkanTexture>());
     }
 
     float& VulkanMaterial::GetFloat(const std::string& name)
     {
-        // TODO: insert return statement here
+        return Get<float>(name);
     }
 
     glm::vec2& VulkanMaterial::GetVector2(const std::string& name)
     {
-        // TODO: insert return statement here
+        return Get<glm::vec2>(name);
     }
 
     glm::vec3& VulkanMaterial::GetVector3(const std::string& name)
     {
-        // TODO: insert return statement here
+        return Get<glm::vec3>(name);
     }
 
     void VulkanMaterial::MaterialDataChanged()
     {
-        _MaterialBuffer->WriteToBuffer(&_Data);
+        //_MaterialBuffer->WriteToBuffer(&_Data);
+    }
+
+    const ShaderUniform* VulkanMaterial::FindUniformDeclaration(const std::string& name)
+    {
+        const auto& shaderbuffers = _Shader->GetShaderBuffers();
+        std::string targetUniformName = name;
+        std::string targetBufferName = "";
+
+        size_t dotPos = name.find('.');
+        if (dotPos != std::string::npos) {
+            targetBufferName = name.substr(0, dotPos);
+            targetUniformName = name.substr(dotPos + 1);
+        }
+
+        for (const auto& [bufferKey, buffer] : shaderbuffers) {
+            if (!targetBufferName.empty() && bufferKey != targetBufferName)
+                continue;
+
+            auto it = buffer.Uniforms.find(targetUniformName);
+            if (it != buffer.Uniforms.end()) {
+                return &it->second;
+            }
+        }
+
+        return nullptr;
     }
 }

@@ -1,6 +1,7 @@
 #pragma once
 #include <iostream>
 #include <imgui.h>
+#include "AssetManager/Asset.h"
 #include "Utilities/Memory.h"
 #include "Utilities/Buffer.h"
 
@@ -42,7 +43,7 @@ namespace House {
 		bool GenerateMipMap = true;
 	};
 
-	class Texture : public MEM::RefCounted {
+	class Texture : public Asset {
 
 	};
 

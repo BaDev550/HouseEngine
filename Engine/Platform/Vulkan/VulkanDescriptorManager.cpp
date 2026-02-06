@@ -33,8 +33,10 @@ namespace House {
 		}
 	}
 
-	void DescriptorManager::UpdateSets(VkCommandBuffer cmd, uint32_t frameIndex, VkPipelineLayout layout)
+	void DescriptorManager::UpdateSets(VkCommandBuffer cmd, VkPipelineLayout layout)
 	{
+		uint32_t frameIndex = Renderer::GetFrameIndex();
+		
 		for (auto& [setIndex, bindings] : _StoredResources) {
 			_Writers[setIndex]->Clear();
 			bool hasData = false;
@@ -73,18 +75,16 @@ namespace House {
 				}
 			}
 
-			if (hasData) {
-				_Writers[setIndex]->Overwrite(_DescriptorSets[frameIndex][setIndex]);
-				vkCmdBindDescriptorSets(
-					cmd,
-					VK_PIPELINE_BIND_POINT_GRAPHICS,
-					layout,
-					setIndex,
-					1,
-					&_DescriptorSets[frameIndex][setIndex],
-					0, nullptr
-				);
-			}
+			vkCmdBindDescriptorSets(
+				cmd,
+				VK_PIPELINE_BIND_POINT_GRAPHICS,
+				layout,
+				setIndex,
+				1,
+				&_DescriptorSets[frameIndex][setIndex],
+				0, nullptr
+			);
+			_Writers[setIndex]->Overwrite(_DescriptorSets[frameIndex][setIndex]);
 		}
 	}
 
@@ -105,11 +105,7 @@ namespace House {
 			.AddPoolSize(VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000)
 			.SetPoolFlags(VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT | VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT)
 			.Build();
-
-		auto& pipeline = spec.Pipeline;
-		auto vulkanPipeline = pipeline.As<VulkanPipeline>();
-		auto vulkanShader = vulkanPipeline->GetShader().As<VulkanShader>();
-		auto& reflectionData = vulkanShader->GetReflectData();
+		auto& reflectionData = spec.Shader->GetReflectData();
 
 		uint32_t maxSet = 0;
 		for (auto const& [set, bindings] : reflectionData) {
@@ -122,7 +118,7 @@ namespace House {
 		}
 
 		for (const auto& [set, bindings] : reflectionData) {
-			auto& layout = vulkanShader->GetDescriptorLayout(set);
+			auto& layout = spec.Shader->GetDescriptorLayout(set);
 
 			for (const auto& [binding, input] : bindings) {
 				RenderPassInputDeclaration declaration{};
@@ -137,7 +133,7 @@ namespace House {
 				_DescriptorSets[i][set] = Allocate(layout);
 			}
 
-			_Writers[set] = MEM::Ref<VulkanDescriptorWriter>::Create(*vulkanShader->GetDescriptorLayout(set), *_Pool);
+			_Writers[set] = MEM::Ref<VulkanDescriptorWriter>::Create(*spec.Shader->GetDescriptorLayout(set), *_Pool);
 		}
 
 	}

@@ -142,9 +142,9 @@ namespace House {
 		if (entity.HasComponent<StaticMeshComponent>()) {
 			auto& mesh = entity.GetComponent<StaticMeshComponent>();
 			out << YAML::Key << "StaticMeshComponent";
-			out << YAML::BeginMap;
-			out << YAML::Key << "ModelPath" << YAML::Value << mesh.Handle->GetFilePath().string();
-			out << YAML::EndMap;
+			//out << YAML::BeginMap;
+			//out << YAML::Key << "ModelPath" << YAML::Value << mesh.Handle->GetFilePath().string();
+			//out << YAML::EndMap;
 		}
 
 		// Directional Light Component

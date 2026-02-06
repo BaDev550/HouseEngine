@@ -83,6 +83,30 @@ namespace House {
             case VK_FORMAT_R32G32B32A32_SFLOAT: return 16;
             }
         }
+
+        ShaderUniformType GetShaderUniformType(const SpvReflectTypeDescription* typeDesc) {
+            if (!typeDesc) return House::ShaderUniformType::None;
+
+            if (typeDesc->type_flags & SPV_REFLECT_TYPE_FLAG_BOOL) {
+                return House::ShaderUniformType::Bool;
+            }
+            else if (typeDesc->type_flags & SPV_REFLECT_TYPE_FLAG_INT) {
+                return House::ShaderUniformType::Int;
+            }
+            else if (typeDesc->type_flags & SPV_REFLECT_TYPE_FLAG_FLOAT) {
+                if (typeDesc->type_flags & SPV_REFLECT_TYPE_FLAG_MATRIX) {
+                    if (typeDesc->traits.numeric.matrix.column_count == 3) return House::ShaderUniformType::Mat3;
+                    if (typeDesc->traits.numeric.matrix.column_count == 4) return House::ShaderUniformType::Mat4;
+                }
+                else if (typeDesc->type_flags & SPV_REFLECT_TYPE_FLAG_VECTOR) {
+                    if (typeDesc->traits.numeric.vector.component_count == 2) return House::ShaderUniformType::Vec2;
+                    if (typeDesc->traits.numeric.vector.component_count == 3) return House::ShaderUniformType::Vec3;
+                    if (typeDesc->traits.numeric.vector.component_count == 4) return House::ShaderUniformType::Vec4;
+                }
+                return House::ShaderUniformType::Float;
+            }
+            return House::ShaderUniformType::None;
+        }
     }
 
     VkDescriptorType ShaderCompiler::ShaderReflectionTypeToVulkanType(const ShaderReflectionDataType& type)
@@ -178,6 +202,25 @@ namespace House {
 
         for (const auto& ds : bindings) {
             shaderInfo.ReflectData[ds->set][ds->binding] = { ds->name, ds->count, helpers::GetResourceType(ds) };
+
+            auto& bufferInfo = shaderInfo.Buffers[ds->name];
+            bufferInfo.Name = ds->name;
+            bufferInfo.Size = ds->block.size;
+            LOG_RENDERER_INFO("Found Uniform: {}", bufferInfo.Name);
+
+            for (uint32_t i = 0; i < ds->block.member_count; ++i) {
+                const auto& member = ds->block.members[i];
+
+                House::ShaderUniform uniform;
+                uniform._Name = member.name;
+                uniform._Offset = member.absolute_offset;
+                uniform._Size = member.size;
+                uniform._Type = helpers::GetShaderUniformType(member.type_description);
+
+                LOG_RENDERER_INFO(" Unifor offset: {}", uniform._Name);
+                LOG_RENDERER_INFO(" Unifor size: {}", uniform._Size);
+                bufferInfo.Uniforms[uniform._Name] = uniform;
+            }
         }
 
         if (module.shader_stage & SPV_REFLECT_SHADER_STAGE_VERTEX_BIT) {

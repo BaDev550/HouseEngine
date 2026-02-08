@@ -36,6 +36,9 @@ namespace House {
 
                 _StorageBuffer.Allocate(size);
                 _StorageBuffer.ZeroInitialize();
+
+                _UniformBuffer = VulkanBuffer::Create(size, BufferType::UniformBuffer, MemoryProperties::HOST_VISIBLE | MemoryProperties::HOST_COHERENT).As<VulkanBuffer>();
+                _UniformBuffer->Map();
             }
 
             _DescriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
@@ -47,12 +50,18 @@ namespace House {
                 if (decl.Type == ShaderReflectionDataType::Sampler2D) {
                     _DescriptorManager.WriteInput(name, Renderer::GetWhiteTexture().As<VulkanTexture>());
                 }
+                else if (decl.Type == ShaderReflectionDataType::UniformBuffer) {
+                    if (_UniformBuffer)
+                        _DescriptorManager.WriteInput("uMaterial", _UniformBuffer);
+                }
             }
         }
     }
 
     void VulkanMaterial::Bind(VkCommandBuffer cmd, VkPipelineLayout layout)
     {
+        if (_UniformBuffer && _StorageBuffer.Data)
+            _UniformBuffer->WriteToBuffer(_StorageBuffer.Data, _StorageBuffer.Size);
         _DescriptorManager.UpdateSets(cmd, layout);
     }
 

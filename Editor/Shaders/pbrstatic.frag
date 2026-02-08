@@ -25,6 +25,6 @@ void main(){
     outNormal = vec4(normal, roughness);
 
     vec3 albedoTextureColor = texture(uDiffTexture, fs_in.TexCoords).rgb;
-    vec3 albedo = albedoTextureColor * uMaterial.albedoColor;
-    outAlbedo = vec4(albedo, 1.0f);
+    vec3 albedo = albedoTextureColor;
+    outAlbedo = vec4(albedoTextureColor, 1.0f);
 }

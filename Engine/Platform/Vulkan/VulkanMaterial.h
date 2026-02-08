@@ -42,7 +42,7 @@ namespace House {
 		{
 			auto decl = FindUniformDeclaration(name);
 			CHECKF(!decl, "Could not find uniform");
-
+			
 			auto& buffer = _StorageBuffer;
 			return buffer.Read<T>(decl->GetOffset());
 		}
@@ -52,9 +52,11 @@ namespace House {
 		const ShaderUniform* FindUniformDeclaration(const std::string& name);
 
 		MaterialData _Data;
+		MEM::Ref<VulkanShader> _Shader;
+		MEM::Ref<VulkanBuffer> _UniformBuffer;
+
 		DescriptorManager _DescriptorManager;
 		std::vector<VkDescriptorSet> _DescriptorSets;
-		MEM::Ref<VulkanShader> _Shader;
 
 		DataBuffer _StorageBuffer;
 
